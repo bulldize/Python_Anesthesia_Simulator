@@ -136,9 +136,7 @@ class Patient:
         None.
 
         """
-        
-                
-        
+
         self.age = patient_characteristic[0]
         self.height = patient_characteristic[1]
         self.weight = patient_characteristic[2]
@@ -156,7 +154,6 @@ class Patient:
         self.co_update = co_update
         self.save_data_bool = save_data_bool
 
-
         # LBM computation
         if self.gender == 1:  # homme
             self.lbm = 1.1 * self.weight - 128 * (self.weight / self.height) ** 2
@@ -172,7 +169,6 @@ class Patient:
 
         self.nore_pk = CompartmentModel(patient_characteristic, self.lbm, drug="Norepinephrine",
                                         ts=self.ts, model=model_nore, random=random_PK)
-
 
         # Init PD model for BIS
         self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD)
@@ -641,6 +637,7 @@ class Patient:
         self.Time = 0
         column_names = ['Time',  # time
                         'BIS', 'TOL', 'MAP', 'CO',  # outputs
+                        'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore',  # inputs
                         'blood_volume']  # nore concentration and blood volume
         propo_state_names = [f'x_propo_{i+1}' for i in range(len(self.propo_pk.x))]
@@ -652,10 +649,12 @@ class Patient:
     def save_data(self, inputs: list = [0, 0, 0]):
         r"""Save all current internal variables as a new line in self.dataframe."""
         # store data
-
+        dap = self.map - 2/9*self.sv
+        sap = self.map + 4/9*self.sv
         new_line = {'Time': self.Time,
                     'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
+                    'SAP': sap, 'DAP': dap,
                     'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2],  # inputs
                     'blood_volume': self.blood_volume}  # blood volume
 
@@ -739,7 +738,6 @@ class Patient:
             y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[:])
         else:
             y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[0, :])
-        
 
         tpr = y[:, 0]
         sv = y[:, 1]
@@ -748,10 +746,12 @@ class Patient:
         co = y[:, 4]
 
         # save data
+        dap = map - 2/9*sv
+        sap = map + 4/9*sv
         df = pd.DataFrame({
             'Time': np.arange(0, len(u_propo)*self.ts, self.ts),
             'BIS': bis, 'TOL': tol, 'TPR': tpr, 'SV': sv,
-            'HR': hr, 'MAP': map, 'CO': co,
+            'HR': hr, 'MAP': map, 'CO': co, 'DAP': dap, 'SAP': sap,
             'u_propo': u_propo, 'u_remi': u_remi, 'u_nore': u_nore
         })
 
@@ -759,7 +759,7 @@ class Patient:
             df['x_propo_' + str(i+1)] = x_propo[i, :]
         for i in range(np.shape(x_remi)[0]):
             df['x_remi_' + str(i+1)] = x_remi[i, :]
-        if x_nore.ndim == 1:    
+        if x_nore.ndim == 1:
             df['x_nore'] = x_nore
         else:
             for i in range(np.shape(x_nore)[0]):
