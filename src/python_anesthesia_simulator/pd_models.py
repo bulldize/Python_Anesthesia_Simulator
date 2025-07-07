@@ -22,18 +22,29 @@ class BIS_model:
     .. math:: U = \frac{C_{p,es}}{C_{p,50}}
 
     If the interaction with remifentanil is considered the equation represents a Surface Response model, where:
-
+        
+    Minto-type surface model
     .. math:: U = \frac{U_p + U_r}{1 - \beta \theta + \beta \theta^2}
     .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
     .. math:: \theta = \frac{U_p}{U_r+U_p}
-
+    
+    Greco-type surface model
+    .. math:: U = U_p + U_r + \beta U_p U_r
+    
     Parameters
     ----------
     hill_model : str, optional
-        'Bouillon' [Bouillon2004], considers the synergistic effect of remifentanil.
         'Vanluchene' [Vanluchene2004], do not consider the synergistic effect of remifentanil.
         'Eleveld' [Eleveld2018], do not consider the synergistic effect of remifentanil.
+        Minto-type surface model
+        'Bouillon' [Bouillon2004], considers the synergistic effect of remifentanil.
+        Greco-type surface model
+        'Fuentes' [Fuentes2018], considers the synergistic effect of remifentanil.
+        'Kern' [Kern2004], considers the synergistic effect of remifentanil.
+        'Mertens' [Mertens2003], considers the synergistic effect of remifentanil.
+        'Johnson' [Johnson2008], considers the synergistic effect of remifentanil.
+        
         Ignored if hill_param is specified.
         Default is 'Bouillon'.
     hill_param : list, optional
@@ -72,10 +83,14 @@ class BIS_model:
     c50p_init : float
         Initial value of c50p, used for blood loss modelling.
     hill_model : str
-        'Bouillon' [Bouillon2004], considers the synergistic effect of remifentanil.
         'Vanluchene' [Vanluchene2004], do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018], do not consider the synergistic effect of remifentanil.    
-
+        'Eleveld' [Eleveld2018], do not consider the synergistic effect of remifentanil.
+        'Bouillon' [Bouillon2004], considers the synergistic effect of remifentanil (Minto-type).
+        'Fuentes' [Fuentes2018], considers the synergistic effect of remifentanil (Greco-type).
+        'Kern' [Kern2004], considers the synergistic effect of remifentanil (Greco-type).
+        'Mertens' [Mertens2003], considers the synergistic effect of remifentanil (Greco-type).
+        'Johnson' [Johnson2008], considers the synergistic effect of remifentanil (Greco-type).
+        'Yumuk' [Yumuk2024], considers the synergistic effect of remifentanil (Greco-type).
     References
     ----------
     .. [Bouillon2004]  T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
@@ -88,7 +103,21 @@ class BIS_model:
             doi: 10.1097/00000542-200407000-00008.
     .. [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
             “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
-            British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018.        
+            British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018. 
+    .. [Fuentes2018]  Fuentes, Ricardo, et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
+            electroencephalographic interaction with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 
+            1078-1086. doi: 10.1111/pan.13486 
+    .. [Kern2004]  Kern, Steven E., et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+            interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
+    .. [Mertens2003]  Mertens, Martijn J., et al. "Propofol reduces perioperative remifentanil requirements 
+            in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
+            Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
+     .. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
+             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
+             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
+     .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+             for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
+             doi: 10.1016/j.jprocont.2024.103243
 
     """
 
@@ -112,78 +141,129 @@ class BIS_model:
             self.beta = hill_param[3]
             self.E0 = hill_param[4]
             self.Emax = hill_param[5]
-
+            
+        # Minto-type surface model parameters
         elif self.hill_model == 'Bouillon':
             # See [Bouillon2004] T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
             # Regarding Hypnosis, Tolerance of Laryngoscopy, Bispectral Index, and Electroencephalographic
             # Approximate Entropy,” Anesthesiology, vol. 100, no. 6, pp. 1353–1372, Jun. 2004,
             # doi: 10.1097/00000542-200406000-00006.
 
-            self.c50p = 4.47
-            self.c50r = 19.3
-            self.gamma = 1.43
-            self.beta = 0
-            self.E0 = 97.4
-            self.Emax = self.E0
-
-            # coefficient of variation
-            cv_c50p = 0.182
-            cv_c50r = 0.888
-            cv_gamma = 0.304
-            cv_beta = 0
-            cv_E0 = 0
-            cv_Emax = 0
+            # model parameters and their coefficient of variation
+            self.c50p = 4.47;       cv_c50p = 0.182
+            self.c50r = 19.3;       cv_c50r = 0.888    
+            self.gamma = 1.43;      cv_gamma = 0.304
+            self.beta = 0;          cv_beta = 0
+            self.E0 = 97.4;         cv_E0 = 0
+            self.Emax = self.E0;    cv_Emax = 0 
 
         elif self.hill_model == 'Vanluchene':
             # See [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
             # of anesthetic drug effect: a comparison with bispectral index and processed midlatency auditory evoked
             # response,” Anesthesiology, vol. 101, no. 1, pp. 34–42, Jul. 2004,
             # doi: 10.1097/00000542-200407000-00008.
-
-            self.c50p = 4.92
-            self.c50r = 0
-            self.gamma = 2.69
-            self.beta = 0
-            self.E0 = 95.9
-            self.Emax = 87.5
-
-            # coefficient of variation
-            cv_c50p = 0.34
-            cv_c50r = 0
-            cv_gamma = 0.32
-            cv_beta = 0
-            cv_E0 = 0.04
-            cv_Emax = 0.11
-
+            
+            # model parameters and their coefficient of variation
+            self.c50p = 4.92;       cv_c50p = 0.34       
+            self.c50r = 0;          cv_c50r = 0
+            self.gamma = 2.69;      cv_gamma = 0.32
+            self.beta = 0;          cv_beta = 0
+            self.E0 = 95.9;         cv_E0 = 0.04
+            self.Emax = 87.5;       cv_Emax = 0.11
+            
         elif self.hill_model == 'Eleveld':
-            # [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
-            # “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
-            # British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018.
+           # [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
+           # “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
+           # British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018.
+           
+           age = kwargs.get('age', -1)
+           if age < 0:
+               raise ValueError("Age is missing for the Eleveld PD model for propofol.")
+               
+           # reference patient
+           AGE_ref = 35
+           
+           # function used in the model
+           def faging(x): return np.exp(x * (age - AGE_ref))
 
-            age = kwargs.get('age', -1)
-            if age < 0:
-                raise ValueError("Age is missing for the Eleveld PD model for propofol.")
-
-            # reference patient
-            AGE_ref = 35
-
-            # function used in the model
-            def faging(x): return np.exp(x * (age - AGE_ref))
-
-            self.c50p = 3.08*faging(-0.00635)
-            self.c50r = 0
-            self.gamma = 1.89
-            self.beta = 0
-            self.E0 = 93
-            self.Emax = self.E0
-
-            # coefficient of variation
-            cv_c50p = 0.523
-            cv_c50r = 0
-            cv_gamma = 0
-            cv_beta = 0
-            cv_E0 = 0
-            cv_Emax = 0
+         # model parameters and their coefficient of variation
+           self.c50p = 3.08*faging(-0.00635);   cv_c50p = 0.523
+           self.c50r = 0;                       cv_c50r = 0
+           self.gamma = 1.89;                   cv_gamma = 0
+           self.beta = 0;                       cv_beta = 0
+           self.E0 = 93;                        cv_E0 = 0
+           self.Emax = self.E0;                 cv_Emax = 0
+        
+        # Greco-type surface model parameters
+        elif self.hill_model == 'Fuentes':
+            # See [Fuentes2018]  Fuentes, Ricardo, et al. 
+            #"Propofol pharmacokinetic and pharmacodynamic profile and its electroencephalographic interaction 
+            # with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 1078-1086.
+            # doi: 10.1111/pan.13486
+            
+            # model parameters and their coefficient of variation
+            self.c50p = 2.99;           cv_c50p = 0.354       
+            self.c50r = 21;             cv_c50r = 0
+            self.gamma = 2.69;          cv_gamma = 0.445
+            self.beta = 0;              cv_beta = 0
+            self.E0 = 94;               cv_E0 = 0.05
+            self.Emax = 94*0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
+            
+        elif self.hill_model == 'Kern':
+            # See [Kern2004]  Kern, Steven E., et al. 
+            # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers." 
+            # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
+            
+            # model parameters and their coefficient of variation
+            self.c50p = 1.80;           cv_c50p = 0.06/1.80       
+            self.c50r = 12.5;           cv_c50r = 0.53/12.5
+            self.gamma = 3.76;          cv_gamma = 0
+            self.beta = 5.1;            cv_beta = 0
+            self.E0 = 100;              cv_E0 = 0
+            self.Emax = self.E0;        cv_Emax = 0
+            
+        elif self.hill_model == 'Mertens':
+            # See [Mertens2003]  Mertens, Martijn J., et al. 
+            # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface 
+            # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359. 
+            # doi : 10.1097/00000542-200308000-00016
+            
+            # model parameters and their coefficient of variation
+            self.c50p = 2.92;           cv_c50p = 0.51/2.92      
+            self.c50r = 5.15;           cv_c50r = 2.80/5.15
+            self.gamma = 3.88;          cv_gamma = 1.09/3.88
+            self.beta = 0;              cv_beta = 0
+            self.E0 = 100;              cv_E0 = 0
+            self.Emax = self.E0;        cv_Emax = 0
+            
+            
+        elif self.hill_model == 'Johnson':
+            # See [Johnson2008] Johnson, Ken B., et al. 
+            # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus, 
+            # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471. 
+            # doi : 10.1213/ane.0b013e3181606c62
+            
+            # model parameters and their coefficient of variation
+            self.c50p = 2.20;           cv_c50p = 0     
+            self.c50r = 33.1;           cv_c50r = 0
+            self.gamma = 5.00;          cv_gamma = 0
+            self.beta = 3.60;           cv_beta = 0
+            self.E0 = 100;              cv_E0 = 0
+            self.Emax = self.E0;        cv_Emax = 0     
+            
+        elif self.hill_model == 'Yumuk':
+            # See [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+            # for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
+            # doi: 10.1016/j.jprocont.2024.103243
+            
+            # model parameters and their coefficient of variation
+            self.c50p = 7.66;           cv_c50p = 0.297     
+            self.c50r = 149.62;         cv_c50r = 0.545
+            self.gamma = 4.07;          cv_gamma = 0.448
+            self.beta = 15.03;          cv_beta = 0.539
+            self.E0 = 93.97;            cv_E0 = 0.0112
+            self.Emax = self.E0;        cv_Emax = 0 
+            
 
         if random and hill_param is None:
             # estimation of log normal standard deviation
@@ -230,14 +310,21 @@ class BIS_model:
                 if c_es_propo <= self.c50p:
                     self.gamma = 1.89
                 else:
-                    self.gamma = 1.47
+                    self.gamma = 1.47            
+        elif self.c50r != 0: 
+            if self.hill_model in ['Bouillon', 'Vanluchene', 'Eleveld']:
+                up = c_es_propo / self.c50p
+                ur = c_es_remi / self.c50r
+                Phi = up/(up + ur + 1e-6)
+                U_50 = 1 - self.beta * (Phi - Phi**2)
+                interaction = (up + ur)/U_50
+                
+            else:
+                # Use Greco-style interaction model
+                up = c_es_propo / self.c50p
+                ur = c_es_remi / self.c50r
+                interaction = up + ur + self.beta * up * ur
 
-        elif self.c50r != 0:
-            up = c_es_propo / self.c50p
-            ur = c_es_remi / self.c50r
-            Phi = up/(up + ur + 1e-6)
-            U_50 = 1 - self.beta * (Phi - Phi**2)
-            interaction = (up + ur)/U_50
 
         bis = self.E0 - self.Emax * interaction ** self.gamma / (1 + interaction ** self.gamma)
 
@@ -283,6 +370,11 @@ class BIS_model:
 
         """
 
+        # Special case : no drug effect
+        if np.isclose(BIS, self.E0, atol=1e-6):
+            return 0.0
+        
+        # Propofol-only model   
         if self.c50r == 0:
             # If the Eleveld model is selected select the slope according to
             # the value of the BIS. Ce50 is the value at which 50% of the Emax
@@ -295,7 +387,13 @@ class BIS_model:
 
             cep = self.c50p * ((self.E0-BIS)/(self.Emax-self.E0+BIS))**(1/self.gamma)
 
-        elif self.c50r != 0:
+            return cep
+
+        # Propofol-remifentanil    
+        temp = (max(0, self.E0-BIS)/(self.Emax-self.E0+BIS))**(1/self.gamma)
+        Yr = c_es_remi / self.c50r
+        # Minto type inversion   
+        if self.hill_model in ['Bouillon', 'Vanluchene', 'Eleveld']:
             temp = (max(0, self.E0-BIS)/(self.Emax-self.E0+BIS))**(1/self.gamma)
             Yr = c_es_remi / self.c50r
             b = 3*Yr - temp
@@ -303,17 +401,26 @@ class BIS_model:
             d = Yr**3 - Yr**2*temp
 
             p = np.poly1d([1, b, c, d])
+            cep = np.nan
 
             real_root = 0
             try:
                 for el in np.roots(p):
                     if np.real(el) == el and np.real(el) > 0:
                         real_root = np.real(el)
+                        cep = real_root*self.c50p
                         break
-                cep = real_root*self.c50p
             except Exception as e:
                 print(f'bug: {e}')
-
+                cep = np.nan
+        # Greco type inversion          
+        else:
+           try:
+               numerator = temp - Yr
+               denominator = 1 + self.beta * Yr
+               cep = self.c50p * (numerator / denominator) if denominator != 0 else np.nan
+           except Exception as e:
+               print(f'bug: {e}')
         return cep
 
     def plot_surface(self):
