@@ -150,7 +150,15 @@ An illustration of this model is given below:
 
    Mechanically based pharmacodynamic model for haemodynamic effects, figure from Su2023_.
 
-The Norepinephrine effect ahve not been yet included in this dynamical model. However, it exists direct pharmacodynamic models, linking the blood concentration of norepinephrine to the increase of MAP ([Beloeil2005_], [Oualha2014_]) using a sigmoid function. As it is known that norepinephrine has a direct effect on TPR, we considered that the norepinephrine affect MAP through TPR to reach the effect identified in the literature. To be explicite, when doing the simulation with norepinephrine, two different system are simulated: one with olny the effect of propofol and remifentanil, and one with the effect of norepinephrine. The difference between the two is that the dynamic of TPR is modified to reach the desired MAP. Particularly:
+For identification of the model, the stroke volume has been approximated using the relation :math:`PP(t) = SV(t)/1.5` where PP stand for pulse pressure and is given by substracting the diastolic aretrial pressure (DAP) to the systolic arterial pressure (SAP). Those two value respectively represent the minimum and maximum of the artrial pressure value over a cardiac cycle. In addition, the relation to link MAP, DAP and SAP is given by :math:`MAP(t) = (2 \cdot DAP(t)+SAP(t))/3`, thus SAP, and DAP can be computed using the following formula:
+
+.. math::
+    \begin{align}
+    DAP(t) &= MAP(t) - \frac{2}{9} SV(t)\\
+    SAP(t) &= MAP(t) + \frac{4}{9} SV(t)
+    \end{align}
+
+The Norepinephrine effect have not been yet included in this dynamical model. However, it exists direct pharmacodynamic models, linking the blood concentration of norepinephrine to the increase of MAP ([Beloeil2005_], [Oualha2014_]) using a sigmoid function. As it is known that norepinephrine has a direct effect on TPR, we considered that the norepinephrine affect MAP through TPR to reach the effect identified in the literature. To be explicite, when doing the simulation with norepinephrine, two different system are simulated: one with olny the effect of propofol and remifentanil, and one with the effect of norepinephrine. The difference between the two is that the dynamic of TPR is modified to reach the desired MAP. Particularly:
 
 .. math::
   MAP_{wanted}(t) = MAP_{no\_nore}(t) + norepinephrine\_effect(t)

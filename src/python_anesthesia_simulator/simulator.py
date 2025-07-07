@@ -637,6 +637,7 @@ class Patient:
         self.Time = 0
         column_names = ['Time',  # time
                         'BIS', 'TOL', 'MAP', 'CO',  # outputs
+                        'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore',  # inputs
                         'blood_volume']  # nore concentration and blood volume
         propo_state_names = [f'x_propo_{i+1}' for i in range(len(self.propo_pk.x))]
@@ -648,10 +649,12 @@ class Patient:
     def save_data(self, inputs: list = [0, 0, 0]):
         r"""Save all current internal variables as a new line in self.dataframe."""
         # store data
-
+        dap = self.map - 2/9*self.sv
+        sap = self.map + 4/9*self.sv
         new_line = {'Time': self.Time,
                     'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
+                    'SAP': sap, 'DAP': dap,
                     'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2],  # inputs
                     'blood_volume': self.blood_volume}  # blood volume
 
@@ -743,10 +746,12 @@ class Patient:
         co = y[:, 4]
 
         # save data
+        dap = map - 2/9*sv
+        sap = map + 4/9*sv
         df = pd.DataFrame({
             'Time': np.arange(0, len(u_propo)*self.ts, self.ts),
             'BIS': bis, 'TOL': tol, 'TPR': tpr, 'SV': sv,
-            'HR': hr, 'MAP': map, 'CO': co,
+            'HR': hr, 'MAP': map, 'CO': co, 'DAP': dap, 'SAP': sap,
             'u_propo': u_propo, 'u_remi': u_remi, 'u_nore': u_nore
         })
 
