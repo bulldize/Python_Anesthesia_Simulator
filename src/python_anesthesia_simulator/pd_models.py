@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 
 
-def fsig(x, c50, gam): return x**gam/(c50**gam + x**gam)  # quick definition of sigmoidal function
+def fsig(x, c50, gam): return x**gam / (c50**gam + x**gam)  # quick definition of sigmoidal function
 
 
 class BIS_model:
@@ -22,16 +22,16 @@ class BIS_model:
     .. math:: U = \frac{C_{p,es}}{C_{p,50}}
 
     If the interaction with remifentanil is considered the equation represents a Surface Response model, where:
-        
+
     Minto-type surface model
     .. math:: U = \frac{U_p + U_r}{1 - \beta \theta + \beta \theta^2}
     .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
     .. math:: \theta = \frac{U_p}{U_r+U_p}
-    
+
     Greco-type surface model
     .. math:: U = U_p + U_r + \beta U_p U_r
-    
+
     Parameters
     ----------
     hill_model : str, optional
@@ -44,7 +44,7 @@ class BIS_model:
         'Kern' [Kern2004], considers the synergistic effect of remifentanil.
         'Mertens' [Mertens2003], considers the synergistic effect of remifentanil.
         'Johnson' [Johnson2008], considers the synergistic effect of remifentanil.
-        
+
         Ignored if hill_param is specified.
         Default is 'Bouillon'.
     hill_param : list, optional
@@ -141,7 +141,7 @@ class BIS_model:
             self.beta = hill_param[3]
             self.E0 = hill_param[4]
             self.Emax = hill_param[5]
-            
+
         # Minto-type surface model parameters
         elif self.hill_model == 'Bouillon':
             # See [Bouillon2004] T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
@@ -151,128 +151,126 @@ class BIS_model:
 
             # model parameters and their coefficient of variation
             self.c50p = 4.47;       cv_c50p = 0.182
-            self.c50r = 19.3;       cv_c50r = 0.888    
+            self.c50r = 19.3;       cv_c50r = 0.888
             self.gamma = 1.43;      cv_gamma = 0.304
             self.beta = 0;          cv_beta = 0
             self.E0 = 97.4;         cv_E0 = 0
-            self.Emax = self.E0;    cv_Emax = 0 
+            self.Emax = self.E0;    cv_Emax = 0
 
         elif self.hill_model == 'Vanluchene':
             # See [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
             # of anesthetic drug effect: a comparison with bispectral index and processed midlatency auditory evoked
             # response,” Anesthesiology, vol. 101, no. 1, pp. 34–42, Jul. 2004,
             # doi: 10.1097/00000542-200407000-00008.
-            
+
             # model parameters and their coefficient of variation
-            self.c50p = 4.92;       cv_c50p = 0.34       
+            self.c50p = 4.92;       cv_c50p = 0.34
             self.c50r = 0;          cv_c50r = 0
             self.gamma = 2.69;      cv_gamma = 0.32
             self.beta = 0;          cv_beta = 0
             self.E0 = 95.9;         cv_E0 = 0.04
             self.Emax = 87.5;       cv_Emax = 0.11
-            
-        elif self.hill_model == 'Eleveld':
-           # [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
-           # “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
-           # British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018.
-           
-           age = kwargs.get('age', -1)
-           if age < 0:
-               raise ValueError("Age is missing for the Eleveld PD model for propofol.")
-               
-           # reference patient
-           AGE_ref = 35
-           
-           # function used in the model
-           def faging(x): return np.exp(x * (age - AGE_ref))
 
-         # model parameters and their coefficient of variation
-           self.c50p = 3.08*faging(-0.00635);   cv_c50p = 0.523
-           self.c50r = 0;                       cv_c50r = 0
-           self.gamma = 1.89;                   cv_gamma = 0
-           self.beta = 0;                       cv_beta = 0
-           self.E0 = 93;                        cv_E0 = 0
-           self.Emax = self.E0;                 cv_Emax = 0
-        
+        elif self.hill_model == 'Eleveld':
+            # [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
+            # “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
+            # British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018.
+
+            age = kwargs.get('age', -1)
+            if age < 0:
+                raise ValueError("Age is missing for the Eleveld PD model for propofol.")
+
+            # reference patient
+            AGE_ref = 35
+
+            # function used in the model
+            def faging(x): return np.exp(x * (age - AGE_ref))
+
+          # model parameters and their coefficient of variation
+            self.c50p = 3.08 * faging(-0.00635);   cv_c50p = 0.523
+            self.c50r = 0;                       cv_c50r = 0
+            self.gamma = 1.89;                   cv_gamma = 0
+            self.beta = 0;                       cv_beta = 0
+            self.E0 = 93;                        cv_E0 = 0
+            self.Emax = self.E0;                 cv_Emax = 0
+
         # Greco-type surface model parameters
         elif self.hill_model == 'Fuentes':
-            # See [Fuentes2018]  Fuentes, Ricardo, et al. 
-            #"Propofol pharmacokinetic and pharmacodynamic profile and its electroencephalographic interaction 
+            # See [Fuentes2018]  Fuentes, Ricardo, et al.
+            # "Propofol pharmacokinetic and pharmacodynamic profile and its electroencephalographic interaction
             # with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 1078-1086.
             # doi: 10.1111/pan.13486
-            
+
             # model parameters and their coefficient of variation
-            self.c50p = 2.99;           cv_c50p = 0.354       
+            self.c50p = 2.99;           cv_c50p = 0.354
             self.c50r = 21;             cv_c50r = 0
             self.gamma = 2.69;          cv_gamma = 0.445
             self.beta = 0;              cv_beta = 0
             self.E0 = 94;               cv_E0 = 0.05
-            self.Emax = 94*0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
-            
+            self.Emax = 94 * 0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
+
         elif self.hill_model == 'Kern':
-            # See [Kern2004]  Kern, Steven E., et al. 
-            # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers." 
+            # See [Kern2004]  Kern, Steven E., et al.
+            # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers."
             # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-            
+
             # model parameters and their coefficient of variation
-            self.c50p = 1.80;           cv_c50p = 0.06/1.80       
-            self.c50r = 12.5;           cv_c50r = 0.53/12.5
+            self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
+            self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
             self.gamma = 3.76;          cv_gamma = 0
             self.beta = 5.1;            cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
-            
+
         elif self.hill_model == 'Mertens':
-            # See [Mertens2003]  Mertens, Martijn J., et al. 
-            # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface 
-            # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359. 
+            # See [Mertens2003]  Mertens, Martijn J., et al.
+            # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface
+            # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359.
             # doi : 10.1097/00000542-200308000-00016
-            
+
             # model parameters and their coefficient of variation
-            self.c50p = 2.92;           cv_c50p = 0.51/2.92      
-            self.c50r = 5.15;           cv_c50r = 2.80/5.15
-            self.gamma = 3.88;          cv_gamma = 1.09/3.88
+            self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
+            self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
+            self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
             self.beta = 0;              cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
-            
-            
+
         elif self.hill_model == 'Johnson':
-            # See [Johnson2008] Johnson, Ken B., et al. 
-            # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus, 
-            # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471. 
+            # See [Johnson2008] Johnson, Ken B., et al.
+            # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus,
+            # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471.
             # doi : 10.1213/ane.0b013e3181606c62
-            
+
             # model parameters and their coefficient of variation
-            self.c50p = 2.20;           cv_c50p = 0     
+            self.c50p = 2.20;           cv_c50p = 0
             self.c50r = 33.1;           cv_c50r = 0
             self.gamma = 5.00;          cv_gamma = 0
             self.beta = 3.60;           cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
-            self.Emax = self.E0;        cv_Emax = 0     
-            
+            self.Emax = self.E0;        cv_Emax = 0
+
         elif self.hill_model == 'Yumuk':
-            # See [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+            # See [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models
             # for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
             # doi: 10.1016/j.jprocont.2024.103243
-            
+
             # model parameters and their coefficient of variation
-            self.c50p = 7.66;           cv_c50p = 0.297     
+            self.c50p = 7.66;           cv_c50p = 0.297
             self.c50r = 149.62;         cv_c50r = 0.545
             self.gamma = 4.07;          cv_gamma = 0.448
             self.beta = 15.03;          cv_beta = 0.539
             self.E0 = 93.97;            cv_E0 = 0.0112
-            self.Emax = self.E0;        cv_Emax = 0 
-            
+            self.Emax = self.E0;        cv_Emax = 0
 
         if random and hill_param is None:
             # estimation of log normal standard deviation
-            w_c50p = np.sqrt(np.log(1+cv_c50p**2))
-            w_c50r = np.sqrt(np.log(1+cv_c50r**2))
-            w_gamma = np.sqrt(np.log(1+cv_gamma**2))
-            w_beta = np.sqrt(np.log(1+cv_beta**2))
-            w_E0 = np.sqrt(np.log(1+cv_E0**2))
-            w_Emax = np.sqrt(np.log(1+cv_Emax**2))
+            w_c50p = np.sqrt(np.log(1 + cv_c50p**2))
+            w_c50r = np.sqrt(np.log(1 + cv_c50r**2))
+            w_gamma = np.sqrt(np.log(1 + cv_gamma**2))
+            w_beta = np.sqrt(np.log(1 + cv_beta**2))
+            w_E0 = np.sqrt(np.log(1 + cv_E0**2))
+            w_Emax = np.sqrt(np.log(1 + cv_Emax**2))
 
         if random and hill_param is None:
             self.c50p *= np.exp(np.random.normal(scale=w_c50p))
@@ -310,21 +308,20 @@ class BIS_model:
                 if c_es_propo <= self.c50p:
                     self.gamma = 1.89
                 else:
-                    self.gamma = 1.47            
-        elif self.c50r != 0: 
+                    self.gamma = 1.47
+        elif self.c50r != 0:
             if self.hill_model in ['Bouillon', 'Vanluchene', 'Eleveld']:
                 up = c_es_propo / self.c50p
                 ur = c_es_remi / self.c50r
-                Phi = up/(up + ur + 1e-6)
+                Phi = up / (up + ur + 1e-6)
                 U_50 = 1 - self.beta * (Phi - Phi**2)
-                interaction = (up + ur)/U_50
-                
+                interaction = (up + ur) / U_50
+
             else:
                 # Use Greco-style interaction model
                 up = c_es_propo / self.c50p
                 ur = c_es_remi / self.c50r
                 interaction = up + ur + self.beta * up * ur
-
 
         bis = self.E0 - self.Emax * interaction ** self.gamma / (1 + interaction ** self.gamma)
 
@@ -351,7 +348,7 @@ class BIS_model:
                 doi: 10.1097/00000542-200308000-00023.
 
         """
-        self.c50p = self.c50p_init - 3/0.5*(1-v_ratio)
+        self.c50p = self.c50p_init - 3 / 0.5 * (1 - v_ratio)
 
     def inverse_hill(self, BIS: float, c_es_remi: Optional[float] = 0) -> float:
         """Compute Propofol effect site concentration from BIS (and optionally Remifentanil effect site concentration if the BIS model chosen takes into acount interaction) .
@@ -373,32 +370,32 @@ class BIS_model:
         # Special case : no drug effect
         if np.isclose(BIS, self.E0, atol=1e-6):
             return 0.0
-        
-        # Propofol-only model   
+
+        # Propofol-only model
         if self.c50r == 0:
             # If the Eleveld model is selected select the slope according to
             # the value of the BIS. Ce50 is the value at which 50% of the Emax
             # is reached. So I check this condition on the BIS.
             if self.hill_model == 'Eleveld':
-                if BIS >= (self.E0-(self.Emax/2)):
+                if BIS >= (self.E0 - (self.Emax / 2)):
                     self.gamma = 1.89
                 else:
                     self.gamma = 1.47
 
-            cep = self.c50p * ((self.E0-BIS)/(self.Emax-self.E0+BIS))**(1/self.gamma)
+            cep = self.c50p * ((self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / self.gamma)
 
             return cep
 
-        # Propofol-remifentanil    
-        temp = (max(0, self.E0-BIS)/(self.Emax-self.E0+BIS))**(1/self.gamma)
+        # Propofol-remifentanil
+        temp = (max(0, self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / self.gamma)
         Yr = c_es_remi / self.c50r
-        # Minto type inversion   
+        # Minto type inversion
         if self.hill_model in ['Bouillon', 'Vanluchene', 'Eleveld']:
-            temp = (max(0, self.E0-BIS)/(self.Emax-self.E0+BIS))**(1/self.gamma)
+            temp = (max(0, self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / self.gamma)
             Yr = c_es_remi / self.c50r
-            b = 3*Yr - temp
-            c = 3*Yr**2 - (2 - self.beta) * Yr * temp
-            d = Yr**3 - Yr**2*temp
+            b = 3 * Yr - temp
+            c = 3 * Yr**2 - (2 - self.beta) * Yr * temp
+            d = Yr**3 - Yr**2 * temp
 
             p = np.poly1d([1, b, c, d])
             cep = np.nan
@@ -408,19 +405,19 @@ class BIS_model:
                 for el in np.roots(p):
                     if np.real(el) == el and np.real(el) > 0:
                         real_root = np.real(el)
-                        cep = real_root*self.c50p
+                        cep = real_root * self.c50p
                         break
             except Exception as e:
                 print(f'bug: {e}')
                 cep = np.nan
-        # Greco type inversion          
+        # Greco type inversion
         else:
-           try:
-               numerator = temp - Yr
-               denominator = 1 + self.beta * Yr
-               cep = self.c50p * (numerator / denominator) if denominator != 0 else np.nan
-           except Exception as e:
-               print(f'bug: {e}')
+            try:
+                numerator = temp - Yr
+                denominator = 1 + self.beta * Yr
+                cep = self.c50p * (numerator / denominator) if denominator != 0 else np.nan
+            except Exception as e:
+                print(f'bug: {e}')
         return cep
 
     def plot_surface(self):
@@ -433,7 +430,7 @@ class BIS_model:
                 i = 0
                 for value in cep:
                     bis[i] = self.compute_bis(value)
-                    i = i+1
+                    i = i + 1
             else:
                 bis = self.compute_bis(cep)
             plt.figure()
@@ -525,11 +522,11 @@ class TOL_model():
             cv_gamma_p = 0.9
             cv_gamma_r = 0.23
             cv_pre_intensity = 0
-            w_c50p = np.sqrt(np.log(1+cv_c50p**2))
-            w_c50r = np.sqrt(np.log(1+cv_c50r**2))
-            w_gamma_p = np.sqrt(np.log(1+cv_gamma_p**2))
-            w_gamma_r = np.sqrt(np.log(1+cv_gamma_r**2))
-            w_pre_intensity = np.sqrt(np.log(1+cv_pre_intensity**2))
+            w_c50p = np.sqrt(np.log(1 + cv_c50p**2))
+            w_c50r = np.sqrt(np.log(1 + cv_c50r**2))
+            w_gamma_p = np.sqrt(np.log(1 + cv_gamma_p**2))
+            w_gamma_r = np.sqrt(np.log(1 + cv_gamma_r**2))
+            w_pre_intensity = np.sqrt(np.log(1 + cv_pre_intensity**2))
 
         if random and model_param is None:
             self.c50p *= np.exp(np.random.normal(scale=w_c50p))
@@ -558,8 +555,8 @@ class TOL_model():
             TOL value.
 
         """
-        post_opioid = self.pre_intensity * (1 - fsig(c_es_remi, self.c50r*self.pre_intensity, self.gamma_r))
-        tol = fsig(c_es_propo, self.c50p*post_opioid, self.gamma_p)
+        post_opioid = self.pre_intensity * (1 - fsig(c_es_remi, self.c50r * self.pre_intensity, self.gamma_r))
+        tol = fsig(c_es_propo, self.c50p * post_opioid, self.gamma_p)
         return tol
 
     def plot_surface(self):
@@ -764,8 +761,8 @@ class Hemo_simple_PD_model():
             w_emax_propo_DAP = 0.207
             w_c50_propo_map_1 = 0.165
             w_c50_propo_map_2 = 0.148
-            w_gamma_propo_map_1 = np.sqrt(np.log(1+5.59**2))
-            w_gamma_propo_map_2 = np.sqrt(np.log(1+6.33**2))
+            w_gamma_propo_map_1 = np.sqrt(np.log(1 + 5.59**2))
+            w_gamma_propo_map_2 = np.sqrt(np.log(1 + 6.33**2))
 
             # see J. E. Fairfield, A. Dritsas, and R. J. Beale,
             # “HAEMODYNAMIC EFFECTS OF PROPOFOL: INDUCTION WITH 2.5 MG KG−1,”
@@ -892,15 +889,16 @@ class Hemo_simple_PD_model():
 
         """
         map_nore = self.emax_nore_map * fsig(c_es_nore, self.c50_nore_map, self.gamma_nore_map)
-        u_propo = ((c_es_propo[0]/self.c50_propo_map_1)**self.gamma_propo_map_1 +
-                   (c_es_propo[1]/self.c50_propo_map_2)**self.gamma_propo_map_2)
-        map_propo = - (self.emax_propo_DAP + (self.emax_propo_SAP + self.emax_propo_DAP) / 3) * u_propo/(1+u_propo)
+        u_propo = ((c_es_propo[0] / self.c50_propo_map_1)**self.gamma_propo_map_1 +
+                   (c_es_propo[1] / self.c50_propo_map_2)**self.gamma_propo_map_2)
+        map_propo = - (self.emax_propo_DAP + (self.emax_propo_SAP + self.emax_propo_DAP) / 3) * u_propo / (1 + u_propo)
         map_remi = self.emax_remi_map * fsig(c_es_remi, self.c50_remi_map, self.gamma_remi_map)
 
         self.map = self.map_base + map_nore + map_propo + map_remi
 
         co_nore = self.emax_nore_co * fsig(c_es_nore, self.c50_nore_co, self.gamma_nore_co)
-        co_propo = self.emax_propo_co * fsig((c_es_propo[0] + c_es_propo[1])/2, self.c50_propo_co, self.gamma_propo_co)
+        co_propo = self.emax_propo_co * \
+            fsig((c_es_propo[0] + c_es_propo[1]) / 2, self.c50_propo_co, self.gamma_propo_co)
         co_remi = self.emax_remi_co * fsig(c_es_remi, self.c50_remi_co, self.gamma_remi_co)
 
         self.co = self.co_base + co_nore + co_propo + co_remi
@@ -1027,7 +1025,7 @@ class Hemo_meca_PD_model:
             self.emax_remi_tpr = -1
             self.sl_remi_hr = 0.0327  # (ng/ml)
             self.sl_remi_sv = 0.0581  # (ng/ml)
-            self.int_hr = -0.0119  # (ng/ml)
+            self.int_hr = -0.119  # (ng/ml)
             self.c50_int_hr = 0.20  # (µg/ml)
             self.int_tpr = 1
             self.int_sv = -0.212  # (ng/ml)
@@ -1035,7 +1033,7 @@ class Hemo_meca_PD_model:
             if hr_base is not None:
                 self.hr_base = hr_base / (1 + self.ltde_hr)
                 self.sv_base = sv_base / (1 + self.ltde_sv)
-                self.tpr_base = map_base/(hr_base * sv_base)
+                self.tpr_base = map_base / (hr_base * sv_base)
                 self.k_in_tpr = self.k_out * self.tpr_base
                 self.k_in_sv = self.k_out * self.sv_base
                 self.k_in_hr = self.k_out * self.hr_base
@@ -1100,16 +1098,16 @@ class Hemo_meca_PD_model:
             self.tpr_base,
             self.sv_base,
             self.hr_base,
-            self.sv_base*self.ltde_sv,
-            self.hr_base*self.ltde_hr,
+            self.sv_base * self.ltde_sv,
+            self.hr_base * self.ltde_hr,
         ])
 
         self.x_effect = np.array([
             self.tpr_base,
             self.sv_base,
             self.hr_base,
-            self.sv_base*self.ltde_sv,
-            self.hr_base*self.ltde_hr,
+            self.sv_base * self.ltde_sv,
+            self.hr_base * self.ltde_hr,
         ])
         self.flag_nore_used = False
         self.flag_blood_loss = False
@@ -1160,21 +1158,21 @@ class Hemo_meca_PD_model:
         dsv = x[1] + x[3]
         dhr = x[2] + x[4]
 
-        a_sv = dsv * (1 - self.hr_sv * np.log(dhr/self.abase_hr))
+        a_sv = dsv * (1 - self.hr_sv * np.log(dhr / self.abase_hr))
         a_map = a_sv * dhr * x[0]
 
-        rmap = a_map/self.base_map
+        rmap = a_map / self.base_map
 
         sv = x[1]
         hr = x[2]
         tpr_dot = self.k_in_tpr * rmap**self.fb * (1 + eff_propo_tpr) - \
-            self.k_out*x[0]*(1 - eff_remi_tpr)
+            self.k_out * x[0] * (1 - eff_remi_tpr)
         if map_wanted > 0:
             tpr_dot += (map_wanted - a_map) * self.k_effect
-        sv_dot_star = self.k_in_sv * rmap**self.fb * (1 + eff_propo_sv) - self.k_out*sv*(1 - eff_remi_sv)
+        sv_dot_star = self.k_in_sv * rmap**self.fb * (1 + eff_propo_sv) - self.k_out * sv * (1 - eff_remi_sv)
         if sv_wanted > 0:
-            sv_dot_star += (sv_wanted - a_sv) * self.k_effect*10000
-        hr_dot_star = self.k_in_hr * rmap**self.fb - self.k_out*hr*(1 - eff_remi_hr)
+            sv_dot_star += (sv_wanted - a_sv) * self.k_effect * 10000
+        hr_dot_star = self.k_in_hr * rmap**self.fb - self.k_out * hr * (1 - eff_remi_hr)
 
         if u[0] > 0:  # apply the time dependant function only if anesthesia as started.
             ltde_sv_dot = -self.k_ltde * x[3]
@@ -1207,7 +1205,7 @@ class Hemo_meca_PD_model:
         tpr = x[0]
         sv = x[1] + x[3]
         hr = x[2] + x[4]
-        sv = sv * (1 - self.hr_sv * np.log(hr/self.abase_hr))
+        sv = sv * (1 - self.hr_sv * np.log(hr / self.abase_hr))
         map = tpr * sv * hr
         co = hr * sv / 1000  # fro mL/min to L/min
         return np.array([tpr, sv, hr, map, co])
@@ -1221,7 +1219,7 @@ class Hemo_meca_PD_model:
             Concentration of Norepinephrine (ng/mL)
         """
 
-        return self.emax_nore_map*fsig(cp_nore, self.c50_nore_map, self.gamma_nore_map)
+        return self.emax_nore_map * fsig(cp_nore, self.c50_nore_map, self.gamma_nore_map)
 
     def one_step(
             self,
@@ -1245,8 +1243,8 @@ class Hemo_meca_PD_model:
         v_ratio : float
             blood volume as a fraction of init volume, 1 mean no loss, 0 mean 100% loss, default is 1.
         """
-        c_propo_sim = (self.previous_cp_propo + cp_propo)/2
-        c_remi_sim = (self.previous_cp_remi + cp_remi)/2
+        c_propo_sim = (self.previous_cp_propo + cp_propo) / 2
+        c_remi_sim = (self.previous_cp_remi + cp_remi) / 2
         # run computation for model without nore effect and without blood loss
         results = solve_ivp(
             self.continuous_dynamic_sys,
@@ -1278,7 +1276,7 @@ class Hemo_meca_PD_model:
             if cp_nore > 0:
                 print("Warning: norepinephrine effect is not computed with blood loss")
             sv_no_blood_loss = self.output_function(self.x)[1]
-            sv_wanted = sv_no_blood_loss*v_ratio
+            sv_wanted = sv_no_blood_loss * v_ratio
             results_blood_loss = solve_ivp(
                 self.continuous_dynamic_sys,
                 t_span=np.array([0, self.ts]),
