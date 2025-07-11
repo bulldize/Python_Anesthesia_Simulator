@@ -186,10 +186,12 @@ class BIS_model:
             # function used in the model
             def faging(x): return np.exp(x * (age - AGE_ref))
 
-          # model parameters and their coefficient of variation
-            self.c50p = 3.08 * faging(-0.00635);   cv_c50p = 0.523
+
+            # model parameters and their coefficient of variation
+            self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
             self.c50r = 0;                       cv_c50r = 0
             self.gamma = 1.89;                   cv_gamma = 0
+            self.gamma_2 = 1.47;                 cv_gamma = 0  # only used if c_propo > c50p
             self.beta = 0;                       cv_beta = 0
             self.E0 = 93;                        cv_E0 = 0
             self.Emax = self.E0;                 cv_Emax = 0
@@ -283,10 +285,11 @@ class BIS_model:
         self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax]
         self.c50p_init = self.c50p  # for blood loss modelling
 
-    def compute_bis(self, c_es_propo: float, c_es_remi: Optional[float] = 0) -> float:
-        """Compute BIS function from Propofol (and optionally Remifentanil) effect site concentration.
-        If the BIS model chosen considers only the effect of propofol the effect site concentration of remifentanil is ignored.
+    def compute_bis(self, c_es_propo, c_es_remi=None):
+        """Compute BIS function from propofol (and optionally remifentanil) effect site concentration.
 
+        If the BIS model chosen considers only the effect of propofol the effect site concentration of remifentanil is ignored.
+        Inputs can be either nd.array or float, the format of the output will be the same as the input
         Parameters
         ----------
         c_es_propo : float
@@ -300,30 +303,42 @@ class BIS_model:
             Bis value.
 
         """
+        vect_input = isinstance(c_es_propo, np.ndarray)
+
+        if c_es_remi is None:
+            if vect_input:
+                c_es_remi = np.zeros_like(c_es_propo)
+            else:
+                c_es_remi = 0
+
+
+        up = c_es_propo / self.c50p
+        if self.hill_model == 'Eleveld':
+            if vect_input:
+                gamma = np.where(c_es_propo <= self.c50p, self.gamma, self.gamma_2)
+            else:
+                gamma = self.gamma if c_es_propo <= self.c50p else self.gamma_2
+            interaction = up
+        else:
+            gamma = self.gamma
+
 
         if self.c50r == 0:
-            interaction = c_es_propo / self.c50p
+            interaction = up
+        elif self.hill_model in ['Bouillon']:
+            up = c_es_propo / self.c50p
+            ur = c_es_remi / self.c50r
+            Phi = up / (up + ur + 1e-6)
+            U_50 = 1 - self.beta * (Phi - Phi**2)
+            interaction = (up + ur) / U_50
+        else:
+            # Use Greco-style interaction model
+            up = c_es_propo / self.c50p
+            ur = c_es_remi / self.c50r
+            interaction = up + ur + self.beta * up * ur
 
-            if self.hill_model == 'Eleveld':
-                if c_es_propo <= self.c50p:
-                    self.gamma = 1.89
-                else:
-                    self.gamma = 1.47
-        elif self.c50r != 0:
-            if self.hill_model in ['Bouillon', 'Vanluchene', 'Eleveld']:
-                up = c_es_propo / self.c50p
-                ur = c_es_remi / self.c50r
-                Phi = up / (up + ur + 1e-6)
-                U_50 = 1 - self.beta * (Phi - Phi**2)
-                interaction = (up + ur) / U_50
-
-            else:
-                # Use Greco-style interaction model
-                up = c_es_propo / self.c50p
-                ur = c_es_remi / self.c50r
-                interaction = up + ur + self.beta * up * ur
-
-        bis = self.E0 - self.Emax * interaction ** self.gamma / (1 + interaction ** self.gamma)
+        interaction_gamma = interaction ** gamma
+        bis = self.E0 - self.Emax * interaction_gamma / (1 + interaction_gamma)
 
         return bis
 
@@ -376,13 +391,13 @@ class BIS_model:
             # If the Eleveld model is selected select the slope according to
             # the value of the BIS. Ce50 is the value at which 50% of the Emax
             # is reached. So I check this condition on the BIS.
-            if self.hill_model == 'Eleveld':
-                if BIS >= (self.E0 - (self.Emax / 2)):
-                    self.gamma = 1.89
-                else:
-                    self.gamma = 1.47
 
-            cep = self.c50p * ((self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / self.gamma)
+            if self.hill_model == 'Eleveld' and BIS < (self.E0 - (self.Emax / 2)):
+                gamma = self.gamma_2
+            else:
+                gamma = self.gamma
+            cep = self.c50p * ((self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / gamma)
+
 
             return cep
 

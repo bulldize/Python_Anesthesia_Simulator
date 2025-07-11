@@ -41,7 +41,9 @@ If pharmacokinetics models usually assume no interaction between drugs, pharmaco
 
     BIS(t) = BIS_{0} - E_{max} \frac{I(t)^\gamma}{1 + I(t)^\gamma}
 
-with :math:`BIS_0` the initial BIS, :math:`E_{max}` the maximum effect of combined drugs, :math:`\gamma` the slope coefficient of the Hill curve and :math:`I(t)` the interaction term defined by:
+with :math:`BIS_0` the initial BIS, :math:`E_{max}` the maximum effect of combined drugs, :math:`\gamma` the slope coefficient of the Hill curve and :math:`I(t)` the interaction term can be defined as the following two ways:
+
+(i) Minto-type surface model,
 
 .. math::
 
@@ -57,7 +59,19 @@ where:
 
 In those equations, :math:`x_{ep,BIS}` and :math:`x_{er,BIS}` are the propofol and remifentanil concentrations of the BIS effect site, :math:`C_{50p,BIS}` and :math:`C_{50r,BIS}` are the propofol and remifentanil half-effect concentrations for BIS, and :math:`\beta` is the interaction term between the two drugs.
 
-Few studies have been conducted on the pharmacodynamic part of the anesthesia process, and the models are less standardized. In this simulator, the values of the parameters of the 3D-Hill function are taken from the study of Bouillon2004_. The surface of the 3D-Hill function with the values from the mentioned study is shown in the figure below.
+(ii) Greco-type surface model,
+
+.. math::
+
+    I(t) = I_p(t) + I_r(t) + \beta I_p(t) I_r(t)
+
+Few studies have been conducted on the pharmacodynamic part of the anesthesia process, and the models are less standardized. In this simulator, the values of the parameters of the Minto-type surface model are taken from the study of Bouillon2004_. Additionally, the values of the parameters of the Greco-type surface model are taken from the studies of Fuentes2018_, Kern2004_, Mertens2003_, Johnson2008_, and Yumuk2024_. 
+
+It also exists models that do not take into account the synergistic effect of remifentanil, see Vanluchene2004_ and Eleveld2018_ for instance. In those cases, the interaction coefficient :math:\beta and the half-effect concentration :math:C_{50r} for remifentanil are ignored.
+
+The surface of the 3D-Hill function using parameters from Bouillon2004_ is shown in the figure below.
+
+
 
 .. figure:: ../images/3Dhill.png
    :width: 80%
@@ -293,4 +307,24 @@ References
 .. [Oualha2014] M. Oualha et al., “Population pharmacokinetics and haemodynamic effects of norepinephrine
         in hypotensive critically ill children,” British Journal of Clinical Pharmacology,
         vol. 78, no. 4, pp. 886–897, 2014, doi: https://10.1111/bcp.12412.
-
+.. [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
+        of anesthetic drug effect: a comparison with bispectral index and processed midlatency auditory evoked
+        response,” Anesthesiology, vol. 101, no. 1, pp. 34–42, Jul. 2004,
+        doi: https://doi.org/10.1097/00000542-200407000-00008.
+.. [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
+        “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
+        British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018. 
+.. [Fuentes2018]  Fuentes, Ricardo, et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
+        electroencephalographic interaction with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 
+        1078-1086. doi: https://doi.org/10.1111/pan.13486 
+.. [Kern2004]  Kern, Steven E., et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+        interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : https://doi.org/10.1097/00000542-200406000-00007
+.. [Mertens2003]  Mertens, Martijn J., et al. "Propofol reduces perioperative remifentanil requirements 
+        in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
+        Anesthesiology 99.2 (2003): 347-359. doi : https://doi.org/10.1097/00000542-200308000-00016
+.. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
+        surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
+        analgesia 106.2 (2008): 471. doi : https://doi.org/10.1213/ane.0b013e3181606c62
+.. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+        for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
+        doi: https://doi.org/10.1016/j.jprocont.2024.103243
