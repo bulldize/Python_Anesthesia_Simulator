@@ -186,11 +186,12 @@ class BIS_model:
             # function used in the model
             def faging(x): return np.exp(x * (age - AGE_ref))
 
+
             # model parameters and their coefficient of variation
-            self.c50p = 3.08 * faging(-0.00635);   cv_c50p = 0.523
+            self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
             self.c50r = 0;                       cv_c50r = 0
             self.gamma = 1.89;                   cv_gamma = 0
-            self.gamma_2 = 1.47;                   cv_gamma = 0  # only used if c_propo > c50p
+            self.gamma_2 = 1.47;                 cv_gamma = 0  # only used if c_propo > c50p
             self.beta = 0;                       cv_beta = 0
             self.E0 = 93;                        cv_E0 = 0
             self.Emax = self.E0;                 cv_Emax = 0
@@ -310,8 +311,8 @@ class BIS_model:
             else:
                 c_es_remi = 0
 
-        up = c_es_propo / self.c50p
 
+        up = c_es_propo / self.c50p
         if self.hill_model == 'Eleveld':
             if vect_input:
                 gamma = np.where(c_es_propo <= self.c50p, self.gamma, self.gamma_2)
@@ -320,6 +321,7 @@ class BIS_model:
             interaction = up
         else:
             gamma = self.gamma
+
 
         if self.c50r == 0:
             interaction = up
@@ -389,12 +391,13 @@ class BIS_model:
             # If the Eleveld model is selected select the slope according to
             # the value of the BIS. Ce50 is the value at which 50% of the Emax
             # is reached. So I check this condition on the BIS.
+
             if self.hill_model == 'Eleveld' and BIS < (self.E0 - (self.Emax / 2)):
                 gamma = self.gamma_2
             else:
                 gamma = self.gamma
-
             cep = self.c50p * ((self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / gamma)
+
 
             return cep
 
@@ -1037,7 +1040,7 @@ class Hemo_meca_PD_model:
             self.emax_remi_tpr = -1
             self.sl_remi_hr = 0.0327  # (ng/ml)
             self.sl_remi_sv = 0.0581  # (ng/ml)
-            self.int_hr = -0.0119  # (ng/ml)
+            self.int_hr = -0.119  # (ng/ml)
             self.c50_int_hr = 0.20  # (µg/ml)
             self.int_tpr = 1
             self.int_sv = -0.212  # (ng/ml)
