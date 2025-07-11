@@ -171,7 +171,7 @@ class Patient:
                                         ts=self.ts, model=model_nore, random=random_PK)
 
         # Init PD model for BIS
-        self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD)
+        self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD, age=self.age)
         self.hill_param = self.bis_pd.hill_param
 
         # Init PD model for TOL
@@ -196,9 +196,9 @@ class Patient:
         self.co_noise_std = 0.1
         self.map_noise_std = 5
         xi = 0.2
-        target_peak_fr = 0.03*2*np.pi
-        omega = target_peak_fr/np.sqrt(1-2*xi**2)
-        noise_filter = TransferFunction([0.1, 1], [1/omega**2, 2*xi/omega, 1])
+        target_peak_fr = 0.03 * 2 * np.pi
+        omega = target_peak_fr / np.sqrt(1 - 2 * xi**2)
+        noise_filter = TransferFunction([0.1, 1], [1 / omega**2, 2 * xi / omega, 1])
         self.noise_filter_d = noise_filter.to_discrete(self.ts, method='bilinear')
         white_noise = np.random.normal(0, self.bis_noise_std, 1000)
         _, self.bis_noise = dlsim(self.noise_filter_d, u=white_noise)
@@ -219,7 +219,7 @@ class Patient:
             self.save_data()
 
     def one_step(self, u_propo: float = 0, u_remi: float = 0, u_nore: float = 0,
-                 blood_rate: float = 0, dist: list = [0]*3, noise: bool = True) -> tuple[float, float, float, float]:
+                 blood_rate: float = 0, dist: list = [0] * 3, noise: bool = True) -> tuple[float, float, float, float]:
         r"""
         Simulate one step time of the patient.
 
@@ -253,9 +253,9 @@ class Patient:
         """
         # update PK model with CO
         if self.co_update:
-            self.propo_pk.update_param_CO(self.co/(self.co_base))
-            self.remi_pk.update_param_CO(self.co/(self.co_base))
-            self.nore_pk.update_param_CO(self.co/(self.co_base))
+            self.propo_pk.update_param_CO(self.co / (self.co_base))
+            self.remi_pk.update_param_CO(self.co / (self.co_base))
+            self.nore_pk.update_param_CO(self.co / (self.co_base))
 
         # blood loss effect
         if blood_rate != 0 or self.blood_volume != self.blood_volume_init:
@@ -274,7 +274,7 @@ class Patient:
             self.propo_pk.x[0, 0],
             self.remi_pk.x[0, 0],
             self.c_blood_nore,
-            (self.blood_volume/self.blood_volume_init)
+            (self.blood_volume / self.blood_volume_init)
         )
         self.tpr = y_hemo[0]
         self.sv = y_hemo[1]
@@ -293,7 +293,7 @@ class Patient:
 
         # Save data
         if self.save_data_bool:
-            index = int(self.Time/self.ts)
+            index = int(self.Time / self.ts)
             self.dataframe.loc[index, 'u_propo'] = u_propo
             self.dataframe.loc[index, 'u_remi'] = u_remi
             self.dataframe.loc[index, 'u_nore'] = u_nore
@@ -364,9 +364,9 @@ class Patient:
         bis = self.bis_pd.compute_bis(cep, cer)
         tol = self.tol_pd.compute_tol(cep, cer)
 
-        J = (bis - bis_target)**2/100**2 + (tol - tol_target)**2
+        J = (bis - bis_target)**2 / 100**2 + (tol - tol_target)**2
         w = [cep, cer]
-        w0 = [self.bis_pd.c50p, self.bis_pd.c50r/2.5]
+        w0 = [self.bis_pd.c50p, self.bis_pd.c50r / 2.5]
         lbw = [0, 0]
         ubw = [50, 50]
 
@@ -388,8 +388,8 @@ class Patient:
         # Then compute the right nore concentration to meet the MAP target
         wanted_map_effect = map_target - map_without_nore
         self.c_blood_nore_eq = self.hemo_pd.c50_nore_map * (wanted_map_effect /
-                                                            (self.hemo_pd.emax_nore_map-wanted_map_effect)
-                                                            )**(1/self.hemo_pd.gamma_nore_map)
+                                                            (self.hemo_pd.emax_nore_map - wanted_map_effect)
+                                                            )**(1 / self.hemo_pd.gamma_nore_map)
         y_hemo = self.hemo_pd.state_at_equilibrium(
             self.c_blood_propo_eq,
             self.c_blood_remi_eq,
@@ -397,9 +397,9 @@ class Patient:
         self.co_eq = y_hemo[4]
         # update pharmacokinetics model from co value
         if self.co_update:
-            self.propo_pk.update_param_CO(self.co_eq/self.co_base)
-            self.remi_pk.update_param_CO(self.co_eq/self.co_base)
-            self.nore_pk.update_param_CO(self.co_eq/self.co_base)
+            self.propo_pk.update_param_CO(self.co_eq / self.co_base)
+            self.remi_pk.update_param_CO(self.co_eq / self.co_base)
+            self.nore_pk.update_param_CO(self.co_eq / self.co_base)
         # get rate input
         self.u_propo_eq = self.c_blood_propo_eq / self.propo_pk.get_system_gain()
         self.u_remi_eq = self.c_blood_remi_eq / self.remi_pk.get_system_gain()
@@ -459,8 +459,8 @@ class Patient:
         Ar = self.remi_pk.discretize_sys.A
         Br = self.remi_pk.discretize_sys.B
 
-        x0p = np.linalg.solve(Ap-np.eye(6), - Bp * 7 / 20)
-        x0r = np.linalg.solve(Ar-np.eye(5), - Br * 7 / 10)
+        x0p = np.linalg.solve(Ap - np.eye(6), - Bp * 7 / 20)
+        x0r = np.linalg.solve(Ar - np.eye(5), - Br * 7 / 10)
         w0 += x0p[:, 0].tolist()
         w0 += x0r[:, 0].tolist()
 
@@ -475,7 +475,7 @@ class Patient:
         bis = self.bis_pd.compute_bis(xp[3], xr[3])
         J = (bis_target - bis)**2
 
-        g = [(Ap-np.eye(6)) @ xp + Bp * UP, (Ar-np.eye(5)) @ xr + Br * (rp_ratio * UP)]
+        g = [(Ap - np.eye(6)) @ xp + Bp * UP, (Ar - np.eye(5)) @ xr + Br * (rp_ratio * UP)]
         lbg = [-1e-8] * 11
         ubg = [1e-8] * 11
         opts = {'ipopt.print_level': 0, 'print_time': 0}
@@ -517,20 +517,20 @@ class Patient:
 
         if self.co_update:
             print(self.co_eq)
-            self.propo_pk.update_param_CO(self.co_eq/self.co_base)
-            self.remi_pk.update_param_CO(self.co_eq/self.co_base)
-            self.nore_pk.update_param_CO(self.co_eq/self.co_base)
+            self.propo_pk.update_param_CO(self.co_eq / self.co_base)
+            self.remi_pk.update_param_CO(self.co_eq / self.co_base)
+            self.nore_pk.update_param_CO(self.co_eq / self.co_base)
 
         self.c_blood_propo_eq = u_propo * self.propo_pk.get_system_gain()
         self.c_blood_remi_eq = u_remi * self.remi_pk.get_system_gain()
         self.c_blood_nore_eq = u_nore * self.nore_pk.get_system_gain()
 
         # PK models
-        self.propo_pk.x = np.array([[self.c_blood_propo_eq]*len(self.propo_pk.x)]).T
+        self.propo_pk.x = np.array([[self.c_blood_propo_eq] * len(self.propo_pk.x)]).T
 
-        self.remi_pk.x = np.array([[self.c_blood_remi_eq]*len(self.remi_pk.x)]).T
+        self.remi_pk.x = np.array([[self.c_blood_remi_eq] * len(self.remi_pk.x)]).T
 
-        self.nore_pk.x = np.array([[self.c_blood_nore_eq]*len(self.nore_pk.x)]).T
+        self.nore_pk.x = np.array([[self.c_blood_nore_eq] * len(self.nore_pk.x)]).T
 
         # PD hemo
         self.hemo_pd.initialized_at_given_concentration(
@@ -587,9 +587,9 @@ class Patient:
                                         u_remi=self.u_remi_eq,
                                         u_nore=self.u_nore_eq)
         if self.co_update:
-            self.propo_pk.update_param_CO(self.co_eq/self.co_base)
-            self.remi_pk.update_param_CO(self.co_eq/self.co_base)
-            self.nore_pk.update_param_CO(self.co_eq/self.co_base)
+            self.propo_pk.update_param_CO(self.co_eq / self.co_base)
+            self.remi_pk.update_param_CO(self.co_eq / self.co_base)
+            self.nore_pk.update_param_CO(self.co_eq / self.co_base)
         return self.u_propo_eq, self.u_remi_eq, self.u_nore_eq
 
     def blood_loss(self, fluid_rate: float = 0):
@@ -606,15 +606,15 @@ class Patient:
         None.
 
         """
-        fluid_rate = fluid_rate/1000 / 60  # in L/s
+        fluid_rate = fluid_rate / 1000 / 60  # in L/s
         # compute the blood volume
-        self.blood_volume += fluid_rate*self.ts
+        self.blood_volume += fluid_rate * self.ts
 
         # Update the models
-        self.propo_pk.update_param_blood_loss(self.blood_volume/self.blood_volume_init, self.co/(self.co_base))
-        self.remi_pk.update_param_blood_loss(self.blood_volume/self.blood_volume_init, self.co/(self.co_base))
-        self.nore_pk.update_param_blood_loss(self.blood_volume/self.blood_volume_init, self.co/(self.co_base))
-        self.bis_pd.update_param_blood_loss(self.blood_volume/self.blood_volume_init)
+        self.propo_pk.update_param_blood_loss(self.blood_volume / self.blood_volume_init, self.co / (self.co_base))
+        self.remi_pk.update_param_blood_loss(self.blood_volume / self.blood_volume_init, self.co / (self.co_base))
+        self.nore_pk.update_param_blood_loss(self.blood_volume / self.blood_volume_init, self.co / (self.co_base))
+        self.bis_pd.update_param_blood_loss(self.blood_volume / self.blood_volume_init)
 
     def init_dataframe(self):
         r"""Initilize the dataframe variable with the following columns:
@@ -640,17 +640,17 @@ class Patient:
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore',  # inputs
                         'blood_volume']  # nore concentration and blood volume
-        propo_state_names = [f'x_propo_{i+1}' for i in range(len(self.propo_pk.x))]
-        remi_state_names = [f'x_remi_{i+1}' for i in range(len(self.remi_pk.x))]
-        nore_state_names = [f'x_nore_{i+1}' for i in range(len(self.nore_pk.x))]
+        propo_state_names = [f'x_propo_{i + 1}' for i in range(len(self.propo_pk.x))]
+        remi_state_names = [f'x_remi_{i + 1}' for i in range(len(self.remi_pk.x))]
+        nore_state_names = [f'x_nore_{i + 1}' for i in range(len(self.nore_pk.x))]
         column_names += propo_state_names + remi_state_names + nore_state_names
         self.dataframe = pd.DataFrame(columns=column_names, dtype=float)
 
     def save_data(self, inputs: list = [0, 0, 0]):
         r"""Save all current internal variables as a new line in self.dataframe."""
         # store data
-        dap = self.map - 2/9*self.sv
-        sap = self.map + 4/9*self.sv
+        dap = self.map - 2 / 9 * self.sv
+        sap = self.map + 4 / 9 * self.sv
         new_line = {'Time': self.Time,
                     'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
@@ -658,9 +658,9 @@ class Patient:
                     'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2],  # inputs
                     'blood_volume': self.blood_volume}  # blood volume
 
-        line_x_propo = {f'x_propo_{i+1}': self.propo_pk.x[i, 0] for i in range(len(self.propo_pk.x))}
-        line_x_remi = {f'x_remi_{i+1}': self.remi_pk.x[i, 0] for i in range(len(self.remi_pk.x))}
-        line_x_nore = {f'x_nore_{i+1}': self.nore_pk.x[i, 0] for i in range(len(self.nore_pk.x))}
+        line_x_propo = {f'x_propo_{i + 1}': self.propo_pk.x[i, 0] for i in range(len(self.propo_pk.x))}
+        line_x_remi = {f'x_remi_{i + 1}': self.remi_pk.x[i, 0] for i in range(len(self.remi_pk.x))}
+        line_x_nore = {f'x_nore_{i + 1}': self.nore_pk.x[i, 0] for i in range(len(self.nore_pk.x))}
         new_line.update(line_x_propo)
         new_line.update(line_x_remi)
         new_line.update(line_x_nore)
@@ -746,23 +746,23 @@ class Patient:
         co = y[:, 4]
 
         # save data
-        dap = map - 2/9*sv
-        sap = map + 4/9*sv
+        dap = map - 2 / 9 * sv
+        sap = map + 4 / 9 * sv
         df = pd.DataFrame({
-            'Time': np.arange(0, len(u_propo)*self.ts, self.ts),
+            'Time': np.arange(0, len(u_propo) * self.ts, self.ts),
             'BIS': bis, 'TOL': tol, 'TPR': tpr, 'SV': sv,
             'HR': hr, 'MAP': map, 'CO': co, 'DAP': dap, 'SAP': sap,
             'u_propo': u_propo, 'u_remi': u_remi, 'u_nore': u_nore
         })
 
         for i in range(np.shape(x_propo)[0]):
-            df['x_propo_' + str(i+1)] = x_propo[i, :]
+            df['x_propo_' + str(i + 1)] = x_propo[i, :]
         for i in range(np.shape(x_remi)[0]):
-            df['x_remi_' + str(i+1)] = x_remi[i, :]
+            df['x_remi_' + str(i + 1)] = x_remi[i, :]
         if x_nore.ndim == 1:
             df['x_nore'] = x_nore
         else:
             for i in range(np.shape(x_nore)[0]):
-                df['x_nore' + str(i+1)] = x_nore[i, :]
+                df['x_nore' + str(i + 1)] = x_nore[i, :]
 
         return df
