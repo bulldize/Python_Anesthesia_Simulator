@@ -35,15 +35,15 @@ class BIS_model:
     Parameters
     ----------
     hill_model : str, optional
-        'Vanluchene' [Vanluchene2004], do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018], do not consider the synergistic effect of remifentanil.
+        'Vanluchene' [Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
+        'Eleveld' [Eleveld2018]_, do not consider the synergistic effect of remifentanil.
         Minto-type surface model
-        'Bouillon' [Bouillon2004], considers the synergistic effect of remifentanil.
-        Greco-type surface model
-        'Fuentes' [Fuentes2018], considers the synergistic effect of remifentanil.
-        'Kern' [Kern2004], considers the synergistic effect of remifentanil.
-        'Mertens' [Mertens2003], considers the synergistic effect of remifentanil.
-        'Johnson' [Johnson2008], considers the synergistic effect of remifentanil.
+        'Bouillon' [Bouillon2004]_, considers the synergistic effect of remifentanil.
+        Greco-type surface model_
+        'Fuentes' [Fuentes2018]_, considers the synergistic effect of remifentanil.
+        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil.
+        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil.
+        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil.
 
         Ignored if hill_param is specified.
         Default is 'Bouillon'.
@@ -83,14 +83,14 @@ class BIS_model:
     c50p_init : float
         Initial value of c50p, used for blood loss modelling.
     hill_model : str
-        'Vanluchene' [Vanluchene2004], do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018], do not consider the synergistic effect of remifentanil.
-        'Bouillon' [Bouillon2004], considers the synergistic effect of remifentanil (Minto-type).
-        'Fuentes' [Fuentes2018], considers the synergistic effect of remifentanil (Greco-type).
-        'Kern' [Kern2004], considers the synergistic effect of remifentanil (Greco-type).
-        'Mertens' [Mertens2003], considers the synergistic effect of remifentanil (Greco-type).
-        'Johnson' [Johnson2008], considers the synergistic effect of remifentanil (Greco-type).
-        'Yumuk' [Yumuk2024], considers the synergistic effect of remifentanil (Greco-type).
+        'Vanluchene' [Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
+        'Eleveld' [Eleveld2018]_, do not consider the synergistic effect of remifentanil.
+        'Bouillon' [Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type).
+        'Fuentes' [Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Yumuk' [Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
     References
     ----------
     .. [Bouillon2004]  T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
@@ -113,11 +113,11 @@ class BIS_model:
             in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
             Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
      .. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
-             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
-             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
+            surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
+            analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
      .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
-             for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
-             doi: 10.1016/j.jprocont.2024.103243
+            for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
+            doi: 10.1016/j.jprocont.2024.103243
 
     """
 
@@ -185,7 +185,6 @@ class BIS_model:
 
             # function used in the model
             def faging(x): return np.exp(x * (age - AGE_ref))
-
 
             # model parameters and their coefficient of variation
             self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
@@ -311,7 +310,6 @@ class BIS_model:
             else:
                 c_es_remi = 0
 
-
         up = c_es_propo / self.c50p
         if self.hill_model == 'Eleveld':
             if vect_input:
@@ -321,7 +319,6 @@ class BIS_model:
             interaction = up
         else:
             gamma = self.gamma
-
 
         if self.c50r == 0:
             interaction = up
@@ -397,7 +394,6 @@ class BIS_model:
             else:
                 gamma = self.gamma
             cep = self.c50p * ((self.E0 - BIS) / (self.Emax - self.E0 + BIS))**(1 / gamma)
-
 
             return cep
 
@@ -922,7 +918,7 @@ class Hemo_simple_PD_model():
 
 
 class Hemo_meca_PD_model:
-    r"""This class implements the mechanically based model of Haemodynamics proposed in [Su2023].
+    r"""This class implements the mechanically based model of Haemodynamics proposed in [Su2023]_.
 
     Particularly, Haemodynamics are considered to be a dynamical system with the following dynamics:
 
@@ -942,7 +938,7 @@ class Hemo_meca_PD_model:
     The different effects are sigmoid functions depending on propofol and remifentanil concentrations.
 
     Moreover, we consider the effect of norepinephrine on the haemodynamics as a simple addition of a sigmoid curve
-    to MAP from the models of [Beloeil2005] and [Oualha2014]. To model the implications of norepinephrine, we use:
+    to MAP from the models of [Beloeil2005]_ and [Oualha2014]_. To model the implications of norepinephrine, we use:
 
     .. math::
 
@@ -982,18 +978,18 @@ class Hemo_meca_PD_model:
     References
     ----------
     .. [Su2023] H. Su, J. V. Koomen, D. J. Eleveld, M. M. R. F. Struys, and P. J. Colin,
-       “Pharmacodynamic mechanism-based interaction model for the haemodynamic effects of remifentanil
-       and propofol in healthy volunteers,” *British Journal of Anaesthesia*, vol. 131, no. 2,
-       pp. 222–233, Aug. 2023. doi:10.1016/j.bja.2023.04.043.
+            “Pharmacodynamic mechanism-based interaction model for the haemodynamic effects of remifentanil
+            and propofol in healthy volunteers,” *British Journal of Anaesthesia*, vol. 131, no. 2,
+            pp. 222–233, Aug. 2023. doi:10.1016/j.bja.2023.04.043.
 
     .. [Beloeil2005] H. Beloeil, J.-X. Mazoit, D. Benhamou, and J. Duranteau,
-       “Norepinephrine kinetics and dynamics in septic shock and trauma patients,”
-       *BJA: British Journal of Anaesthesia*, vol. 95, no. 6, pp. 782–788, Dec. 2005.
-       doi:10.1093/bja/aei259.
+            “Norepinephrine kinetics and dynamics in septic shock and trauma patients,”
+            *BJA: British Journal of Anaesthesia*, vol. 95, no. 6, pp. 782–788, Dec. 2005.
+            doi:10.1093/bja/aei259.
 
     .. [Oualha2014] M. Oualha et al., “Population pharmacokinetics and haemodynamic effects of norepinephrine
-       in hypotensive critically ill children,” *British Journal of Clinical Pharmacology*,
-       vol. 78, no. 4, pp. 886–897, 2014. doi:10.1111/bcp.12412.
+            in hypotensive critically ill children,” *British Journal of Clinical Pharmacology*,
+            vol. 78, no. 4, pp. 886–897, 2014. doi:10.1111/bcp.12412.
     """
 
     def __init__(self,
@@ -1088,7 +1084,7 @@ class Hemo_meca_PD_model:
             w_emax_nore_map = 0
             w_c50_nore_map = 0.09
             w_gamma_nore_map = 0
-        self.k_effect = 0.0001  # (1/s)
+        self.k_effect = 0.0002  # (1/s)
 
         if random:
             # compute intercorrelated uncertainties
