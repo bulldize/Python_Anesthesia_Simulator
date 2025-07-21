@@ -48,10 +48,10 @@ interaction_model = [
 ]
 
 # Create a BIS_model object initialized with custom parameters equal to those of bouillon
-custom_bis_model_bouillon = BIS_model(hill_param=[4.47, 19.3, 1.43, 0, 97.4, 97.4])
+custom_bis_model_bouillon = BIS_model(hill_param = [4.47, 19.3, 1.43, 0, 97.4, 97.4, 0])
 
 # Create a BIS_model object initialized with custom parameters equal to those of vanluchene
-custom_bis_model_vanluchene = BIS_model(hill_param=[4.92, 0, 2.69, 0, 95.9, 87.5])
+custom_bis_model_vanluchene = BIS_model(hill_param = [4.92, 0, 2.69, 0, 95.9, 87.5, 0])
 
 
 # tests

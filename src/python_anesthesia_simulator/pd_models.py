@@ -49,18 +49,22 @@ class BIS_model:
         Default is 'Bouillon'.
     hill_param : list, optional
         Parameters of the model
-        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS]:
+        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS]:
 
         - **c50p_BIS**: Concentration at half effect for propofol effect on BIS (µg/mL).
         - **c50r_BIS**: Concentration at half effect for remifentanil effect on BIS (ng/mL). If it is equal to zero the interaction with remifentanil is not considered.
-        - **gamma_BIS**: slope coefficient for the BIS  model.
-        - **beta_BIS**: interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
-        - **E0_BIS**: initial BIS.
-        - **Emax_BIS**: max effect of the drugs on BIS.
+        - **gamma_BIS**: Slope coefficient for the BIS model.
+        - **beta_BIS**: Interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
+        - **E0_BIS**: Initial BIS.
+        - **Emax_BIS**: Max effect of the drugs on BIS.
+        - **Delay_BIS**: Delay affecting the BIS (s)
 
         The default is None.
+        If Delay_BIS is not provided it is assumed equal to 0.
     random : bool, optional
         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
+    ts : float
+        Sampling time, in s.        
 
 
     Attributes
@@ -70,16 +74,18 @@ class BIS_model:
     c50r : float
         Concentration at half effect for remifentanil effect on BIS (ng/mL). If it is equal to zero the interaction with remifentanil is not considered.
     gamma : float
-        slope coefficient for the BIS  model.
+        Slope coefficient for the BIS  model.
     beta : float
-        interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
+        Interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
     E0 : float
-        initial BIS.
+        Initial BIS.
     Emax : float
-        max effect of the drugs on BIS.
+        Max effect of the drugs on BIS.
+    bis_delay : float
+         Delay time on the output of the BIS model (s)          
     hill_param : list
         Parameters of the model
-        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS]
+        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS]
     c50p_init : float
         Initial value of c50p, used for blood loss modelling.
     hill_model : str
@@ -91,6 +97,8 @@ class BIS_model:
         'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
         'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
         'Yumuk' [Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
+    ts : float
+        Sampling time, in s.        
     References
     ----------
     .. [Bouillon2004]  T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
@@ -122,7 +130,7 @@ class BIS_model:
     """
 
     def __init__(self, hill_model: str = 'Bouillon', hill_param: Optional[list] = None,
-                 random: Optional[bool] = False, **kwargs):
+                 random: Optional[bool] = False, ts: float = 1, **kwargs):
         """
         Init the class.
 
@@ -133,14 +141,27 @@ class BIS_model:
         """
 
         self.hill_model = hill_model
+        self.ts = ts
 
         if hill_param is not None:  # Parameter given as an input
-            self.c50p = hill_param[0]
-            self.c50r = hill_param[1]
-            self.gamma = hill_param[2]
-            self.beta = hill_param[3]
-            self.E0 = hill_param[4]
-            self.Emax = hill_param[5]
+            if len(hill_param) == 7:
+                self.c50p = hill_param[0]
+                self.c50r = hill_param[1]
+                self.gamma = hill_param[2]
+                self.beta = hill_param[3]
+                self.E0 = hill_param[4]
+                self.Emax = hill_param[5]
+                self.bis_delay = hill_param[6]
+            elif len(hill_param) == 6:
+                self.c50p = hill_param[0]
+                self.c50r = hill_param[1]
+                self.gamma = hill_param[2]
+                self.beta = hill_param[3]
+                self.E0 = hill_param[4]
+                self.Emax = hill_param[5]
+                self.bis_delay = 0
+            else:
+                raise ValueError("The model parameters provided are not valid")
 
         # Minto-type surface model parameters
         elif self.hill_model == 'Bouillon':
@@ -156,6 +177,7 @@ class BIS_model:
             self.beta = 0;          cv_beta = 0
             self.E0 = 97.4;         cv_E0 = 0
             self.Emax = self.E0;    cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Vanluchene':
             # See [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
@@ -170,6 +192,7 @@ class BIS_model:
             self.beta = 0;          cv_beta = 0
             self.E0 = 95.9;         cv_E0 = 0.04
             self.Emax = 87.5;       cv_Emax = 0.11
+            self.bis_delay = 0
 
         elif self.hill_model == 'Eleveld':
             # [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
@@ -185,6 +208,7 @@ class BIS_model:
 
             # function used in the model
             def faging(x): return np.exp(x * (age - AGE_ref))
+            def fdelay(x): return 15 + np.exp(x*age)
 
             # model parameters and their coefficient of variation
             self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
@@ -194,6 +218,7 @@ class BIS_model:
             self.beta = 0;                       cv_beta = 0
             self.E0 = 93;                        cv_E0 = 0
             self.Emax = self.E0;                 cv_Emax = 0
+            self.bis_delay = fdelay(0.0517)
 
         # Greco-type surface model parameters
         elif self.hill_model == 'Fuentes':
@@ -209,6 +234,7 @@ class BIS_model:
             self.beta = 0;              cv_beta = 0
             self.E0 = 94;               cv_E0 = 0.05
             self.Emax = 94 * 0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
+            self.bis_delay = 0
 
         elif self.hill_model == 'Kern':
             # See [Kern2004]  Kern, Steven E., et al.
@@ -222,6 +248,7 @@ class BIS_model:
             self.beta = 5.1;            cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Mertens':
             # See [Mertens2003]  Mertens, Martijn J., et al.
@@ -236,6 +263,7 @@ class BIS_model:
             self.beta = 0;              cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Johnson':
             # See [Johnson2008] Johnson, Ken B., et al.
@@ -250,6 +278,7 @@ class BIS_model:
             self.beta = 3.60;           cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Yumuk':
             # See [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models
@@ -263,6 +292,7 @@ class BIS_model:
             self.beta = 15.03;          cv_beta = 0.539
             self.E0 = 93.97;            cv_E0 = 0.0112
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         if random and hill_param is None:
             # estimation of log normal standard deviation
@@ -281,8 +311,10 @@ class BIS_model:
             self.E0 *= min(100, np.exp(np.random.normal(scale=w_E0)))
             self.Emax *= np.exp(np.random.normal(scale=w_Emax))
 
-        self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax]
+        self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax, self.bis_delay]
         self.c50p_init = self.c50p  # for blood loss modelling
+        # Buffer of BIS values to simulate delay. Initialized at E0.
+        self.bis_buffer = np.ones(int(np.round(self.bis_delay / self.ts))) * self.E0
 
     def compute_bis(self, c_es_propo, c_es_remi=None):
         """Compute BIS function from propofol (and optionally remifentanil) effect site concentration.
@@ -338,6 +370,57 @@ class BIS_model:
         bis = self.E0 - self.Emax * interaction_gamma / (1 + interaction_gamma)
 
         return bis
+    
+    
+    def one_step(self, c_es_propo: float, c_es_remi: Optional[float] = 0) -> float:
+        """Compute one step time of the BIS model
+        Parameters
+        ----------
+       c_es_propo : float
+            Propofol effect site concentration (µg/mL).
+       c_es_remi : float, optional
+            Remifentanil effect site concentration (ng/mL). The default is 0.
+        Returns
+        -------
+        BIS : float
+            Bis value.
+        """
+
+        bis_temp = self.compute_bis(c_es_propo, c_es_remi)
+        if len(self.bis_buffer)>1:
+            self.bis_buffer = np.roll(self.bis_buffer, -1)
+            bis = self.bis_buffer[0]
+            self.bis_buffer[-1] = float(bis_temp.item())
+        else:
+            bis = bis_temp
+
+        return bis
+
+
+    def full_sim(self, c_es_propo: np.ndarray, c_es_remi: Optional[np.ndarray] = None) -> np.ndarray:
+        """ Simulate BIS model with a given input.
+        Parameters
+        ----------
+        c_es_propo : np.ndarray
+            List of propofol effect site concentrations (µg/ml).
+        c_es_remi : np.ndarray, optional
+            List of remifentanil effect site concentrations (ng/ml).
+        Returns
+        -------
+        np.ndarray
+            List of the output BIS values during the simulation.
+        """
+        if c_es_remi is not None:
+            if len(c_es_propo) != len(c_es_remi):
+                raise ValueError("Inputs must have the same lenght")
+        else:
+            c_es_remi = np.zeros(len(c_es_propo))
+
+        BIS_output = np.ones(len(c_es_propo))
+        for index in range(len(c_es_propo)):
+            BIS_output[index] = self.one_step(c_es_propo[index], c_es_remi[index])
+
+        return BIS_output    
 
     def update_param_blood_loss(self, v_ratio: float):
         """Update PK coefficient to mimic a blood loss.

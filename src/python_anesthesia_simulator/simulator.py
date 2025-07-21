@@ -29,6 +29,8 @@ class Patient:
         Name of the Remifentanil PK Model. The default is 'Minto'.
     model_nore : str, optional
         Name of the norepinephrine PK Model. The default is 'Beloeil'.
+    model_bis : str, optional
+        Name of the BIS PD Model. The default is 'Bouillon'.        
     ts : float, optional
         Sampling time (s). The default is 1.
     BIS_param : list, optional
@@ -70,7 +72,8 @@ class Patient:
         Name of the BIS PD model.
     hill_param : list
         Parameter of the BIS model (Propo Remi interaction)
-        list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS].
+        list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
+        If Delay_BIS is not provided it is assumed equal to 0.
     random_PK : bool
         Add uncertainties in the Propofol and Remifentanil PK models.
     random_PD : bool
@@ -171,7 +174,7 @@ class Patient:
                                         ts=self.ts, model=model_nore, random=random_PK)
 
         # Init PD model for BIS
-        self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD, age=self.age)
+        self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD, ts=self.ts, age=self.age)
         self.hill_param = self.bis_pd.hill_param
 
         # Init PD model for TOL
@@ -266,7 +269,7 @@ class Patient:
         self.c_es_remi = self.remi_pk.one_step(u_remi)
         self.c_blood_nore = self.nore_pk.one_step(u_nore)
         # BIS
-        self.bis = self.bis_pd.compute_bis(self.c_es_propo, self.c_es_remi)
+        self.bis = self.bis_pd.one_step(self.c_es_propo, self.c_es_remi)
         # TOL
         self.tol = self.tol_pd.compute_tol(self.c_es_propo, self.c_es_remi)
         # Hemodynamic
@@ -732,7 +735,7 @@ class Patient:
         x_nore = self.nore_pk.full_sim(u_nore, x0_nore, interp)
 
         # compute outputs
-        bis = self.bis_pd.compute_bis(x_propo[3, :], x_remi[3, :])
+        bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :])
         tol = self.tol_pd.compute_tol(x_propo[3, :], x_remi[3, :])
         if x_nore.ndim == 1:
             y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[:])
