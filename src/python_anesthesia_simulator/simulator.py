@@ -33,9 +33,10 @@ class Patient:
         Name of the BIS PD Model. The default is 'Bouillon'.        
     ts : float, optional
         Sampling time (s). The default is 1.
-    BIS_param : list, optional
+    hill_param : list
         Parameter of the BIS model (Propo Remi interaction)
-        list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS].
+        list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
+        If Delay_BIS is not provided it is assumed equal to 0.
         The default is None.
     random_PK : bool, optional
         Add uncertainties in the Propofol and Remifentanil PK models. The default is False.
@@ -45,6 +46,8 @@ class Patient:
         Turn on the option to update PK parameters thanks to the CO value. The default is False.
     save_data_bool : bool, optional
         Save all interns variable at each sampling time in a data frame. The default is True.
+    bis_delay_max : float, optional
+        Maximum value of the BIS delay caused by signal quality index expressed in (s). The default is 120 (s).    
 
     Attributes
     ----------
@@ -114,6 +117,10 @@ class Patient:
         Standard deviation of the CO noise.
     map_noise_std : float
         Standard deviation of the MAP noise.
+    bis_delay_max : float
+        Maximum value of the BIS delay caused by signal quality index expressed in (s). 
+    bis_delay_buffer: array
+        Buffer of BIS values to simulate delay.
     """
 
     def __init__(self,
@@ -130,7 +137,8 @@ class Patient:
                  random_PK: bool = False,
                  random_PD: bool = False,
                  co_update: bool = False,
-                 save_data_bool: bool = True):
+                 save_data_bool: bool = True,
+                 bis_delay_max: float = 120):
         """
         Initialise a patient class for anesthesia simulation.
 
@@ -156,6 +164,7 @@ class Patient:
         self.random_PD = random_PD
         self.co_update = co_update
         self.save_data_bool = save_data_bool
+        self.bis_delay_max = bis_delay_max
 
         # LBM computation
         if self.gender == 1:  # homme
@@ -215,13 +224,16 @@ class Patient:
         self.hr = self.hemo_pd.abase_hr
         self.map = map_base
         self.co = co_base
+        
+        # Initialize the buffer to simulate BIS delay
+        self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.bis
 
         # Save data
         if self.save_data_bool:
             self.init_dataframe()
             self.save_data()
 
-    def one_step(self, u_propo: float = 0, u_remi: float = 0, u_nore: float = 0,
+    def one_step(self, u_propo: float = 0, u_remi: float = 0, u_nore: float = 0, sqi: float = 100,
                  blood_rate: float = 0, dist: list = [0] * 3, noise: bool = True) -> tuple[float, float, float, float]:
         r"""
         Simulate one step time of the patient.
@@ -234,6 +246,8 @@ class Patient:
             Remifentanil infusion rate (µg/s). The default is 0.
         u_nore : float, optional
             Norepinephrine infusion rate (µg/s). The default is 0.
+        sqi: float, optional
+            Signal quality index of the BIS signal. The default is 100.
         blood_rate : float, optional
             Fluid rates from blood volume (mL/min), negative is bleeding while positive is a transfusion.
             The default is 0.
@@ -289,10 +303,22 @@ class Patient:
         self.bis += dist[0]
         self.map += dist[1]
         self.co += dist[2]
-
+        
         # add noise
         if noise:
             self.add_noise()
+            
+        # bis delay
+        delay = self.bis_delay_max * (1 - sqi/100)
+        delay_steps = int(np.ceil(delay/self.ts))-1
+        if delay_steps>0:
+            
+            # Approximated by excess
+            self.bis_delay_buffer = np.roll(self.bis_delay_buffer, -1)
+            self.bis_delay_buffer[delay_steps:] = [self.bis] * len(self.bis_delay_buffer[delay_steps:])
+            self.bis = self.bis_delay_buffer[0]
+        else:
+            self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.bis
 
         # Save data
         if self.save_data_bool:

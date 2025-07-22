@@ -314,7 +314,8 @@ class BIS_model:
         self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax, self.bis_delay]
         self.c50p_init = self.c50p  # for blood loss modelling
         # Buffer of BIS values to simulate delay. Initialized at E0.
-        self.bis_buffer = np.ones(int(np.round(self.bis_delay / self.ts))) * self.E0
+        # Approximated by excess
+        self.bis_buffer = np.ones(int(np.ceil(self.bis_delay / self.ts))) * self.E0
 
     def compute_bis(self, c_es_propo, c_es_remi=None):
         """Compute BIS function from propofol (and optionally remifentanil) effect site concentration.

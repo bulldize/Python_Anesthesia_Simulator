@@ -139,7 +139,7 @@ if __name__ == '__main__':
 # %%
 def test_delay():
     """Check that the BIS delays obtained in the simulations match those of the Eleveld model"""
-    # Check results at low concentrations
+
     assert simulated_delay_1 >= np.floor(bis_delay_1)
     assert simulated_delay_11 >= np.floor(bis_delay_1)
     assert simulated_delay_2 >= np.floor(bis_delay_2)
