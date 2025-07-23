@@ -326,6 +326,7 @@ class Patient:
             self.dataframe.loc[index, 'u_propo'] = u_propo
             self.dataframe.loc[index, 'u_remi'] = u_remi
             self.dataframe.loc[index, 'u_nore'] = u_nore
+            self.dataframe.loc[index, 'SQI'] = sqi
             # compute time
             self.Time += self.ts
             self.save_data()
@@ -649,6 +650,7 @@ class Patient:
         r"""Initilize the dataframe variable with the following columns:
             - 'Time': Simulation time (s)
             - 'BIS': Bispectral Index
+            - 'SQI': Signal Quality Index
             - 'TOL': Tolerance level
             - 'TPR': Total eripheral resistance (mmHg min/ mL) 
             - 'SV': Stroke volume (ml)
@@ -665,7 +667,7 @@ class Patient:
         """
         self.Time = 0
         column_names = ['Time',  # time
-                        'BIS', 'TOL', 'MAP', 'CO',  # outputs
+                        'BIS', 'SQI', 'TOL', 'MAP', 'CO',  # outputs
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore',  # inputs
                         'blood_volume']  # nore concentration and blood volume
@@ -675,7 +677,7 @@ class Patient:
         column_names += propo_state_names + remi_state_names + nore_state_names
         self.dataframe = pd.DataFrame(columns=column_names, dtype=float)
 
-    def save_data(self, inputs: list = [0, 0, 0]):
+    def save_data(self, inputs: list = [0, 0, 0, 100]):
         r"""Save all current internal variables as a new line in self.dataframe."""
         # store data
         dap = self.map - 2 / 9 * self.sv
@@ -684,7 +686,7 @@ class Patient:
                     'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
                     'SAP': sap, 'DAP': dap,
-                    'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2],  # inputs
+                    'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2], 'SQI': inputs[3],  # inputs
                     'blood_volume': self.blood_volume}  # blood volume
 
         line_x_propo = {f'x_propo_{i + 1}': self.propo_pk.x[i, 0] for i in range(len(self.propo_pk.x))}
