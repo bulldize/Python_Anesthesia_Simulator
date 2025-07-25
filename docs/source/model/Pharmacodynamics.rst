@@ -67,7 +67,7 @@ In those equations, :math:`x_{ep,BIS}` and :math:`x_{er,BIS}` are the propofol a
 
 Few studies have been conducted on the pharmacodynamic part of the anesthesia process, and the models are less standardized. In this simulator, the values of the parameters of the Minto-type surface model are taken from the study of [Bouillon2004]_. Additionally, the values of the parameters of the Greco-type surface model are taken from the studies of [Fuentes2018]_, [Kern2004]_, [Mertens2003]_, [Johnson2008]_, and [Yumuk2024]_. 
 
-It also exists models that do not take into account the synergistic effect of remifentanil, see [Vanluchene2004]_ and [Eleveld2018]_ for instance. In those cases, the interaction coefficient :math:\beta and the half-effect concentration :math:C_{50r} for remifentanil are ignored.
+It also exists models that do not take into account the synergistic effect of remifentanil, see [Vanluchene2004]_ and [Eleveld2018]_ for instance. In those cases, the interaction coefficient :math:`\beta` and the half-effect concentration :math:`C_{50r}` for remifentanil are ignored.
 
 The surface of the 3D-Hill function using parameters from [Bouillon2004]_ is shown in the figure below.
 
@@ -77,6 +77,10 @@ The surface of the 3D-Hill function using parameters from [Bouillon2004]_ is sho
    :width: 80%
    :align: center
    :alt: 3D-Hill function
+   
+
+Note that the BIS can also be affected by delay, in this case we have that :math:`BIS(t) = BIS(t - \tau)`.
+In the literature this delay has been attributed to different causes, such as the age of the patient [Eleveld2018]_ or the Signal Quality Index (SQI) of the BIS [Wahlquist2025]_ 
 
 
 Tolerance of Laryngoscopy
@@ -328,3 +332,6 @@ References
 .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
         for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
         doi: https://doi.org/10.1016/j.jprocont.2024.103243   
+.. [Wahlquist2025] Y. Eahlquist, et al. "Kalman filter soft sensor to handle signal quality loss in closed-loop controlled anesthesia" 
+          Biomedical Signal Processing and Control 104 (2025): 107506.
+          doi: https://doi.org/10.1016/j.bspc.2025.107506    

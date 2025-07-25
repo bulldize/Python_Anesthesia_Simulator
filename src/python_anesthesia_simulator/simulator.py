@@ -47,7 +47,7 @@ class Patient:
     save_data_bool : bool, optional
         Save all interns variable at each sampling time in a data frame. The default is True.
     bis_delay_max : float, optional
-        Maximum value of the BIS delay caused by signal quality index expressed in (s). The default is 120 (s).    
+        Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).    
 
     Attributes
     ----------
@@ -121,6 +121,12 @@ class Patient:
         Maximum value of the BIS delay caused by signal quality index expressed in (s). 
     bis_delay_buffer: array
         Buffer of BIS values to simulate delay.
+        
+    References
+    ---------- 
+    .. [Wahlquist2025] Y. Eahlquist, et al. "Kalman filter soft sensor to handle signal quality loss in closed-loop controlled anesthesia" 
+              Biomedical Signal Processing and Control 104 (2025): 107506.
+              doi: https://doi.org/10.1016/j.bspc.2025.107506  
     """
 
     def __init__(self,
@@ -247,7 +253,7 @@ class Patient:
         u_nore : float, optional
             Norepinephrine infusion rate (µg/s). The default is 0.
         sqi: float, optional
-            Signal quality index of the BIS signal. The default is 100.
+            Signal Quality Index of the BIS signal. It affects the BIS delay (expressed in seconds) according to the relationship proposed in [Wahlquist2025]_: :math:`bis\_delay = bis\_delay\_max * (1 - \frac{sqi}{100})`. The default is 100.
         blood_rate : float, optional
             Fluid rates from blood volume (mL/min), negative is bleeding while positive is a transfusion.
             The default is 0.
