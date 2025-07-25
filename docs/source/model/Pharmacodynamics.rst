@@ -1,7 +1,7 @@
 Pharmacodynamics
 =================
 
-While the mechanism of the pharmacokinetic is still poorly understood, the mechanism of actions of drugs at the molecular level is better understood (Bailey2005_). However, the link between the molecular level and the measured physiological variables is complex and thus, the pharmacodynamics models are usually empirical. The most common approach is to use the Hill function to describe the effect of the drug concentration on the physiological variables. The Hill function is a sigmoid function defined by the following equation:
+While the mechanism of the pharmacokinetic is still poorly understood, the mechanism of actions of drugs at the molecular level is better understood [Bailey2005]_. However, the link between the molecular level and the measured physiological variables is complex and thus, the pharmacodynamics models are usually empirical. The most common approach is to use the Hill function to describe the effect of the drug concentration on the physiological variables. The Hill function is a sigmoid function defined by the following equation:
 
 .. math::
 
@@ -65,11 +65,11 @@ In those equations, :math:`x_{ep,BIS}` and :math:`x_{er,BIS}` are the propofol a
 
     I(t) = I_p(t) + I_r(t) + \beta I_p(t) I_r(t)
 
-Few studies have been conducted on the pharmacodynamic part of the anesthesia process, and the models are less standardized. In this simulator, the values of the parameters of the Minto-type surface model are taken from the study of Bouillon2004_. Additionally, the values of the parameters of the Greco-type surface model are taken from the studies of Fuentes2018_, Kern2004_, Mertens2003_, Johnson2008_, and Yumuk2024_. 
+Few studies have been conducted on the pharmacodynamic part of the anesthesia process, and the models are less standardized. In this simulator, the values of the parameters of the Minto-type surface model are taken from the study of [Bouillon2004]_. Additionally, the values of the parameters of the Greco-type surface model are taken from the studies of [Fuentes2018]_, [Kern2004]_, [Mertens2003]_, [Johnson2008]_, and [Yumuk2024]_. 
 
-It also exists models that do not take into account the synergistic effect of remifentanil, see Vanluchene2004_ and Eleveld2018_ for instance. In those cases, the interaction coefficient :math:\beta and the half-effect concentration :math:C_{50r} for remifentanil are ignored.
+It also exists models that do not take into account the synergistic effect of remifentanil, see [Vanluchene2004]_ and [Eleveld2018]_ for instance. In those cases, the interaction coefficient :math:\beta and the half-effect concentration :math:C_{50r} for remifentanil are ignored.
 
-The surface of the 3D-Hill function using parameters from Bouillon2004_ is shown in the figure below.
+The surface of the 3D-Hill function using parameters from [Bouillon2004]_ is shown in the figure below.
 
 
 
@@ -82,7 +82,7 @@ The surface of the 3D-Hill function using parameters from Bouillon2004_ is shown
 Tolerance of Laryngoscopy
 -----------------------------
 
-To output an indicator of analgesia in the simulator, we used the Tolerance of Laryngoscopy (TOL). The TOL is defined as the probability of reaction of the patient to the laryngoscopy. In Bouillon2004_, the authors proposed a hierarchical model to link drug effect site concentration to TOL. The model is given by:
+To output an indicator of analgesia in the simulator, we used the Tolerance of Laryngoscopy (TOL). The TOL is defined as the probability of reaction of the patient to the laryngoscopy. In [Bouillon2004]_, the authors proposed a hierarchical model to link drug effect site concentration to TOL. The model is given by:
 
 .. math:: postopioid(t) = preopioid \times \left(1 - \frac{x_{er,BIS}(t)^{\gamma_r}}{x_{er,BIS}(t)^{\gamma_r} + (C_{r,50,TOL} \times preopioid)^{\gamma_r}}\right)
 .. math:: TOL(t) = \frac{x_{ep,BIS}(t)^{\gamma_p}}{x_{ep,BIS}(t)^{\gamma_p} + (C_{p,50,TOL} \times postopioid(t))^{\gamma_p}}
@@ -94,7 +94,7 @@ where :math:`preopioid` is the tolerance of laryngoscopy without remifentanil, :
    :align: center
    :alt: Hirarchical model for TOL
 
-   Hierarchical model for TOL, figure from Bouillon2004_.
+   Hierarchical model for TOL, figure from [Bouillon2004]_.
 
 Haemodynamic
 --------------
@@ -103,7 +103,7 @@ Haemodynamics are the dynamic of blood flow. Blood flow ensures the transportati
 
 The main variable to monitor is the cardiac output (CO), which is the volume of blood pumped by the heart per minute as it is the main determinant of oxygen delivery to tissues. However, CO is not directly measurable, and thus, the mean arterial pressure (MAP) is often used as a surrogate. The MAP is the average arterial pressure during one cardiac cycle, and it is considered to be a good indicator of perfusion pressure in the organs. The CO and MAP are influenced by the drugs used during anesthesia, and thus, it is important to model their effects.
 
-For the effect of propofol and remifentanil on MAP and CO, the interaction of drugs has been studied in Su2023_ using a general pharmacodynamic interaction model. In this dynamical model, three variable are considered to be dynamic: the total peripheral resistance (TPR), the stroke volume (SV), and the heart rate (HR). They respectively represent the resistance of the blood vessels, the volume of blood pumped by the heart per beat, and the number of heartbeats per minute. They are related to the MAP and CO by the following equations:
+For the effect of propofol and remifentanil on MAP and CO, the interaction of drugs has been studied in [Su2023]_ using a general pharmacodynamic interaction model. In this dynamical model, three variable are considered to be dynamic: the total peripheral resistance (TPR), the stroke volume (SV), and the heart rate (HR). They respectively represent the resistance of the blood vessels, the volume of blood pumped by the heart per beat, and the number of heartbeats per minute. They are related to the MAP and CO by the following equations:
 
 .. math::
     :label: eq:hemodynamic
@@ -123,7 +123,7 @@ The idea of this model is to consider that TPR, SV and HR are autoregulated by t
 
 where :math:`RMAP(t)` is the normalized MAP thanks to the baseline MAP, :math:`k_{in\_TPR}`, :math:`k_{in\_SV}`, and :math:`k_{in\_HR}` are the gain of the feedback loop for TPR, SV and HR, respectively, and :math:`k_{out}` is the decay rate of TPR, SV and HR. The exponent :math:`FB` is a feedback exponent that determines the sensitivity of the feedback loop to changes in MAP.
 
-In Su2023_, the effect of propofol and remifentanil is modelled as a perturbation of this autoregulation. In addition, a time dependant effect have been added to the model to describe elevated MAP, HR, and PP before anesthesia induction. Finally, a non-linear relationship between SV and HR is considered to represent the effect of shorter left ventricular filling time because of increased HR thereby decreasing SV
+In [Su2023]_, the effect of propofol and remifentanil is modelled as a perturbation of this autoregulation. In addition, a time dependant effect have been added to the model to describe elevated MAP, HR, and PP before anesthesia induction. Finally, a non-linear relationship between SV and HR is considered to represent the effect of shorter left ventricular filling time because of increased HR thereby decreasing SV
 
 .. math::
     \begin{align}
@@ -162,7 +162,7 @@ An illustration of this model is given below:
    :align: center
    :alt: Mechanically based pharmacodynamic model for haemodynamic effects
 
-   Mechanically based pharmacodynamic model for haemodynamic effects, figure from Su2023_.
+   Mechanically based pharmacodynamic model for haemodynamic effects, figure from [Su2023]_.
 
 For identification of the model, the stroke volume has been approximated using the relation :math:`PP(t) = SV(t)/1.5` where PP stand for pulse pressure and is given by substracting the diastolic aretrial pressure (DAP) to the systolic arterial pressure (SAP). Those two value respectively represent the minimum and maximum of the artrial pressure value over a cardiac cycle. In addition, the relation to link MAP, DAP and SAP is given by :math:`MAP(t) = (2 \cdot DAP(t)+SAP(t))/3`, thus SAP, and DAP can be computed using the following formula:
 
@@ -172,7 +172,7 @@ For identification of the model, the stroke volume has been approximated using t
     SAP(t) &= MAP(t) + \frac{4}{9} SV(t)
     \end{align}
 
-The Norepinephrine effect have not been yet included in this dynamical model. However, it exists direct pharmacodynamic models, linking the blood concentration of norepinephrine to the increase of MAP ([Beloeil2005_], [Oualha2014_]) using a sigmoid function. As it is known that norepinephrine has a direct effect on TPR, we considered that the norepinephrine affect MAP through TPR to reach the effect identified in the literature. To be explicite, when doing the simulation with norepinephrine, two different system are simulated: one with olny the effect of propofol and remifentanil, and one with the effect of norepinephrine. The difference between the two is that the dynamic of TPR is modified to reach the desired MAP. Particularly:
+The Norepinephrine effect have not been yet included in this dynamical model. However, it exists direct pharmacodynamic models, linking the blood concentration of norepinephrine to the increase of MAP ([Beloeil2005]_, [Oualha2014]_) using a sigmoid function. As it is known that norepinephrine has a direct effect on TPR, we considered that the norepinephrine affect MAP through TPR to reach the effect identified in the literature. To be explicite, when doing the simulation with norepinephrine, two different system are simulated: one with olny the effect of propofol and remifentanil, and one with the effect of norepinephrine. The difference between the two is that the dynamic of TPR is modified to reach the desired MAP. Particularly:
 
 .. math::
   MAP_{wanted}(t) = MAP_{no\_nore}(t) + norepinephrine\_effect(t)
@@ -186,7 +186,7 @@ where :math:`MAP_{no\_nore}(t)` is the MAP computed without norepinephrine, and 
   & \textcolor{blue}{ + k_{nore}(MAP_{wanted}(t)- MAP(t))}
   \end{align}
 
-The term in blue ensure that MAP is converging to the desired value, :math:`MAP_{wanted}`, :math:`k_{nore}` is choosen to have a fast convergence without too much oscillation. Then the dynamic of HR and SV are computed as in the system without norepinephrine. This approach allows to make use of the previous results on norepinephrine effect on MAP while keeping valid the dynamical model of Su2023_. Particularly, it allow to model the effect of norepinephrine on SV, HR, and CO without having to infer new parameters for the model. As seen in the figure below, the simulator model the effect of norepinephrine on the whole haemodynamic system by merging the effect on MAP and the dynamic of TPR, SV, and HR.
+The term in blue ensure that MAP is converging to the desired value, :math:`MAP_{wanted}`, :math:`k_{nore}` is choosen to have a fast convergence without too much oscillation. Then the dynamic of HR and SV are computed as in the system without norepinephrine. This approach allows to make use of the previous results on norepinephrine effect on MAP while keeping valid the dynamical model of [Su2023]_. Particularly, it allow to model the effect of norepinephrine on SV, HR, and CO without having to infer new parameters for the model. As seen in the figure below, the simulator model the effect of norepinephrine on the whole haemodynamic system by merging the effect on MAP and the dynamic of TPR, SV, and HR.
 
 .. figure:: ../images/hemo_sys_nore.png
    :width: 60%
@@ -288,7 +288,7 @@ The following table summarizes the effect of single drugs injection on the model
         </tr>
       </tbody>
     </table>
-
+    
 References
 ----------
 
@@ -327,4 +327,4 @@ References
         analgesia 106.2 (2008): 471. doi : https://doi.org/10.1213/ane.0b013e3181606c62
 .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
         for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
-        doi: https://doi.org/10.1016/j.jprocont.2024.103243
+        doi: https://doi.org/10.1016/j.jprocont.2024.103243   

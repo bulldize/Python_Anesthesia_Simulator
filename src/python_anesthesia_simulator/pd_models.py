@@ -23,28 +23,29 @@ class BIS_model:
 
     If the interaction with remifentanil is considered the equation represents a Surface Response model, where:
 
-    Minto-type surface model
     .. math:: U = \frac{U_p + U_r}{1 - \beta \theta + \beta \theta^2}
+    
+    for Minto-type surface model and:
+    
+    .. math:: U = U_p + U_r + \beta U_p U_r
+
+    for Greco-type surface model, with: 
+        
     .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
     .. math:: \theta = \frac{U_p}{U_r+U_p}
 
-    Greco-type surface model
-    .. math:: U = U_p + U_r + \beta U_p U_r
-
+    
     Parameters
     ----------
     hill_model : str, optional
-        'Vanluchene' [Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018]_, do not consider the synergistic effect of remifentanil.
-        Minto-type surface model
-        'Bouillon' [Bouillon2004]_, considers the synergistic effect of remifentanil.
-        Greco-type surface model_
-        'Fuentes' [Fuentes2018]_, considers the synergistic effect of remifentanil.
-        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil.
-        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil.
-        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil.
-
+        'Vanluchene'[Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
+        'Eleveld'[Eleveld2018]_, do not consider the synergistic effect of remifentanil.
+        'Bouillon'[Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type surface model).
+        'Fuentes'[Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type surface model).
         Ignored if hill_param is specified.
         Default is 'Bouillon'.
     hill_param : list, optional
@@ -89,41 +90,42 @@ class BIS_model:
     c50p_init : float
         Initial value of c50p, used for blood loss modelling.
     hill_model : str
-        'Vanluchene' [Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018]_, do not consider the synergistic effect of remifentanil.
-        'Bouillon' [Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type).
-        'Fuentes' [Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Yumuk' [Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Vanluchene'[Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
+        'Eleveld'[Eleveld2018]_, do not consider the synergistic effect of remifentanil.
+        'Bouillon'[Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type).
+        'Fuentes'[Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Yumuk'[Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
     ts : float
-        Sampling time, in s.        
+        Sampling time, in s.    
+        
     References
     ----------
-    .. [Bouillon2004]  T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
+    .. [Bouillon2004] T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
             Regarding Hypnosis, Tolerance of Laryngoscopy, Bispectral Index, and Electroencephalographic
             Approximate Entropy,” Anesthesiology, vol. 100, no. 6, pp. 1353–1372, Jun. 2004,
             doi: 10.1097/00000542-200406000-00006.
-    .. [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
+    .. [Vanluchene2004] A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
             of anesthetic drug effect: a comparison with bispectral index and processed midlatency auditory evoked
             response,” Anesthesiology, vol. 101, no. 1, pp. 34–42, Jul. 2004,
             doi: 10.1097/00000542-200407000-00008.
     .. [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
             “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
             British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018. 
-    .. [Fuentes2018]  Fuentes, Ricardo, et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
+    .. [Fuentes2018] Fuentes, Ricardo, et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
             electroencephalographic interaction with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 
             1078-1086. doi: 10.1111/pan.13486 
-    .. [Kern2004]  Kern, Steven E., et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+    .. [Kern2004] Kern, Steven E., et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
             interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-    .. [Mertens2003]  Mertens, Martijn J., et al. "Propofol reduces perioperative remifentanil requirements 
+    .. [Mertens2003] Mertens, Martijn J., et al. "Propofol reduces perioperative remifentanil requirements 
             in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
             Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
-     .. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
+    .. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
-     .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+    .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
             for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
             doi: 10.1016/j.jprocont.2024.103243
 

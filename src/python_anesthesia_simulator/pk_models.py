@@ -30,10 +30,10 @@ class CompartmentModel:
     drug : str
         can be "Propofol", "Remifentanil" or "Norepinephrine".
     model : str, optional
-        Could be "Schnider" [Schnider1999]_, "Marsh_initial"[Marsh1991]_, "Marsh_modified"[Struys2000]_,
+        Could be "Schnider"[Schnider1999]_, "Marsh_initial"[Marsh1991]_, "Marsh_modified"[Struys2000]_,
         "Shuttler"[Schuttler2000]_ or "Eleveld"[Eleveld2018]_ for Propofol.
         "Minto"[Minto1997]_, or "Eleveld"[Eleveld2017]_ for Remifentanil.
-        "Beloeil"[Beloeil2005]_, "Oualha"[Oualha2014], or "Li"[Li2024] for Norepinephrine.
+        "Beloeil"[Beloeil2005]_, "Oualha"[Oualha2014]_, or "Li"[Li2024]_ for Norepinephrine.
         The default is "Schnider" for Propofol, "Minto" for Remifentanil, and Beloeil for Norepinephrine.
     ts : float, optional
         Sampling time, in s. The default is 1.

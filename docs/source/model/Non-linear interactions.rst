@@ -2,7 +2,7 @@ Non-linear interactions
 =========================
 Cardiac output dependency
 --------------------------
-Several studies have shown the influence of cardiac output (CO) on the pharmacokinetics of propofol (Adachi2001_; Kurita2002_; Upton1999_). In Bienert2020_, the authors proposed the assumption that the clearance rate of propofol and fentanil could be proportional to CO resulting in a non-constant clearance rate. In the simulator, the same assumption is made for propofol and extended to remifentanil and norepinephrine clearance rates in the PK model. 
+Several studies have shown the influence of cardiac output (CO) on the pharmacokinetics of propofol ([Adachi2001]_, [Kurita2002]_, [Upton1999]_). In [Bienert2020]_, the authors proposed the assumption that the clearance rate of propofol and fentanil could be proportional to CO resulting in a non-constant clearance rate. In the simulator, the same assumption is made for propofol and extended to remifentanil and norepinephrine clearance rates in the PK model. 
 
 .. math::
     Cl(t) = Cl_0 \frac{CO(t)}{CO_0}
@@ -13,9 +13,9 @@ This behavior can be activated or deactivated (default) to simulate the interact
 
 Blood loss modelling
 ----------------------
-When important, blood loss can be considered as a shock situation for the patient. It strongly affect the haemodynamic system and also all the inner working of multiple organs in the body. Regarding anesthesia modelling, blood loss is known to change the distribution of drugs in the body (Johnson2001_, Johnson2003_; Kurita2009_). In fact, the reduced volume of blood will affect the PK system of the drugs. Thus, during a blood loss simulation the blood volume (first compartment volume) is updated in all the PK models. For this, we consider the volume of the first compartment of propofol as the "true" volume of blood in the patient body and update the other PK model according to the fraction of the remaining blood volume over the initial blood volume.
+When important, blood loss can be considered as a shock situation for the patient. It strongly affect the haemodynamic system and also all the inner working of multiple organs in the body. Regarding anesthesia modelling, blood loss is known to change the distribution of drugs in the body ([Johnson2001]_, [Johnson2003]_, [Kurita2009]_). In fact, the reduced volume of blood will affect the PK system of the drugs. Thus, during a blood loss simulation the blood volume (first compartment volume) is updated in all the PK models. For this, we consider the volume of the first compartment of propofol as the "true" volume of blood in the patient body and update the other PK model according to the fraction of the remaining blood volume over the initial blood volume.
 
-In addition to the effect of blood loss in the PK models, the crude assumption that SV is proportional to the blood volume is made in the simulator. The transient behavior of bleeding and transfusion does not verify this assumption, however the steady-state experimental values do agree with it (Rinehart2011_). Thus, in case of bleeding a term is added to the dynamic equations of SV such that it converge to the wanted value. The equations are the following:
+In addition to the effect of blood loss in the PK models, the crude assumption that SV is proportional to the blood volume is made in the simulator. The transient behavior of bleeding and transfusion does not verify this assumption, however the steady-state experimental values do agree with it [Rinehart2011]_. Thus, in case of bleeding a term is added to the dynamic equations of SV such that it converge to the wanted value. The equations are the following:
 
 .. math::
     SV_{wanted}(t) = SV_{no\_bleeding}(t) \frac{V_{1,p}(t)}{V_{1,p}(0)}
@@ -29,7 +29,7 @@ where :math:`SV_{no\_bleeding}(t)` is the stroke volume computed without conside
     & \textcolor{blue}{ + k_{bleeding}(SV_{wanted}(t)- SV(t))}
     \end{align}
 
-A more complex hemodynamic model should be integrated to obtain better results. The simulator also takes into account the fact that the BIS pharmacodynamics depends on bleeding (Kurita2009_) leading to a deeper hypnosis state, again value for this dependencies have been chosen to match the experimentals results of the paper.
+A more complex hemodynamic model should be integrated to obtain better results. The simulator also takes into account the fact that the BIS pharmacodynamics depends on bleeding [Kurita2009]_ leading to a deeper hypnosis state, again value for this dependencies have been chosen to match the experimentals results of the paper.
 
 In case of bleeding, considering :math:`\rho = \frac{V_{1,p}(t)}{V_{1,p}(0)}` with :math:`V_{1,p}(0)` the initial first compartment volume of propofol PK model and :math:`V_{1,p}(t)` the volume updated thanks to the rates of blood loss given by the user, the equations are the following:
 

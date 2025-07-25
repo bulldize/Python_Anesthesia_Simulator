@@ -1,7 +1,7 @@
 Pharmacokinetics
 ================
 
-The most common approach for modeling pharmacokinetics is based on compartmental models. The concept is to consider the body as one or several compartments and describe the drug concentration in each compartment (Bailey2005_). The drug is assumed to be homogeneously distributed in each compartment, and the transport rate between compartments is assumed to be proportional to the drug concentration. Although this is a crude simplification of reality, it is a powerful tool for the prediction of the drug concentration in the body. Moreover, the freedom of the number of compartments allows to reach a good compromise between accuracy and complexity depending on available data.
+The most common approach for modeling pharmacokinetics is based on compartmental models. The concept is to consider the body as one or several compartments and describe the drug concentration in each compartment [Bailey2005]_. The drug is assumed to be homogeneously distributed in each compartment, and the transport rate between compartments is assumed to be proportional to the drug concentration. Although this is a crude simplification of reality, it is a powerful tool for the prediction of the drug concentration in the body. Moreover, the freedom of the number of compartments allows to reach a good compromise between accuracy and complexity depending on available data.
 
 .. figure:: ../images/3_comportment_model.png
    :alt: Three-compartment model for propofol and remifentanil.
@@ -47,7 +47,7 @@ where :math:`x_1(t), x_2(t)` and :math:`x_3(t)` respectively represent drug conc
 
 where :math:`V_i` and :math:`Cl_i` for :math:`i \in \{1,2,3\}` are, respectively, the volumes and the clearance rates of each compartment. The input :math:`u(t)` is the drug infusion rate in :math:`\mathrm{mg/s}` for propofol and :math:`\mathrm{µg/s}` for remifentanil.
 
-Multiple studies have been conducted to estimate the parameters of the PK model for propofol and remifentanil depending on the patient's characteristics (age, height, weight, and sex). The most commonly used in clinical practice are the models of Scnnider1999_ and Marsh1991_ for propofol, and the model of Minto1997_ for remifentanil. However, two more recent studies made by Eleveld et al. (Eleveld2018_, Eleveld2017_) respectively for propofol and remifentanil, gather much more data and could be considered as the state of the art.
+Multiple studies have been conducted to estimate the parameters of the PK model for propofol and remifentanil depending on the patient's characteristics (age, height, weight, and sex). The most commonly used in clinical practice are the models of [Scnnider1999]_ and [Marsh1991]_ for propofol, and the model of [Minto1997]_ for remifentanil. However, two more recent studies made by Eleveld et al. ([Eleveld2018]_, [Eleveld2017]_) respectively for propofol and remifentanil, gather much more data and could be considered as the state of the art.
 
 
 .. figure:: ../images/propofol_concentration.png
@@ -93,19 +93,19 @@ blood pressure. It has a short half-life, between 1-6 minutes depending on the s
 
 For this drug, there is less studies focused on modelling, and the model structure varies between the propositions.
 
-In Beloeil2005_, the authors have proposed a single compartment model given by the following equation to model the PK of norepineprhine in shocked adult patients:
+In [Beloeil2005]_, the authors have proposed a single compartment model given by the following equation to model the PK of norepineprhine in shocked adult patients:
 
 .. math::
     \dot{x}(t) = -\frac{Cl}{V} x(t) + \frac{1}{V} u(t)
 
 where :math:`V` and :math:`Cl` are, respectively, the volume and the clearance rate of the single compartment. :math:`x(t)` is directly the blood concentration of norepinephrine.
 
-In Oualha2014_, the focused was one shock child patient and the endogenous production is also considered in the model:
+In [Oualha2014]_, the focused was one shock child patient and the endogenous production is also considered in the model:
 
 .. math::
     \dot{x}(t) = -\frac{Cl}{V} x(t) + \frac{1}{V} (u_{endo} + u(t))
 
-In Li2024_, the authors studied healthy patient and considered a two compartments model with endogenous production and a delayed input:
+In [Li2024]_, the authors studied healthy patient and considered a two compartments model with endogenous production and a delayed input:
 
 .. math::
     \begin{align}
@@ -121,7 +121,7 @@ A comparison of those three model is given in the figure below.
    :width: 70%
    
    Blood concentration of norepinephrine for a constant injection of 0.1 µg/s
-
+   
 References
 ----------
 
@@ -146,4 +146,4 @@ References
         vol. 78, no. 4, pp. 886–897, 2014, doi: https://10.1111/bcp.12412.
 .. [Li2024] Y. Li et al., “Population Pharmacokinetic Modelling of Norepinephrine
         in Healthy Volunteers Prior to and During General Anesthesia,” Clin Pharmacokinet,
-        vol. 63, no. 11, pp. 1597–1608, Nov. 2024, doi: https://10.1007/s40262-024-01430-y.
+        vol. 63, no. 11, pp. 1597–1608, Nov. 2024, doi: https://10.1007/s40262-024-01430-y.   
