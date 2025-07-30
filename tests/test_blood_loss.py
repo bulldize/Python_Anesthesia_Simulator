@@ -41,13 +41,13 @@ for index in range(N_simu):
     uR = tci_remi.one_step(target_remi)/3600 * 10  # convert to mg/s
 
     if index*ts > time_start_bleeding and index*ts < time_end_bleeding:
-        Bis, Co, Map, Tol = George.one_step(u_propo=uP, u_remi=uR, u_nore=uN,
+        Bis, Co, Map, Tol, Nmb = George.one_step(u_propo=uP, u_remi=uR, u_nore=uN,
                                             blood_rate=- blood_loss_rate, noise=False)
     elif index*ts > time_start_transfusion and index*ts < time_end_transfusion:
-        Bis, Co, Map, Tol = George.one_step(u_propo=uP, u_remi=uR, u_nore=uN,
+        Bis, Co, Map, Tol, Nmb = George.one_step(u_propo=uP, u_remi=uR, u_nore=uN,
                                             blood_rate=blood_gain_rate, noise=False)
     else:
-        Bis, Co, Map, Tol = George.one_step(u_propo=uP, u_remi=uR, u_nore=uN,
+        Bis, Co, Map, Tol, Nmb = George.one_step(u_propo=uP, u_remi=uR, u_nore=uN,
                                             blood_rate=0, noise=False)
 
 

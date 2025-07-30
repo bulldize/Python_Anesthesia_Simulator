@@ -324,6 +324,7 @@ class BIS_model:
 
         If the BIS model chosen considers only the effect of propofol the effect site concentration of remifentanil is ignored.
         Inputs can be either nd.array or float, the format of the output will be the same as the input
+        
         Parameters
         ----------
         c_es_propo : float
@@ -377,16 +378,19 @@ class BIS_model:
     
     def one_step(self, c_es_propo: float, c_es_remi: Optional[float] = 0) -> float:
         """Compute one step time of the BIS model
+        
         Parameters
         ----------
-       c_es_propo : float
+        c_es_propo : float
             Propofol effect site concentration (µg/mL).
-       c_es_remi : float, optional
+        c_es_remi : float, optional
             Remifentanil effect site concentration (ng/mL). The default is 0.
+            
         Returns
         -------
         BIS : float
             Bis value.
+            
         """
 
         bis_temp = self.compute_bis(c_es_propo, c_es_remi)
@@ -402,16 +406,19 @@ class BIS_model:
 
     def full_sim(self, c_es_propo: np.ndarray, c_es_remi: Optional[np.ndarray] = None) -> np.ndarray:
         """ Simulate BIS model with a given input.
+        
         Parameters
         ----------
         c_es_propo : np.ndarray
             List of propofol effect site concentrations (µg/ml).
         c_es_remi : np.ndarray, optional
             List of remifentanil effect site concentrations (ng/ml).
+            
         Returns
         -------
         np.ndarray
             List of the output BIS values during the simulation.
+            
         """
         if c_es_remi is not None:
             if len(c_es_propo) != len(c_es_remi):
@@ -1513,3 +1520,99 @@ class Hemo_meca_PD_model:
         self.x = self.x_eq
         self.previous_cp_propo = cp_propo_eq
         self.previous_cp_remi = cp_remi_eq
+
+
+class NMB_model:
+    r"""Model to link Atracurium effect site concentration to Neuromuscular Blockade (NMB).
+
+    The equation is:
+
+    .. math:: NMB = \frac{100*C_{50}^\gamma}{C_{50}^\gamma + C_e^\gamma}
+    
+    Parameters
+    ----------
+    hill_model : str, optional
+        'Weatherley' [Weatherley1983]_       
+        Ignored if hill_param is specified.
+        Default is 'Weatherley'.
+    hill_param : dict, optional
+        Parameters of the model:
+            
+        - **'c50'**: Half effect concentration (µg/mL).
+        - **'gamma'**: Stepness of the Hill curve.
+        
+        If it is not provided default values are used.
+
+
+
+    Attributes
+    ----------
+    c50p : float
+        Concentration at half effect for atracurium effect on NMB (µg/mL).
+    gamma : float
+        slope coefficient for the Hill curve.
+    hill_model : str
+        'Weatherley' [Weatherley1983]_
+        
+    References
+    ----------
+    .. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v." 
+            British Journal of Anesthesia, vol. 55, Suppl. 1, pp. 39S-45S, Jan. 1983.
+
+    """
+
+    def __init__(self, hill_model: str = 'Weatherley',
+                 hill_param: Optional[dict] = {}):
+        """
+        Init the class.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        self.hill_model = hill_model
+
+        if self.hill_model == 'Weatherley':
+        
+            self.C50 = hill_param.get('C50', 0.625) 
+            self.gamma = hill_param.get('gamma', 4.25) 
+
+
+
+
+    def compute_nmb(self, Ce):
+        """Compute NMB from atracurium effect site concentration.
+
+        Parameters
+        ----------
+        Ce : float
+            Atracurium effect site concentration (µg/mL).
+
+
+        Returns
+        -------
+        NMB : float
+            NMB value.
+
+        """
+        
+        if self.hill_model == 'Weatherley':
+            nmb = (100*self.C50**self.gamma) / (self.C50**self.gamma + Ce**self.gamma)
+
+        return nmb
+
+    
+
+    def plot_surface(self):
+        """Plot the 2D-Hill curve of the NMB level related to Atracurium effect site concentration"""
+        ce = np.linspace(0, 8, 100)
+        nmb = self.compute_nmb(ce)
+        plt.figure()
+        plt.plot(ce, nmb)
+        plt.xlabel('Atracurium Ce [μg/mL]')
+        plt.ylabel('NMB')
+        plt.grid(True)
+        plt.ylim(0, 100)
+        plt.show()
