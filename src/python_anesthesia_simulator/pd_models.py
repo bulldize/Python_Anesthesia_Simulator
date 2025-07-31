@@ -114,18 +114,18 @@ class BIS_model:
     .. [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
             “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
             British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018. 
-    .. [Fuentes2018] Fuentes, Ricardo, et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
+    .. [Fuentes2018] R. Fuentes et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
             electroencephalographic interaction with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 
             1078-1086. doi: 10.1111/pan.13486 
-    .. [Kern2004] Kern, Steven E., et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+    .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
             interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-    .. [Mertens2003] Mertens, Martijn J., et al. "Propofol reduces perioperative remifentanil requirements 
+    .. [Mertens2003] M. J. Mertens et al. "Propofol reduces perioperative remifentanil requirements 
             in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
             Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
-    .. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
+    .. [Johnson2008] K. B. Johnson et al. "Validation of remifentanil propofol response surfaces for sedation, 
             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
-    .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+    .. [Yumuk2024] E. Yumuk et al.  "Data-driven identification and comparison of full multivariable models 
             for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
             doi: 10.1016/j.jprocont.2024.103243
 
