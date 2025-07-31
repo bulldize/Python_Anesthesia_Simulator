@@ -962,3 +962,16 @@ class AtracuriumModel:
     
     def get_system_gain(self):
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
+    
+    
+    def initialize_state(self, x0: np.ndarray):
+        """ Initialize the state vector 
+
+        Parameters
+        ----------
+        x0 : numpy array
+            Initial state vector. 
+
+        """
+        
+        self.x = x0.reshape(-1, 1)

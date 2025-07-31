@@ -711,6 +711,7 @@ class Patient:
             - 'BIS': Bispectral Index
             - 'SQI': Signal Quality Index
             - 'TOL': Tolerance level
+            - 'NMB': Neuromuscular blockade level (%)
             - 'TPR': Total eripheral resistance (mmHg min/ mL) 
             - 'SV': Stroke volume (ml)
             - 'HR': Heart rate (beat/min)
@@ -728,7 +729,7 @@ class Patient:
         """
         self.Time = 0
         column_names = ['Time',  # time
-                        'BIS', 'SQI', 'TOL', 'MAP', 'CO',  # outputs
+                        'BIS', 'SQI', 'TOL', 'NMB', 'MAP', 'CO',  # outputs
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore', 'u_atra',  # inputs
                         'blood_volume']  # nore concentration and blood volume
@@ -745,7 +746,7 @@ class Patient:
         dap = self.map - 2 / 9 * self.sv
         sap = self.map + 4 / 9 * self.sv
         new_line = {'Time': self.Time,
-                    'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr,
+                    'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr, 'NMB': self.nmb,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
                     'SAP': sap, 'DAP': dap,
                     'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2], 'u_atra': inputs[3], 'SQI': inputs[4],  # inputs
@@ -888,3 +889,20 @@ class Patient:
                 df['x_nore' + str(i + 1)] = x_nore[i, :]
 
         return df
+
+
+    def initialized_at_given_state(self, x0_atra: np.ndarray):
+        r"""
+        Initialize the atracurium linear model at the given state.
+
+        Parameters
+        ----------
+        x0 : numpy array
+            Initial state vector of the atracurium linear model.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.atracurium_pk.initialize_state(x0_atra)
