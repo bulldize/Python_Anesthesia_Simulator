@@ -776,7 +776,26 @@ class CompartmentModel:
         # Discretization of the system
         self.discretize_sys = self.continuous_sys.to_discrete(self.ts)
 
+
     def get_system_gain(self):
+        """
+        Compute the steady-state (DC) gain of the compartment model.
+
+        The steady-state gain is the ratio of the output to the input when the system
+        reaches equilibrium. For a stable LTI system,
+        this is given by:
+
+        .. math::
+            G_{ss} = C (-A)^{-1} B + D
+
+        where ( A, B, C, D ) are the state-space matrices.
+
+        Returns
+        -------
+        float
+            The scalar steady-state gain of the system (assumes SISO or extracts [0,0] for MIMO).
+        """
+        
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
 
 
@@ -961,6 +980,24 @@ class AtracuriumModel:
         return x    
     
     def get_system_gain(self):
+        """
+        Compute the steady-state (DC) gain of the atracurium model.
+
+        The steady-state gain is the ratio of the output to the input when the system
+        reaches equilibrium. For a stable LTI system,
+        this is given by:
+
+        .. math::
+            G_{ss} = C (-A)^{-1} B + D
+
+        where ( A, B, C, D ) are the state-space matrices.
+
+        Returns
+        -------
+        float
+            The scalar steady-state gain of the system (assumes SISO or extracts [0,0] for MIMO).
+        """
+        
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
     
     

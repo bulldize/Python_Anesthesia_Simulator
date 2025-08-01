@@ -14,7 +14,7 @@ where :math:`E(t)` is the effect of the drug at time :math:`t`, :math:`E_{max}` 
    :align: center
    :alt: Sigmoid function
 
-For propofol and remifentanil, before applying the Hill function, an effect-site compartment is added to the PK model to represent a delay between a rise of drug concentration in blood and the occurrence of the effect. This delay is dependent on the physiological variables, and thus, multiple effect-site compartments can be added to the model. As those compartments are virtual, the drug transfer is considered in only one direction, from blood to the effect site without affecting the blood compartment concentration. Thus, the addition of the effect site does not affect the PK model. The equation for one effect-site compartment is given by:
+For propofol, remifentanil and atracurium [Weatherley1983]_, before applying the Hill function, an effect-site compartment is added to the PK model to represent a delay between a rise of drug concentration in blood and the occurrence of the effect. This delay is dependent on the physiological variables, and thus, multiple effect-site compartments can be added to the model. As those compartments are virtual, the drug transfer is considered in only one direction, from blood to the effect site without affecting the blood compartment concentration. Thus, the addition of the effect site does not affect the PK model. The equation for one effect-site compartment is given by:
 
 .. math::
 
@@ -28,6 +28,12 @@ where :math:`x_{es}(t)` is the drug concentration in the effect site, :math:`x_1
    :alt: Four-compartment model
 
    Four-compartment model for propofol and remifentanil.
+   
+For atracurium, before applying the Hill function, a second effect-site compartment have been added to better fit experimental data [Lago1998]_. The equation for the second effect-site compartment is given by:    
+
+.. math::
+
+    \dot{\hat{x}}_{es}(t) = \frac{1}{\tau} (x_{es}(t) - \hat{x}_{es}(t))
 
 In the simulator, we slightly abuse the notation and included the effect-site compartments in the PK model in order to keep all the dynamical system in the same state-space representation.  
 
@@ -82,6 +88,13 @@ The surface of the 3D-Hill function using parameters from [Bouillon2004]_ is sho
 Note that the BIS can also be affected by delay, in this case we have that :math:`BIS(t) = BIS(t - \tau)`.
 In the literature this delay has been attributed to different causes, such as the age of the patient [Eleveld2018]_ or the Signal Quality Index (SQI) of the BIS [Wahlquist2025]_ 
 
+Atracurium
+-----------
+For atracurium a 2D-Hill function is used to express the drug's effect on the neoromuscular blockade level (NMB) [Weatherley1983]_, which is expressed in \%:
+
+.. math::
+
+    NMB(t) =  \frac{E_{max} * C_{50}^\gamma}{C_{50}^\gamma + \hat{x}_{es}(t)^\gamma}
 
 Tolerance of Laryngoscopy
 -----------------------------
@@ -245,6 +258,7 @@ The following table summarizes the effect of single drugs injection on the model
           <th>Propofol</th>
           <th>Remifentanil</th>
           <th>Norepinephrine</th>
+          <th>Atracurium</th>
         </tr>
       </thead>
       <tbody>
@@ -253,11 +267,13 @@ The following table summarizes the effect of single drugs injection on the model
           <td class="blue-bg">-</td>
           <td class="blue-bg">-</td>
           <td>No effect</td>
+          <td>No effect</td>
         </tr>
         <tr>
           <th>TOL</th>
           <td class="red-bg">+</td>
           <td class="red-bg">+</td>
+          <td>No effect</td>
           <td>No effect</td>
         </tr>
         <tr>
@@ -265,30 +281,42 @@ The following table summarizes the effect of single drugs injection on the model
           <td class="blue-bg">-</td>
           <td class="blue-bg">-</td>
           <td class="red-bg">+</td>
+          <td>No effect</td>
         </tr>
         <tr>
           <th>CO</th>
           <td class="red-bg">+</td>
           <td class="red-bg">+</td>
           <td class="blue-bg">-</td>
+          <td>No effect</td>
         </tr>
         <tr>
           <th>TPR</th>
           <td class="blue-bg">-</td>
           <td class="blue-bg">-</td>
           <td class="red-bg">+</td>
+          <td>No effect</td>
         </tr>
         <tr>
           <th>SV</th>
           <td class="blue-bg">-</td>
           <td class="red-bg">+</td>
           <td class="blue-bg">-</td>
+          <td>No effect</td>
         </tr>
         <tr>
           <th>HR</th>
           <td class="red-bg">+</td>
           <td class="red-bg">+</td>
           <td class="blue-bg">-</td>
+          <td>No effect</td>
+        </tr>
+        <tr>
+          <th>NMB</th>
+          <td>No effect</td>
+          <td>No effect</td>
+          <td>No effect</td>
+          <td class="red-bg">+</td>
         </tr>
       </tbody>
     </table>
@@ -335,3 +363,7 @@ References
 .. [Wahlquist2025] Y. Wahlquist, et al. "Kalman filter soft sensor to handle signal quality loss in closed-loop controlled anesthesia" 
           Biomedical Signal Processing and Control 104 (2025): 107506.
           doi: https://doi.org/10.1016/j.bspc.2025.107506    
+.. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v." 
+        British Journal of Anesthesia, vol. 55, Suppl. 1, pp. 39S-45S, Jan. 1983. 
+.. [Lago1998] P. Lago et al., "On-Line Autocalibration of a PID Controller of Neuromuscular Blockade"
+        Proceedings of the 1998 IEEE International Conference on Control Applications (Cat. No.98CH36104), Trieste, Italy, Vol. 1, pp. 363-367, Sept. 1998, doi: 10.1109/CCA.1998.728448.          

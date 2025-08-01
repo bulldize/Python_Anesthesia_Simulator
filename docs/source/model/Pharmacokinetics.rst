@@ -83,6 +83,84 @@ Multiple studies have been conducted to estimate the parameters of the PK model 
 
     where :math:`m_i` for :math:`i \in \{1,2,3\}` are the mass of drug in each compartment and blood concentration is given by :math:`\frac{m_1(t)}{V_1}`. Note that both models are equivalent.
 
+Atracurium
+-------------------------
+For atracurium, the two-compartment model proposed in [Ward1983]_ is considered, see the figure below.
+
+.. figure:: ../images/2_comportment_model.png
+   :alt: Two-compartment model for atracurium.
+   :align: center
+   :width: 50%
+
+   Two-compartment model for atracurium.
+   
+The first compartment is the central compartment, which represents blood and highly perfused organs such as the heart, brain, kidney and liver.
+Then the peripherical compartment represents the highly perfused tissues such as muscles.
+The model results in a dynamical system described by the following state-space representation:
+
+.. math::
+
+    \begin{pmatrix}
+    \dot{x}_1(t) \\ \dot{x}_2 (t)
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    -\frac{(k_{10} + k_{12})}{60} & \frac{k_{21}}{60} \frac{V_2}{V_1} \\
+    \frac{k_{12}}{60} \frac{V_1}{V_2} & -\frac{k_{21}}{60} 
+    \end{pmatrix}
+    \begin{pmatrix}
+    x_1 (t)\\ x_2 (t)
+    \end{pmatrix}
+    +
+    \begin{pmatrix}
+    \frac{1}{V_1 * Weight} \\ 0
+    \end{pmatrix}
+    u(t)
+
+where :math:`x_1(t)` and :math:`x_2(t)` respectively represent drug concentration in blood and muscles in :math:`\mathrm{\mu g/ml}`. The coefficients can be obtained from the equations below, all in :math:`\mathrm{1/s}`:
+
+.. math::
+
+    k_{10} = \frac{Cl_1}{V_1},\quad
+    k_{21} = \frac{\alpha \beta}{k_{10}},\quad
+    k_{12} = \alpha + \beta - k_{10} - k_{21}
+
+where :math:`V_1` and :math:`Cl_1` are, respectively, the volume and the clearanc rate of the primary compartment.
+The coefficients :math:`\alpha` and :math:`\beta` are computed as:
+
+.. math::
+
+    \alpha = \frac{\log(2)}{t^{\alpha}_{1/2}}, \quad
+    \beta = \frac{\log(2)}{t^{\beta}_{1/2}}
+    
+where :math:`t^{\alpha}_{1/2}` and :math:`t^{\beta}_{1/2}` are the half live times of the drug.     
+
+The input :math:`u(t)` is the atracurium infusion rate in :math:`\mathrm{\mu g/s}`.
+
+..
+
+    *Remark:* The 2-compartment model of atracurium is often presented with state representing drug mass divided by the patient's weight rather than concentration. In this case the model is given by
+
+    .. math::
+
+        \begin{pmatrix}
+        \dot{m}_1(t) \\ \dot{m}_2 (t)
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+        -\frac{(k_{10} + k_{12})}{60} & \textcolor{blue}{\frac{k_{21}}{60}} \\
+        \textcolor{blue}{\frac{k_{12}}{60}} & -\frac{k_{21}}{60}
+        \end{pmatrix}
+        \begin{pmatrix}
+        m_1 (t)\\ m_2 (t)
+        \end{pmatrix}
+        +
+        \begin{pmatrix}
+        \frac{1}{Weight} \\ 0
+        \end{pmatrix}
+        u(t)
+
+    where :math:`m_1` and :math:`m_2` are the mass of drug in each compartment and blood concentration is given by :math:`\frac{m_1(t)}{V_1}`. Note that both models are equivalent.
 
 Norepinephrine
 ---------------
@@ -146,4 +224,6 @@ References
         vol. 78, no. 4, pp. 886–897, 2014, doi: https://10.1111/bcp.12412.
 .. [Li2024] Y. Li et al., “Population Pharmacokinetic Modelling of Norepinephrine
         in Healthy Volunteers Prior to and During General Anesthesia,” Clin Pharmacokinet,
-        vol. 63, no. 11, pp. 1597–1608, Nov. 2024, doi: https://10.1007/s40262-024-01430-y.   
+        vol. 63, no. 11, pp. 1597–1608, Nov. 2024, doi: https://10.1007/s40262-024-01430-y.  
+.. [Ward1983] S. Ward et al., "Pharmacokinetics of Atracurium Besylate in Healty Patients (after a single i.v. bolus dose),"
+        British Journal of Anesthesia, vol. 55, no. 2, pp. 113-116, Feb. 1983, doi: 10.1093/bja/55.2.113.       
