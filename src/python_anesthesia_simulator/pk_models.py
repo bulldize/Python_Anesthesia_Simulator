@@ -1,6 +1,7 @@
 # Standard import
 import copy
 from typing import Optional
+import math
 
 # Third party imports
 import numpy as np
@@ -10,7 +11,7 @@ from scipy.signal import lsim, StateSpace
 class CompartmentModel:
     """PKmodel class modelize the PK model of propofol, remifentanil or norepinephrine drug. Simulate the drug distribution in the body.
 
-    Use a 6 compartement model for propofol, a 5 compartement model for remifentanil,
+    Use a 6 compartement model for propofol, a 5 compartement model for remifentanil
     and a 1 compartement model for norepinephrine.
     The model is a LTI model with the form:
 
@@ -18,8 +19,15 @@ class CompartmentModel:
     .. math::  y(k) = Cx(k)
 
     The state vector is the concentration of the drug in each compartement in the following order:
-    blood, muscles, fat, BIS effect-site, MAP effect-site 1, MAP effect-site 2.
-    The output of the model is the BIS effect-site concentration.
+        
+    * blood, muscles, fat, BIS effect-site, MAP effect-site 1, MAP effect-site 2 for propofol;
+    * blood, muscles, fat, BIS effect-site, MAP effect-site 1 for remifentanil;
+    * blood for norepinephrine;
+    
+    The output of the model is:
+        
+    * the BIS effect-site concentration for propofol and remifentanil;
+    * the blood concentration for norepinephrine;
 
     Parameters
     ----------
@@ -30,17 +38,17 @@ class CompartmentModel:
     drug : str
         can be "Propofol", "Remifentanil" or "Norepinephrine".
     model : str, optional
-        Could be "Schnider" [Schnider1999]_, "Marsh_initial"[Marsh1991]_, "Marsh_modified"[Struys2000]_,
+        Could be "Schnider"[Schnider1999]_, "Marsh_initial"[Marsh1991]_, "Marsh_modified"[Struys2000]_,
         "Shuttler"[Schuttler2000]_ or "Eleveld"[Eleveld2018]_ for Propofol.
         "Minto"[Minto1997]_, or "Eleveld"[Eleveld2017]_ for Remifentanil.
-        "Beloeil"[Beloeil2005]_, "Oualha"[Oualha2014], or "Li"[Li2024] for Norepinephrine.
-        The default is "Schnider" for Propofol, "Minto" for Remifentanil, and Beloeil for Norepinephrine.
+        "Beloeil"[Beloeil2005]_, "Oualha"[Oualha2014]_, or "Li"[Li2024]_ for Norepinephrine.
+        The default is "Schnider" for Propofol, "Minto" for Remifentanil, and "Beloeil" for Norepinephrine.
     ts : float, optional
         Sampling time, in s. The default is 1.
     random : bool, optional
         bool to introduce uncertainties in the model. The default is False.
     x0 : np.ndarray, optional
-        Initial concentration of the compartement model. The default is np.ones([4, 1])*1e-4.
+        Initial concentration of the compartement model. The default is np.zeros((len(A), 1)).
     opiate : bool, optional
         For Elelevd model for propofol, specify if their is a co-administration of opiate (Remifentantil)
         in the same time. The default is True.
@@ -102,7 +110,7 @@ class CompartmentModel:
     .. [Li2024] Y. Li et al., “Population Pharmacokinetic Modelling of Norepinephrine
             in Healthy Volunteers Prior to and During General Anesthesia,” Clin Pharmacokinet,
             vol. 63, no. 11, pp. 1597–1608, Nov. 2024, doi: 10.1007/s40262-024-01430-y.
-
+            
     """
 
     def __init__(self, Patient_characteristic: list, lbm: float,
@@ -768,5 +776,239 @@ class CompartmentModel:
         # Discretization of the system
         self.discretize_sys = self.continuous_sys.to_discrete(self.ts)
 
+
     def get_system_gain(self):
+        """
+        Compute the steady-state (DC) gain of the compartment model.
+
+        The steady-state gain is the ratio of the output to the input when the system
+        reaches equilibrium. For a stable LTI system,
+        this is given by:
+
+        .. math::
+            G_{ss} = C (-A)^{-1} B + D
+
+        where ( A, B, C, D ) are the state-space matrices.
+
+        Returns
+        -------
+        float
+            The scalar steady-state gain of the system (assumes SISO or extracts [0,0] for MIMO).
+        """
+        
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
+
+
+class AtracuriumModel:    
+    """AtracuriumModel class modelize the linear part of the PK-PD model of atracurium drug. Simulate the drug distribution in the body.
+
+    The model is a LTI model with the form:
+
+    .. math::  x(k+1)= Ax(k) + Bu(k)
+    .. math::  y(k) = Cx(k)
+    
+    The state vector is the concentration of the drug in each compartement.
+
+    Parameters
+    ----------
+    Patient_characteristic: list
+        Patient_characteristic = [age (yr), height(cm), weight(kg), gender(0: female, 1: male)]
+    model : str, optional
+        "WardWeatherleyLago"[Ward1983,Weatherley1983,Lago1998]_.
+        The default is "WardWeatherleyLago".    
+    model_params : dict, optional
+        For "WardWeatherleyLago":
+            
+        - **'V1'**: Volume of the central compartment (ml/kg)
+        - **'V2'**: Volume of the peripheral compartment (ml/kg)
+        - **'Cl'**: Clearance (ml/min/kg)
+        - **'t12_alpha'**: First half live time (min)
+        - **'t12_beta'**: Second half live time (min)
+        - **'ke0'**: Transfer rate of the first effect-site compartment (1/min)
+        - **'tau'**: Time constant of the second effect-site compartment (min)
+            
+        If it is not provided average values are used.    
+    ts : float, optional
+        Sampling time, in s. The default is 1.
+    x0 : np.ndarray, optional
+        Initial conditions of the model. The default is np.zeros((len(A), 1)).
+
+
+    Attributes
+    ----------
+    ts : float
+        Sampling time, in s.    
+    continuous_sys : control.StateSpace
+        Continuous state space model.
+    discrete_sys : control.StateSpace
+        Discrete state space model.
+    x : np.ndarray
+        State vector.
+    y : np.ndarray
+        Output vector (hypnotic effect site concentration).
+
+    References
+    ----------
+    .. [Ward1983] S. Ward et al., "Pharmacokinetics of Atracurium Besylate in Healty Patients (after a single i.v. bolus dose),"
+            British Journal of Anesthesia, vol. 55, no. 2, pp. 113-116, Feb. 1983, doi: 10.1093/bja/55.2.113.
+    .. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v." 
+            British Journal of Anesthesia, vol. 55, Suppl. 1, pp. 39S-45S, Jan. 1983.
+    .. [Lago1998] P. Lago et al., "On-Line Autocalibration of a PID Controller of Neuromuscular Blockade"
+            Proceedings of the 1998 IEEE International Conference on Control Applications (Cat. No.98CH36104), Trieste, Italy, Vol. 1, pp. 363-367, Sept. 1998, doi: 10.1109/CCA.1998.728448.
+    """
+    
+    def __init__(self, Patient_characteristic: list, 
+                 model: str = None,
+                 model_params: dict = {},    
+                 ts: float = 1,
+                 x0: np.ndarray = None):
+        """Init the class."""
+        self.ts = ts
+        weight = Patient_characteristic[2]
+        self.model = model
+        if self.model is None:
+            self.model = 'WardWeatherleyLago'
+            
+        if self.model == 'WardWeatherleyLago':
+            
+            # Volume of the central compartment [ml/kg]
+            V1 = model_params.get('V1', 49.0) 
+            # Volume of the peripheral compartment [ml/kg]
+            V2 = model_params.get('V1', 157.0) 
+            # Clearance [ml/min/kg]
+            Cl = model_params.get('Cl', 5.5) 
+            # First half live time [min]
+            t12_alpha = model_params.get('t12_alpha', 2.06) 
+            # Second half live time [min]
+            t12_beta = model_params.get('t12_beta', 19.9)
+            # Transfer rate of the first effect-site compartment [1/min]
+            ke0 = model_params.get('ke0', 0.1)
+            # Time constant of the second effect-site compartment [min]
+            tau = model_params.get('tau', 6.2670)
+            
+            # Elimination rate constant [1/min]
+            k10 = Cl/V1;
+            # alpha [1/min]
+            alpha = math.log(2)/t12_alpha;
+            # beta [1/min]
+            beta = math.log(2)/t12_beta;
+            # Transfer rate 2->1 [1/min]
+            k21 = (alpha*beta)/k10;
+            # Transfer rate 1->2 [1/min]
+            k12 = alpha + beta - k10 - k21;
+            
+            # Matrices system definition
+            A = np.array([[ -(k10+k12),     (k21*V2)/V1,    0,      0],
+                          [ (k12*V1)/V2,    -k21,           0,      0],
+                          [ ke0,             0,            -ke0,    0],
+                          [ 0,               0,            1/tau,  -1/tau]])/60  # 1/s  
+            # Conversion from [ug/s] to [ug/ml/s]
+            B = np.transpose(np.array([[1/(weight*V1), 0, 0, 0]]))
+            C = np.array([[0, 0, 0, 1]])
+            D = np.array([[0]])
+        
+        
+        # Continuous system
+        self.continuous_sys = StateSpace(A, B, C, D)
+        # Discretization of the system
+        self.discretize_sys = self.continuous_sys.to_discrete(self.ts)
+
+        # init output
+        if x0 is None:
+            x0 = np.zeros((len(A), 1))
+        self.x = x0
+        self.y = np.dot(C, self.x)
+        
+    def one_step(self, u: float) -> list:
+        """Simulate one step of the model.
+
+        .. math:: x^+ = Ax + Bu
+        .. math:: y = Cx
+
+        Parameters
+        ----------
+        u : float
+            Infusion rate (µg/s).
+
+        Returns
+        -------
+        numpy array
+            Actual effect site concentration (µg/mL).
+
+        """
+
+        self.x = self.discretize_sys.A @ self.x + self.discretize_sys.B * u
+        self.y = self.discretize_sys.C @ self.x + self.discretize_sys.D * u
+
+        return self.y[0, 0]
+
+    def full_sim(self, u: np.ndarray, x0: Optional[np.ndarray] = None, interp=False) -> list:
+        """ Simulate the model with a given input.
+
+        Parameters
+        ----------
+        u : list
+            Infusion rate [mg/s].
+        x0 : numpy array, optional
+            Initial state. The default is None.
+        interp : bool, optional
+            Whether to use zero-order-hold (False, the default) or linear (True) interpolation for the input array.
+
+        Returns
+        -------
+        numpy array
+            List of the states value during the simulation.
+
+        """
+
+        if x0 is None:
+            x0 = np.zeros(len(self.continuous_sys.A))
+            
+        t = np.ones_like(u)*self.ts
+        t[0] = 0
+        t = np.cumsum(t)
+        
+        _, _, x_lsim = lsim(
+            self.continuous_sys,
+            T=t,
+            U=u,
+            X0=x0,
+            interp=interp
+        )
+        
+        x = x_lsim.T
+        return x    
+    
+    def get_system_gain(self):
+        """
+        Compute the steady-state (DC) gain of the atracurium model.
+
+        The steady-state gain is the ratio of the output to the input when the system
+        reaches equilibrium. For a stable LTI system,
+        this is given by:
+
+        .. math::
+            G_{ss} = C (-A)^{-1} B + D
+
+        where ( A, B, C, D ) are the state-space matrices.
+
+        Returns
+        -------
+        float
+            The scalar steady-state gain of the system (assumes SISO or extracts [0,0] for MIMO).
+        """
+        
+        return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
+    
+    
+    def initialize_state(self, x0: np.ndarray):
+        """ Initialize the state vector 
+
+        Parameters
+        ----------
+        x0 : numpy array
+            Initial state vector. 
+
+        """
+        
+        self.x = x0.reshape(-1, 1)

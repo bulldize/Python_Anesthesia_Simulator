@@ -23,44 +23,49 @@ class BIS_model:
 
     If the interaction with remifentanil is considered the equation represents a Surface Response model, where:
 
-    Minto-type surface model
     .. math:: U = \frac{U_p + U_r}{1 - \beta \theta + \beta \theta^2}
+    
+    for Minto-type surface model and:
+    
+    .. math:: U = U_p + U_r + \beta U_p U_r
+
+    for Greco-type surface model, with: 
+        
     .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
     .. math:: \theta = \frac{U_p}{U_r+U_p}
 
-    Greco-type surface model
-    .. math:: U = U_p + U_r + \beta U_p U_r
-
+    
     Parameters
     ----------
     hill_model : str, optional
-        'Vanluchene' [Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018]_, do not consider the synergistic effect of remifentanil.
-        Minto-type surface model
-        'Bouillon' [Bouillon2004]_, considers the synergistic effect of remifentanil.
-        Greco-type surface model_
-        'Fuentes' [Fuentes2018]_, considers the synergistic effect of remifentanil.
-        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil.
-        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil.
-        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil.
-
+        'Vanluchene'[Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
+        'Eleveld'[Eleveld2018]_, do not consider the synergistic effect of remifentanil.
+        'Bouillon'[Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type surface model).
+        'Fuentes'[Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type surface model).
         Ignored if hill_param is specified.
         Default is 'Bouillon'.
     hill_param : list, optional
         Parameters of the model
-        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS]:
+        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS]:
 
         - **c50p_BIS**: Concentration at half effect for propofol effect on BIS (µg/mL).
         - **c50r_BIS**: Concentration at half effect for remifentanil effect on BIS (ng/mL). If it is equal to zero the interaction with remifentanil is not considered.
-        - **gamma_BIS**: slope coefficient for the BIS  model.
-        - **beta_BIS**: interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
-        - **E0_BIS**: initial BIS.
-        - **Emax_BIS**: max effect of the drugs on BIS.
+        - **gamma_BIS**: Slope coefficient for the BIS model.
+        - **beta_BIS**: Interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
+        - **E0_BIS**: Initial BIS.
+        - **Emax_BIS**: Max effect of the drugs on BIS.
+        - **Delay_BIS**: Delay affecting the BIS (s)
 
         The default is None.
+        If Delay_BIS is not provided it is assumed equal to 0.
     random : bool, optional
         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
+    ts : float
+        Sampling time, in s.        
 
 
     Attributes
@@ -70,59 +75,64 @@ class BIS_model:
     c50r : float
         Concentration at half effect for remifentanil effect on BIS (ng/mL). If it is equal to zero the interaction with remifentanil is not considered.
     gamma : float
-        slope coefficient for the BIS  model.
+        Slope coefficient for the BIS  model.
     beta : float
-        interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
+        Interaction coefficient for the BIS model (beta_BIS = 0 signifies an additive interaction, beta_BIS > 0 indicates synergy).
     E0 : float
-        initial BIS.
+        Initial BIS.
     Emax : float
-        max effect of the drugs on BIS.
+        Max effect of the drugs on BIS.
+    bis_delay : float
+         Delay time on the output of the BIS model (s)          
     hill_param : list
         Parameters of the model
-        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS]
+        list [c50p_BIS, c50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS]
     c50p_init : float
         Initial value of c50p, used for blood loss modelling.
     hill_model : str
-        'Vanluchene' [Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
-        'Eleveld' [Eleveld2018]_, do not consider the synergistic effect of remifentanil.
-        'Bouillon' [Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type).
-        'Fuentes' [Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Yumuk' [Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Vanluchene'[Vanluchene2004]_, do not consider the synergistic effect of remifentanil.
+        'Eleveld'[Eleveld2018]_, do not consider the synergistic effect of remifentanil.
+        'Bouillon'[Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type).
+        'Fuentes'[Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Yumuk'[Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
+    ts : float
+        Sampling time, in s.    
+        
     References
     ----------
-    .. [Bouillon2004]  T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
+    .. [Bouillon2004] T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
             Regarding Hypnosis, Tolerance of Laryngoscopy, Bispectral Index, and Electroencephalographic
             Approximate Entropy,” Anesthesiology, vol. 100, no. 6, pp. 1353–1372, Jun. 2004,
             doi: 10.1097/00000542-200406000-00006.
-    .. [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
+    .. [Vanluchene2004] A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
             of anesthetic drug effect: a comparison with bispectral index and processed midlatency auditory evoked
             response,” Anesthesiology, vol. 101, no. 1, pp. 34–42, Jul. 2004,
             doi: 10.1097/00000542-200407000-00008.
     .. [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
             “Pharmacokinetic–pharmacodynamic model for propofol for broad application in anaesthesia and sedation”
             British Journal of Anaesthesia, vol. 120, no. 5, pp. 942–959, mai 2018, doi:10.1016/j.bja.2018.01.018. 
-    .. [Fuentes2018]  Fuentes, Ricardo, et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
+    .. [Fuentes2018] R. Fuentes et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
             electroencephalographic interaction with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 
             1078-1086. doi: 10.1111/pan.13486 
-    .. [Kern2004]  Kern, Steven E., et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+    .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
             interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-    .. [Mertens2003]  Mertens, Martijn J., et al. "Propofol reduces perioperative remifentanil requirements 
+    .. [Mertens2003] M. J. Mertens et al. "Propofol reduces perioperative remifentanil requirements 
             in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
             Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
-     .. [Johnson2008] Johnson, Ken B., et al. "Validation of remifentanil propofol response surfaces for sedation, 
+    .. [Johnson2008] K. B. Johnson et al. "Validation of remifentanil propofol response surfaces for sedation, 
             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
-     .. [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models 
+    .. [Yumuk2024] E. Yumuk et al.  "Data-driven identification and comparison of full multivariable models 
             for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
             doi: 10.1016/j.jprocont.2024.103243
 
     """
 
     def __init__(self, hill_model: str = 'Bouillon', hill_param: Optional[list] = None,
-                 random: Optional[bool] = False, **kwargs):
+                 random: Optional[bool] = False, ts: float = 1, **kwargs):
         """
         Init the class.
 
@@ -133,14 +143,27 @@ class BIS_model:
         """
 
         self.hill_model = hill_model
+        self.ts = ts
 
         if hill_param is not None:  # Parameter given as an input
-            self.c50p = hill_param[0]
-            self.c50r = hill_param[1]
-            self.gamma = hill_param[2]
-            self.beta = hill_param[3]
-            self.E0 = hill_param[4]
-            self.Emax = hill_param[5]
+            if len(hill_param) == 7:
+                self.c50p = hill_param[0]
+                self.c50r = hill_param[1]
+                self.gamma = hill_param[2]
+                self.beta = hill_param[3]
+                self.E0 = hill_param[4]
+                self.Emax = hill_param[5]
+                self.bis_delay = hill_param[6]
+            elif len(hill_param) == 6:
+                self.c50p = hill_param[0]
+                self.c50r = hill_param[1]
+                self.gamma = hill_param[2]
+                self.beta = hill_param[3]
+                self.E0 = hill_param[4]
+                self.Emax = hill_param[5]
+                self.bis_delay = 0
+            else:
+                raise ValueError("The model parameters provided are not valid")
 
         # Minto-type surface model parameters
         elif self.hill_model == 'Bouillon':
@@ -156,6 +179,7 @@ class BIS_model:
             self.beta = 0;          cv_beta = 0
             self.E0 = 97.4;         cv_E0 = 0
             self.Emax = self.E0;    cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Vanluchene':
             # See [Vanluchene2004]  A. L. G. Vanluchene et al., “Spectral entropy as an electroencephalographic measure
@@ -170,6 +194,7 @@ class BIS_model:
             self.beta = 0;          cv_beta = 0
             self.E0 = 95.9;         cv_E0 = 0.04
             self.Emax = 87.5;       cv_Emax = 0.11
+            self.bis_delay = 0
 
         elif self.hill_model == 'Eleveld':
             # [Eleveld2018] D. J. Eleveld, P. Colin, A. R. Absalom, and M. M. R. F. Struys,
@@ -185,6 +210,7 @@ class BIS_model:
 
             # function used in the model
             def faging(x): return np.exp(x * (age - AGE_ref))
+            def fdelay(x): return 15 + np.exp(x*age)
 
             # model parameters and their coefficient of variation
             self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
@@ -194,6 +220,7 @@ class BIS_model:
             self.beta = 0;                       cv_beta = 0
             self.E0 = 93;                        cv_E0 = 0
             self.Emax = self.E0;                 cv_Emax = 0
+            self.bis_delay = fdelay(0.0517)
 
         # Greco-type surface model parameters
         elif self.hill_model == 'Fuentes':
@@ -209,6 +236,7 @@ class BIS_model:
             self.beta = 0;              cv_beta = 0
             self.E0 = 94;               cv_E0 = 0.05
             self.Emax = 94 * 0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
+            self.bis_delay = 0
 
         elif self.hill_model == 'Kern':
             # See [Kern2004]  Kern, Steven E., et al.
@@ -222,6 +250,7 @@ class BIS_model:
             self.beta = 5.1;            cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Mertens':
             # See [Mertens2003]  Mertens, Martijn J., et al.
@@ -236,6 +265,7 @@ class BIS_model:
             self.beta = 0;              cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Johnson':
             # See [Johnson2008] Johnson, Ken B., et al.
@@ -250,6 +280,7 @@ class BIS_model:
             self.beta = 3.60;           cv_beta = 0
             self.E0 = 100;              cv_E0 = 0
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         elif self.hill_model == 'Yumuk':
             # See [Yumuk2024] Yumuk, E., et al.  "Data-driven identification and comparison of full multivariable models
@@ -263,6 +294,7 @@ class BIS_model:
             self.beta = 15.03;          cv_beta = 0.539
             self.E0 = 93.97;            cv_E0 = 0.0112
             self.Emax = self.E0;        cv_Emax = 0
+            self.bis_delay = 0
 
         if random and hill_param is None:
             # estimation of log normal standard deviation
@@ -281,14 +313,18 @@ class BIS_model:
             self.E0 *= min(100, np.exp(np.random.normal(scale=w_E0)))
             self.Emax *= np.exp(np.random.normal(scale=w_Emax))
 
-        self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax]
+        self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax, self.bis_delay]
         self.c50p_init = self.c50p  # for blood loss modelling
+        # Buffer of BIS values to simulate delay. Initialized at E0.
+        # Approximated by excess
+        self.bis_buffer = np.ones(int(np.ceil(self.bis_delay / self.ts))) * self.E0
 
     def compute_bis(self, c_es_propo, c_es_remi=None):
         """Compute BIS function from propofol (and optionally remifentanil) effect site concentration.
 
         If the BIS model chosen considers only the effect of propofol the effect site concentration of remifentanil is ignored.
         Inputs can be either nd.array or float, the format of the output will be the same as the input
+        
         Parameters
         ----------
         c_es_propo : float
@@ -338,6 +374,63 @@ class BIS_model:
         bis = self.E0 - self.Emax * interaction_gamma / (1 + interaction_gamma)
 
         return bis
+    
+    
+    def one_step(self, c_es_propo: float, c_es_remi: Optional[float] = 0) -> float:
+        """Compute one step time of the BIS model
+        
+        Parameters
+        ----------
+        c_es_propo : float
+            Propofol effect site concentration (µg/mL).
+        c_es_remi : float, optional
+            Remifentanil effect site concentration (ng/mL). The default is 0.
+            
+        Returns
+        -------
+        BIS : float
+            Bis value.
+            
+        """
+
+        bis_temp = self.compute_bis(c_es_propo, c_es_remi)
+        if len(self.bis_buffer)>1:
+            self.bis_buffer = np.roll(self.bis_buffer, -1)
+            bis = self.bis_buffer[0]
+            self.bis_buffer[-1] = float(bis_temp.item())
+        else:
+            bis = bis_temp
+
+        return bis
+
+
+    def full_sim(self, c_es_propo: np.ndarray, c_es_remi: Optional[np.ndarray] = None) -> np.ndarray:
+        """ Simulate BIS model with a given input.
+        
+        Parameters
+        ----------
+        c_es_propo : np.ndarray
+            List of propofol effect site concentrations (µg/ml).
+        c_es_remi : np.ndarray, optional
+            List of remifentanil effect site concentrations (ng/ml).
+            
+        Returns
+        -------
+        np.ndarray
+            List of the output BIS values during the simulation.
+            
+        """
+        if c_es_remi is not None:
+            if len(c_es_propo) != len(c_es_remi):
+                raise ValueError("Inputs must have the same lenght")
+        else:
+            c_es_remi = np.zeros(len(c_es_propo))
+
+        BIS_output = np.ones(len(c_es_propo))
+        for index in range(len(c_es_propo)):
+            BIS_output[index] = self.one_step(c_es_propo[index], c_es_remi[index])
+
+        return BIS_output    
 
     def update_param_blood_loss(self, v_ratio: float):
         """Update PK coefficient to mimic a blood loss.
@@ -1427,3 +1520,99 @@ class Hemo_meca_PD_model:
         self.x = self.x_eq
         self.previous_cp_propo = cp_propo_eq
         self.previous_cp_remi = cp_remi_eq
+
+
+class NMB_model:
+    r"""Model to link Atracurium effect site concentration to Neuromuscular Blockade (NMB).
+
+    The equation is:
+
+    .. math:: NMB = \frac{100*C_{50}^\gamma}{C_{50}^\gamma + C_e^\gamma}
+    
+    Parameters
+    ----------
+    hill_model : str, optional
+        'Weatherley' [Weatherley1983]_       
+        Ignored if hill_param is specified.
+        Default is 'Weatherley'.
+    hill_param : dict, optional
+        Parameters of the model:
+            
+        - **'c50'**: Half effect concentration (µg/mL).
+        - **'gamma'**: Stepness of the Hill curve.
+        
+        If it is not provided default values are used.
+
+
+
+    Attributes
+    ----------
+    c50p : float
+        Concentration at half effect for atracurium effect on NMB (µg/mL).
+    gamma : float
+        slope coefficient for the Hill curve.
+    hill_model : str
+        'Weatherley' [Weatherley1983]_
+        
+    References
+    ----------
+    .. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v." 
+            British Journal of Anesthesia, vol. 55, Suppl. 1, pp. 39S-45S, Jan. 1983.
+
+    """
+
+    def __init__(self, hill_model: str = 'Weatherley',
+                 hill_param: Optional[dict] = {}):
+        """
+        Init the class.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        self.hill_model = hill_model
+
+        if self.hill_model == 'Weatherley':
+        
+            self.C50 = hill_param.get('C50', 0.625) 
+            self.gamma = hill_param.get('gamma', 4.25) 
+
+
+
+
+    def compute_nmb(self, Ce):
+        """Compute NMB from atracurium effect site concentration.
+
+        Parameters
+        ----------
+        Ce : float
+            Atracurium effect site concentration (µg/mL).
+
+
+        Returns
+        -------
+        NMB : float
+            NMB value.
+
+        """
+        
+        if self.hill_model == 'Weatherley':
+            nmb = (100*self.C50**self.gamma) / (self.C50**self.gamma + Ce**self.gamma)
+
+        return nmb
+
+    
+
+    def plot_surface(self):
+        """Plot the 2D-Hill curve of the NMB level related to Atracurium effect site concentration"""
+        ce = np.linspace(0, 8, 100)
+        nmb = self.compute_nmb(ce)
+        plt.figure()
+        plt.plot(ce, nmb)
+        plt.xlabel('Atracurium Ce [μg/mL]')
+        plt.ylabel('NMB')
+        plt.grid(True)
+        plt.ylim(0, 100)
+        plt.show()

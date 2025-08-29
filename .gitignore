@@ -16,3 +16,5 @@ docs/build/
 *.coverage
 # matlab asv files
 *.asv
+# virtual documents
+.virtual_documents/
