@@ -35,6 +35,13 @@ For atracurium, before applying the Hill function, a second effect-site compartm
 
     \dot{\hat{x}}_{es}(t) = \frac{1}{\tau} (x_{es}(t) - \hat{x}_{es}(t))
 
+.. figure:: ../images/4_comportment_model_atracurium.svg
+   :width: 70%
+   :align: center
+   :alt: Four-compartment model for atracurium
+
+   Four-compartment model for atracurium.
+
 In the simulator, we slightly abuse the notation and included the effect-site compartments in the PK model in order to keep all the dynamical system in the same state-space representation.  
 
 BIS
