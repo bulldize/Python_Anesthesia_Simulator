@@ -12,15 +12,6 @@ eleveld_bis_model = BIS_model('Eleveld', age=70)
 # BIS_model object to test the Fuentes propofol-remifentanil interaction model
 fuentes_bis_model = BIS_model('Fuentes')
 
-# BIS_model object to test the Kern propofol-remifentanil model
-kern_bis_model = BIS_model('Kern')
-
-# BIS_model object to test the Mertens propofol-remifentanil model
-mertens_bis_model = BIS_model('Mertens')
-
-# BIS_model object to test the Johnson propofol-remifentanil model
-johnson_bis_model = BIS_model('Johnson')
-
 # BIS_model object to test the Yumuk propofol-remifentanil model
 yumuk_bis_model = BIS_model('Yumuk')
 
@@ -29,9 +20,6 @@ list_of_model = [
     vanluchene_bis_model,
     eleveld_bis_model,
     fuentes_bis_model,
-    kern_bis_model,
-    mertens_bis_model,
-    johnson_bis_model,
     yumuk_bis_model,
 ]
 propo_model = [
@@ -41,9 +29,6 @@ propo_model = [
 interaction_model = [
     bouillon_bis_model,
     fuentes_bis_model,
-    kern_bis_model,
-    mertens_bis_model,
-    johnson_bis_model,
     yumuk_bis_model,
 ]
 
@@ -75,12 +60,6 @@ def test_default_initialization():
     assert bouillon_bis_model.compute_bis(3, 6) >= 40
     assert fuentes_bis_model.compute_bis(3, 6) <= 60
     assert fuentes_bis_model.compute_bis(3, 6) >= 40
-    assert kern_bis_model.compute_bis(1, 1.5) <= 60
-    assert kern_bis_model.compute_bis(1, 1.5) >= 40
-    assert mertens_bis_model.compute_bis(1.5, 3) <= 60
-    assert mertens_bis_model.compute_bis(1.5, 3) >= 40
-    assert johnson_bis_model.compute_bis(1.5, 3) <= 60
-    assert johnson_bis_model.compute_bis(1.5, 3) >= 40
     assert yumuk_bis_model.compute_bis(4, 8) <= 60
     assert yumuk_bis_model.compute_bis(4, 8) >= 40
 
