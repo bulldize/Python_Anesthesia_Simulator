@@ -874,7 +874,7 @@ class AtracuriumModel:
             # Volume of the central compartment [ml/kg]
             V1 = model_params.get('V1', 49.0) 
             # Volume of the peripheral compartment [ml/kg]
-            V2 = model_params.get('V1', 157.0) 
+            V2 = model_params.get('V2', 157.0) 
             # Clearance [ml/min/kg]
             Cl = model_params.get('Cl', 5.5) 
             # First half live time [min]
@@ -887,15 +887,15 @@ class AtracuriumModel:
             tau = model_params.get('tau', 6.2670)
             
             # Elimination rate constant [1/min]
-            k10 = Cl/V1;
+            k10 = Cl/V1
             # alpha [1/min]
-            alpha = math.log(2)/t12_alpha;
+            alpha = math.log(2)/t12_alpha
             # beta [1/min]
-            beta = math.log(2)/t12_beta;
+            beta = math.log(2)/t12_beta
             # Transfer rate 2->1 [1/min]
-            k21 = (alpha*beta)/k10;
+            k21 = (alpha*beta)/k10
             # Transfer rate 1->2 [1/min]
-            k12 = alpha + beta - k10 - k21;
+            k12 = alpha + beta - k10 - k21
             
             # Matrices system definition
             A = np.array([[ -(k10+k12),     (k21*V2)/V1,    0,      0],

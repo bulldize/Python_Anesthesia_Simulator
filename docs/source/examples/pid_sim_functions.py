@@ -34,7 +34,141 @@ Patient_table = [[1,  40, 163, 54, 0, 4.73, 24.97,  2.97,  0.3, 97.86, 89.62],
                  [11, 42, 179, 78, 1, 3.79, 22.25,  2.35,  1.12, 98.02, 96.95],
                  [12, 34, 172, 58, 0, 5.7, 18.64,  2.67,  0.4, 99.57, 96.94],
                  [13, 38, 169, 65, 0, 4.64, 19.50,  2.38,  0.48, 93.82, 94.40]]
-
+# ------------------------------------------ #
+Patient_1 = {
+    'Weight': 65.0,      # Weight [kg]
+    'V1': 46.0,          # Volume of the central compartment [ml/kg]
+    'V2': 157.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 5.0,           # Clearance [ml/min/kg]
+    't12_alpha': 2.8,    # First half-life time [min]
+    't12_beta': 21.7,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_2 = {
+    'Weight': 66.0,      # Weight [kg]
+    'V1': 42.0,          # Volume of the central compartment [ml/kg]
+    'V2': 164.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 4.9,           # Clearance [ml/min/kg]
+    't12_alpha': 1.6,    # First half-life time [min]
+    't12_beta': 23.1,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_3 = {
+    'Weight': 58.0,      # Weight [kg]
+    'V1': 47.0,          # Volume of the central compartment [ml/kg]
+    'V2': 145.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 6.0,           # Clearance [ml/min/kg]
+    't12_alpha': 1.7,    # First half-life time [min]
+    't12_beta': 16.9,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_4 = {
+    'Weight': 89.0,      # Weight [kg]
+    'V1': 34.0,          # Volume of the central compartment [ml/kg]
+    'V2': 178.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 5.7,           # Clearance [ml/min/kg]
+    't12_alpha': 1.3,    # First half-life time [min]
+    't12_beta': 21.7,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_5 = {
+    'Weight': 80.0,      # Weight [kg]
+    'V1': 25.0,          # Volume of the central compartment [ml/kg]
+    'V2': 142.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 4.8,           # Clearance [ml/min/kg]
+    't12_alpha': 1.4,    # First half-life time [min]
+    't12_beta': 20.4,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_6 = {
+    'Weight': 63.0,      # Weight [kg]
+    'V1': 69.0,          # Volume of the central compartment [ml/kg]
+    'V2': 186.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 6.5,           # Clearance [ml/min/kg]
+    't12_alpha': 2.3,    # First half-life time [min]
+    't12_beta': 19.8,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_7 = {
+    'Weight': 80.0,      # Weight [kg]
+    'V1': 78.0,          # Volume of the central compartment [ml/kg]
+    'V2': 176.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 6.2,           # Clearance [ml/min/kg]
+    't12_alpha': 2.2,    # First half-life time [min]
+    't12_beta': 19.8,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_8 = {
+    'Weight': 97.0,      # Weight [kg]
+    'V1': 43.0,          # Volume of the central compartment [ml/kg]
+    'V2': 120.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 4.4,           # Clearance [ml/min/kg]
+    't12_alpha': 2.0,    # First half-life time [min]
+    't12_beta': 19.0,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_9 = {
+    'Weight': 91.0,      # Weight [kg]
+    'V1': 28.0,          # Volume of the central compartment [ml/kg]
+    'V2': 140.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 5.5,           # Clearance [ml/min/kg]
+    't12_alpha': 1.0,    # First half-life time [min]
+    't12_beta': 17.8,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_10 = {
+    'Weight': 79.0,      # Weight [kg]
+    'V1': 51.0,          # Volume of the central compartment [ml/kg]
+    'V2': 178.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 5.5,           # Clearance [ml/min/kg]
+    't12_alpha': 2.7,    # First half-life time [min]
+    't12_beta': 22.4,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_11 = {
+    'Weight': 69.0,      # Weight [kg]
+    'V1': 53.0,          # Volume of the central compartment [ml/kg]
+    'V2': 114.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 4.9,           # Clearance [ml/min/kg]
+    't12_alpha': 2.4,    # First half-life time [min]
+    't12_beta': 16.1,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+Patient_12 = {
+    'Weight': 66.0,      # Weight [kg]
+    'V1': 76.0,          # Volume of the central compartment [ml/kg]
+    'V2': 188.0,         # Volume of the peripheral compartment [ml/kg] 
+    'Cl': 6.4,           # Clearance [ml/min/kg]
+    't12_alpha': 3.3,    # First half-life time [min]
+    't12_beta': 20.6,    # Second half-life time [min]
+    'ke0': 0.1,          # Transfer rate of the first effect-site compartment [1/min]
+    'tau': 6.2670        # Time constant of the second effect-site compartment [min]
+}
+# Patient table atracurium Ward et al. 2004 model:
+Patient_table_atracurium = [Patient_1,
+                           Patient_2,
+                           Patient_3,
+                           Patient_4,
+                           Patient_5,
+                           Patient_6,
+                           Patient_7,
+                           Patient_8,
+                           Patient_9,
+                           Patient_10,
+                           Patient_11,
+                           Patient_12]
+# ------------------------------------------ #
 
 def simu(Patient_info: list, style: str, PID_param: list,
          random_PK: bool = False, random_PD: bool = False) -> tuple[float, list, list]:
@@ -153,7 +287,7 @@ class PID():
     """PID class to implement PID on python."""
 
     def __init__(self, Kp: float, Ti: float, Td: float, N: int = 5,
-                 Ts: float = 1, umax: float = 1e10, umin: float = -1e10):
+                 Ts: float = 1, umax: float = 1e10, umin: float = -1e10, last_BIS: float = 100):
         """ Implementation of a working PID with anti-windup:
 
             PID = Kp ( 1 + Te / (Ti - Ti z^-1) + Td (1-z^-1) / (Td/N (1-z^-1) + Te) )
@@ -163,7 +297,8 @@ class PID():
                  - N: interger to filter the derivative part
                  - Ts: sampling time
                  - umax: upper saturation of the control input
-                 - umin: lower saturation of the control input."""
+                 - umin: lower saturation of the control input
+                 - last_BIS: last BIS value, to initialize the derivative part"""
         self.Kp = Kp
         self.Ti = Ti
         self.Td = Td
@@ -174,7 +309,7 @@ class PID():
 
         self.integral_part = 0
         self.derivative_part = 0
-        self.last_BIS = 100
+        self.last_BIS = last_BIS
 
     def one_step(self, BIS: float, Bis_target: float):
         """Compute the next command for the PID controller."""
@@ -198,8 +333,65 @@ class PID():
             self.integral_part = self.umin / self.Kp - error - self.derivative_part
             control = self.umin
 
-        return control
+        return control 
 
+class PID_NMB():
+    """PID class to implement PID on python."""
+
+    def __init__(self, Kp: float, Ti: float, Td: float, N: int = 5,
+                 Ts: float = 1, umax: float = 1e10, umin: float = -1e10, last_BIS: float = 100):
+        """ Implementation of a working PID with anti-windup:
+
+            PID = Kp ( 1 + Te / (Ti - Ti z^-1) + Td (1-z^-1) / (Td/N (1-z^-1) + Te) )
+        Inputs : - Kp: Gain
+                 - Ti: Integrator time constant
+                 - Td: Derivative time constant
+                 - N: interger to filter the derivative part
+                 - Ts: sampling time
+                 - umax: upper saturation of the control input
+                 - umin: lower saturation of the control input
+                 - last_BIS: last BIS value, to initialize the derivative part"""
+        self.Kp = Kp
+        self.Ti = Ti
+        self.Td = Td
+        self.N = N
+        self.Ts = Ts
+        self.umax = umax
+        self.umin = umin
+
+        self.integral_part = 0
+        self.derivative_part = 0
+        self.last_BIS = last_BIS
+
+        self.sat = False
+
+    def one_step(self, BIS: float, Bis_target: float):
+        """Compute the next command for the PID controller."""
+        error = -(Bis_target - BIS)
+        if not self.sat:
+            self.integral_part += self.Ts / self.Ti * error
+
+        self.derivative_part = (self.derivative_part * self.Td / self.N +
+                                self.Td * (BIS - self.last_BIS)) / (self.Ts +
+                                                                    self.Td / self.N)
+        self.last_BIS = BIS
+
+        control = self.Kp * (error + self.integral_part + self.derivative_part)
+
+        # Anti windup Conditional Integration from
+        # Visioli, A. (2006). Anti-windup strategies. Practical PID control, 35-60.
+        if control >= self.umax:
+            self.sat = True
+            control = self.umax
+
+        elif control <= self.umin:
+            self.sat = True
+            control = self.umin
+
+        else:
+            self.sat = False
+
+        return control     
 
 # ------------------- MAIN ------------------- #
 if __name__ == "__main__":
