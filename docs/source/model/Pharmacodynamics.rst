@@ -35,6 +35,13 @@ For atracurium, before applying the Hill function, a second effect-site compartm
 
     \dot{\hat{x}}_{es}(t) = \frac{1}{\tau} (x_{es}(t) - \hat{x}_{es}(t))
 
+.. figure:: ../images/4_comportment_model_atracurium.svg
+   :width: 70%
+   :align: center
+   :alt: Four-compartment model for atracurium
+
+   Four-compartment model for atracurium.
+
 In the simulator, we slightly abuse the notation and included the effect-site compartments in the PK model in order to keep all the dynamical system in the same state-space representation.  
 
 BIS
@@ -84,9 +91,24 @@ The surface of the 3D-Hill function using parameters from [Bouillon2004]_ is sho
    :align: center
    :alt: 3D-Hill function
    
+Delay
+~~~~~~~~~~~~~~
 
-Note that the BIS can also be affected by delay, in this case we have that :math:`BIS(t) = BIS(t - \tau)`.
-In the literature this delay has been attributed to different causes, such as the age of the patient [Eleveld2018]_ or the Signal Quality Index (SQI) of the BIS [Wahlquist2025]_ 
+Note that the BIS can also be affected by delay, in this case we have that :math:`BIS(t) = BIS(t - \tau)`, where :math:`\tau` is the delay expressed in seconds.
+In the literature this delay has been attributed to two main causes.
+
+The first cause is physiological and it is related to the age of the patient.
+This effect was modeled in [Eleveld2018]_ as: :math:`\tau = 15 + \exp(0.0517 \cdot \mathrm{AGE})` where :math:`AGE` is the age of the patient in years.
+
+The second cause is related to the quality of the EEG signal used to compute the BIS.
+This effect was modeled in [Wahlquist2025]_ as a function of the Signal Quality Index (SQI) of the BIS.
+The SQI is a value between 0 and 100 that indicates the quality of the EEG signal used to compute the BIS.
+A value of 100 indicates a perfect signal, while a value of 0 indicates a very poor signal.
+The SQI can be affected by various factors such as electrode placement, patient movement, and electrical interference.
+In [Wahlquist2025]_, the authors proposed a model to link the SQI to the BIS delay.
+The model is given by :math:`\tau = \tau\_max * (1 - \frac{SQI}{100})` where :math:`\tau\_max` is a maximum admissible delay, which was set equal to 120 seconds.
+
+In the simulator, we have implemented both models and the user can choose to use one or both of them.
 
 Loss of Consciousness (LOC)
 ----------------------------

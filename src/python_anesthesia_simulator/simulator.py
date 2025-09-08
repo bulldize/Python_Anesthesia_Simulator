@@ -720,6 +720,7 @@ class Patient:
             - 'u_propo': Propofol infusion rate (mg/s)
             - 'u_remi': Remifentanil infusion rate (µg/s)
             - 'u_nore': Norepinephrine infusion rate (µg/s)
+            - 'u_atra': Atracurium infusion rate (µg/s)
             - 'x_propo_1' to 'x_propo_6': States of the propofol PK model
             - 'x_remi_1' to 'x_remi_5': States of the remifentanil PK model
             - 'x_nore': State of the norepinephrine PK model

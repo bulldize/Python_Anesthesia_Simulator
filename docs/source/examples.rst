@@ -20,3 +20,4 @@ These notebooks demonstrate the use of the toolbox for different applications.
    /examples/check_vitalDB_model
    /examples/Merigo_PID
    /examples/TCI_example
+   /examples/Merigo_PID_Atracurium
