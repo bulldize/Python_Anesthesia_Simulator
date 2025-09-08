@@ -43,9 +43,7 @@ class BIS_model:
         'Eleveld'[Eleveld2018]_, do not consider the synergistic effect of remifentanil.
         'Bouillon'[Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type surface model).
         'Fuentes'[Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type surface model).
-        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type surface model).
-        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type surface model).
-        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Yumuk'[Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
         Ignored if hill_param is specified.
         Default is 'Bouillon'.
     hill_param : list, optional
@@ -94,9 +92,6 @@ class BIS_model:
         'Eleveld'[Eleveld2018]_, do not consider the synergistic effect of remifentanil.
         'Bouillon'[Bouillon2004]_, considers the synergistic effect of remifentanil (Minto-type).
         'Fuentes'[Fuentes2018]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
-        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
         'Yumuk'[Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
     ts : float
         Sampling time, in s.    
@@ -117,14 +112,6 @@ class BIS_model:
     .. [Fuentes2018] R. Fuentes et al. "Propofol pharmacokinetic and pharmacodynamic profile and its 
             electroencephalographic interaction with remifentanil in children." Pediatric Anesthesia 28.12 (2018): 
             1078-1086. doi: 10.1111/pan.13486 
-    .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
-            interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-    .. [Mertens2003] M. J. Mertens et al. "Propofol reduces perioperative remifentanil requirements 
-            in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
-            Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
-    .. [Johnson2008] K. B. Johnson et al. "Validation of remifentanil propofol response surfaces for sedation, 
-            surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
-            analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
     .. [Yumuk2024] E. Yumuk et al.  "Data-driven identification and comparison of full multivariable models 
             for propofol–remifentanil induced general anesthesia." Journal of Process Control 139 (2024): 103243.
             doi: 10.1016/j.jprocont.2024.103243
@@ -236,50 +223,6 @@ class BIS_model:
             self.beta = 0;              cv_beta = 0
             self.E0 = 94;               cv_E0 = 0.05
             self.Emax = 94 * 0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
-            self.bis_delay = 0
-
-        elif self.hill_model == 'Kern':
-            # See [Kern2004]  Kern, Steven E., et al.
-            # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers."
-            # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-
-            # model parameters and their coefficient of variation
-            self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
-            self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
-            self.gamma = 3.76;          cv_gamma = 0
-            self.beta = 5.1;            cv_beta = 0
-            self.E0 = 100;              cv_E0 = 0
-            self.Emax = self.E0;        cv_Emax = 0
-            self.bis_delay = 0
-
-        elif self.hill_model == 'Mertens':
-            # See [Mertens2003]  Mertens, Martijn J., et al.
-            # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface
-            # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359.
-            # doi : 10.1097/00000542-200308000-00016
-
-            # model parameters and their coefficient of variation
-            self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
-            self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
-            self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
-            self.beta = 0;              cv_beta = 0
-            self.E0 = 100;              cv_E0 = 0
-            self.Emax = self.E0;        cv_Emax = 0
-            self.bis_delay = 0
-
-        elif self.hill_model == 'Johnson':
-            # See [Johnson2008] Johnson, Ken B., et al.
-            # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus,
-            # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471.
-            # doi : 10.1213/ane.0b013e3181606c62
-
-            # model parameters and their coefficient of variation
-            self.c50p = 2.20;           cv_c50p = 0
-            self.c50r = 33.1;           cv_c50r = 0
-            self.gamma = 5.00;          cv_gamma = 0
-            self.beta = 3.60;           cv_beta = 0
-            self.E0 = 100;              cv_E0 = 0
-            self.Emax = self.E0;        cv_Emax = 0
             self.bis_delay = 0
 
         elif self.hill_model == 'Yumuk':
@@ -561,7 +504,194 @@ class BIS_model:
             ax.view_init(20, 60, 0)
             plt.show()
 
+class LOC_model:
+    r"""Propofol + Remifentanil -> LOC (Loss of Consciousness) model (Greco-type interaction).
 
+    The equation is:
+
+    .. math:: LOC = \frac{U^\gamma}{1+U^\gamma}
+
+     with the Greco-type surface response model:
+    
+    .. math:: U = U_p + U_r + \beta U_p U_r
+
+    where 
+    
+    .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
+    .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
+    
+     
+     Parameters
+     ----------
+     hill_model : str, optional
+         'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+         'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+         'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+         Ignored if hill_param is specified.
+         Default is 'Kern'.
+     hill_param : list, optional
+         Parameters of the model
+         list [c50p_LOC, c50r_LOC, gamma_LOC, beta_LOC]:
+         - **c50p_LOC**: Concentration at half effect for propofol effect on LOC (µg/mL).
+         - **c50r_LOC**: Concentration at half effect for remifentanil effect on LOC (ng/mL).
+         - **gamma_LOC**: Slope coefficient for the LOC model.
+         - **beta_LOC**: Interaction coefficient for the LOC model (beta_LOC = 0 signifies an additive interaction, beta_LOC > 0 indicates synergy).
+     random : bool, optional
+         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
+     ts : float
+         Sampling time, in s.        
+
+
+     Attributes
+     ----------
+     c50p : float
+         Concentration at half effect for propofol effect on LOC (µg/mL).
+     c50r : float
+         Concentration at half effect for remifentanil effect on LOC (ng/mL).
+     gamma : float
+         Slope coefficient for the LOC  model.
+     beta : float
+         Interaction coefficient for the LOC model (beta_LOC = 0 signifies an additive interaction, beta_LOC > 0 indicates synergy). 
+     hill_param : list
+         Parameters of the model
+         list [c50p_LOC, c50r_LOC, gamma_LOC, beta_LOC]
+     hill_model : str
+         'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
+         'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
+         'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
+     ts : float
+         Sampling time, in s.    
+         
+     References
+     ---------- 
+     .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+             interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
+     .. [Mertens2003] M. J. Mertens et al. "Propofol reduces perioperative remifentanil requirements 
+             in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
+             Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
+     .. [Johnson2008] K. B. Johnson et al. "Validation of remifentanil propofol response surfaces for sedation, 
+             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
+             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
+
+     """
+     
+    def __init__(self, hill_model: str = 'Kern', hill_param: Optional[list] = None,
+                  random: Optional[bool] = False, ts: float = 1, **kwargs):
+         """
+         Init the class.
+
+         Returns
+         -------
+         None.
+
+         """
+
+         self.hill_model = hill_model
+         self.ts = ts
+
+         if hill_param is not None:  # Parameter given as an input
+             if len(hill_param) == 4:
+                 self.c50p = hill_param[0]
+                 self.c50r = hill_param[1]
+                 self.gamma = hill_param[2]
+                 self.beta = hill_param[3]
+             else:
+                 raise ValueError("The model parameters provided are not valid")
+
+
+         elif self.hill_model == 'Kern':
+             # See [Kern2004]  Kern, Steven E., et al.
+             # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers."
+             # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
+
+             # model parameters and their coefficient of variation
+             self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
+             self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
+             self.gamma = 3.76;          cv_gamma = 0
+             self.beta = 5.1;            cv_beta = 0
+
+         elif self.hill_model == 'Mertens':
+             # See [Mertens2003]  Mertens, Martijn J., et al.
+             # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface
+             # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359.
+             # doi : 10.1097/00000542-200308000-00016
+
+             # model parameters and their coefficient of variation
+             self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
+             self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
+             self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
+             self.beta = 0;              cv_beta = 0
+
+         elif self.hill_model == 'Johnson':
+             # See [Johnson2008] Johnson, Ken B., et al.
+             # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus,
+             # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471.
+             # doi : 10.1213/ane.0b013e3181606c62
+
+             # model parameters and their coefficient of variation
+             self.c50p = 2.20;           cv_c50p = 0
+             self.c50r = 33.1;           cv_c50r = 0
+             self.gamma = 5.00;          cv_gamma = 0
+             self.beta = 3.60;           cv_beta = 0
+
+         if random and hill_param is None:
+             # estimation of log normal standard deviation
+             w_c50p = np.sqrt(np.log(1 + cv_c50p**2))
+             w_c50r = np.sqrt(np.log(1 + cv_c50r**2))
+             w_gamma = np.sqrt(np.log(1 + cv_gamma**2))
+             w_beta = np.sqrt(np.log(1 + cv_beta**2))
+
+         if random and hill_param is None:
+             self.c50p *= np.exp(np.random.normal(scale=w_c50p))
+             self.c50r *= np.exp(np.random.normal(scale=w_c50r))
+             self.beta *= np.exp(np.random.normal(scale=w_beta))
+             self.gamma *= np.exp(np.random.normal(scale=w_gamma))
+
+         self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta]
+
+    def compute_loc(self, c_es_propo, c_es_remi):
+        """Compute LOC function (0-1) from propofol and remifentanil effect site concentration.
+        
+        LOC = 0  means fully awake, LOC = 1 deep LOC
+
+        
+        Parameters
+        ----------
+        c_es_propo : float
+            Propofol effect site concentration µg/mL.
+        c_es_remi : float, optional
+            Remifentanil effect site concentration ng/mL.
+
+        Returns
+        -------
+        LOC : float
+            LOC value.
+        """
+        up = np.asarray(c_es_propo, dtype=float) / self.c50p
+        ur = np.asarray(c_es_remi, dtype=float) / self.c50r
+        interaction = up + ur + self.beta * up * ur
+        interaction_gamma = interaction ** self.gamma
+        loc =  interaction_gamma / (1 + interaction_gamma)
+        
+        return loc      
+     
+    def plot_surface(self):
+        """Plot the 3D-Hill surface of the LOC related to Propofol and Remifentanil effect site concentration""" 
+        cer = np.linspace(0, 8, 9)   # ng/mL
+        cep = np.linspace(0, 12, 13)    # µg/mL
+        cer, cep = np.meshgrid(cer, cep) 
+        effect = self.compute_loc(cep, cer)
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"}) 
+        surf = ax.plot_surface(cer, cep, effect, cmap=cm.jet, linewidth=0.1)
+        ax.set_xlabel('Remifentanil Ce [ng/mL]')
+        ax.set_ylabel('Propofol Ce [µg/mL]')
+        ax.set_zlabel('LOC (0–1)')
+        ax.set_zlim(0, 1)
+        fig.colorbar(surf, shrink=0.5, aspect=8)
+        ax.view_init(15, -70)
+        plt.show()
+
+    
 class TOL_model():
     r"""Hierarchical model to link drug effect site concentration to Tolerance of Laringoscopy.
 
