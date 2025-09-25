@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 from python_anesthesia_simulator import Patient, TCIController
 
@@ -36,30 +35,30 @@ tci_remi = TCIController(
     drug_concentration=concentration
 )
 
-N_simu = 5*60 // sampling_time  # 10 minutes
+N_simu = 5 * 60 // sampling_time  # 10 minutes
 
 
 for time_step in range(N_simu):
     u_propo = tci_propo.one_step(propofol_target)  # in ml/h
     u_remi = tci_remi.one_step(remifentanil_target)  # in ml/h
 
-    patient.one_step(u_propo/3600 * concentration, u_remi/3600 * concentration)
+    patient.one_step(u_propo / 3600 * concentration, u_remi / 3600 * concentration)
 
 if __name__ == "__main__":
     plt.subplot(2, 1, 1)
-    plt.plot(patient.dataframe['Time']/60, patient.dataframe['u_propo'], label='Propofol (mg/s)')
-    plt.plot(patient.dataframe['Time']/60, patient.dataframe['u_remi'], label='Remifentanil (ug/s)')
+    plt.plot(patient.dataframe['Time'] / 60, patient.dataframe['u_propo'], label='Propofol (mg/s)')
+    plt.plot(patient.dataframe['Time'] / 60, patient.dataframe['u_remi'], label='Remifentanil (ug/s)')
     plt.ylabel('Drug rate')
     plt.grid()
     plt.legend()
 
     plt.subplot(2, 1, 2)
-    plt.plot(patient.dataframe['Time']/60, patient.dataframe['x_propo_4'], label='Propofol (ug/ml)')
-    plt.plot(patient.dataframe['Time']/60, patient.dataframe['x_remi_4'], label='Remifentanil (ng/ml)')
+    plt.plot(patient.dataframe['Time'] / 60, patient.dataframe['x_propo_4'], label='Propofol (ug/ml)')
+    plt.plot(patient.dataframe['Time'] / 60, patient.dataframe['x_remi_4'], label='Remifentanil (ng/ml)')
     # plot target
-    plt.plot(patient.dataframe['Time']/60, [propofol_target] *
+    plt.plot(patient.dataframe['Time'] / 60, [propofol_target] *
              len(patient.dataframe['Time']), '--', label='Propofol target')
-    plt.plot(patient.dataframe['Time']/60, [remifentanil_target] *
+    plt.plot(patient.dataframe['Time'] / 60, [remifentanil_target] *
              len(patient.dataframe['Time']), '--', label='Remifentanil target')
     plt.ylabel('Effect site concentration ')
     plt.xlabel('Time (min)')
@@ -81,11 +80,11 @@ def test_tci_ouput_range():
 
 def test_tci_behavior():
     # ensure that the concentration reach the target (maximum of 1%)
-    assert patient.dataframe['x_propo_4'].iloc[-1] <= propofol_target*1.01
-    assert patient.dataframe['x_propo_4'].iloc[-1] >= propofol_target*0.99
-    assert patient.dataframe['x_remi_4'].iloc[-1] <= remifentanil_target*1.01
-    assert patient.dataframe['x_remi_4'].iloc[-1] >= remifentanil_target*0.99
+    assert patient.dataframe['x_propo_4'].iloc[-1] <= propofol_target * 1.01
+    assert patient.dataframe['x_propo_4'].iloc[-1] >= propofol_target * 0.99
+    assert patient.dataframe['x_remi_4'].iloc[-1] <= remifentanil_target * 1.01
+    assert patient.dataframe['x_remi_4'].iloc[-1] >= remifentanil_target * 0.99
 
     # ensure that there is not too much overshoot (maximum 5%)
-    assert (patient.dataframe['x_propo_4'].iloc[-1] <= propofol_target*1.05).all()
-    assert (patient.dataframe['x_remi_4'].iloc[-1] <= remifentanil_target*1.05).all()
+    assert (patient.dataframe['x_propo_4'].iloc[-1] <= propofol_target * 1.05).all()
+    assert (patient.dataframe['x_remi_4'].iloc[-1] <= remifentanil_target * 1.05).all()

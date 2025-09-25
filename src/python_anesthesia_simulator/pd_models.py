@@ -5,6 +5,7 @@ from scipy.integrate import solve_ivp
 import casadi as cas
 from matplotlib import pyplot as plt
 from matplotlib import cm
+from scipy.signal import TransferFunction, lfilter
 
 
 def fsig(x, c50, gam): return x**gam / (c50**gam + x**gam)  # quick definition of sigmoidal function
@@ -856,6 +857,8 @@ class Hemo_meca_PD_model:
         Model to use, only 'Su' is available. The default is 'Su'.
     nore_model : str, optional
         Model to use for norepinephrine, 'Beloeil' and 'Oualha' are available. The default is 'Beloeil'.
+    stimuli_model : str, optional
+        Model to use for stimuli, 'none' and 'VitalDB' are available. The default is 'none'.
     random : bool, optional
         Add uncertainties in the parameters. The default is False.
     hr_base : float, optional
@@ -887,6 +890,7 @@ class Hemo_meca_PD_model:
                  ts: float,
                  model: str = 'Su',
                  nore_model: str = 'Beloeil',
+                 stimuli_model: str = 'none',
                  random: bool = False,
                  hr_base: float = None,
                  sv_base: float = None,
@@ -1020,6 +1024,90 @@ class Hemo_meca_PD_model:
         self.previous_cp_propo = 0
         self.previous_cp_remi = 0
 
+        # stimuli models
+        self.dist_intub_tpr_tau = 3
+        self.dist_intub_sv_tau = 2.7
+        self.dist_intub_hr_tau = 40
+        self.smooth_factor = 50
+        self.dist_surg_tpr_tau = 5 * 60
+        self.dist_surg_sv_tau = 3 * 60
+        self.dist_surg_hr_tau = 8 * 60
+        if stimuli_model == 'none':
+            # intubation stimuli filter
+            self.dist_intub_tpr_k = 1e-6
+            self.dist_intub_sv_k = 1e-4
+            self.dist_intub_hr_k = 1e-4
+
+            self.dist_surg_tpr_k = 1e-6
+            self.dist_surg_sv_k = 1e-4
+            self.dist_surg_hr_k = 1e-4
+        elif stimuli_model == 'VitalDB':
+            self.dist_intub_tpr_k = 1.1256e-05
+            self.dist_intub_sv_k = 0.180
+            self.dist_intub_hr_k = 8.677
+
+            self.dist_surg_tpr_k = 0.0008
+            self.dist_surg_sv_k = 14.052
+            self.dist_surg_hr_k = 9.4613
+
+            # update model param
+            self.int_hr = -0.085
+            self.emax_propo_tpr = -0.0237
+            self.fb = -0.3673
+        self.start_intub = 3 * 60  # seconds
+        self.start_surg = 40 * 60  # seconds
+        self.time_id = 0
+
+        self.disturbance_dynamic()
+
+    def disturbance_dynamic(self):
+        """Apply the dynamic on the input disturbance signal.
+        """
+        # stimuli input
+        self.intub_input = np.zeros(50000)
+        # step disturbance after 3 minutes
+        self.intub_input[self.start_intub // self.ts:(self.start_intub + 2 * 60) // self.ts] = 1
+        self.surg_input = np.zeros(50000)
+        self.surg_input[self.start_surg // self.ts:] = 1  # step disturbance after 40 minutes
+        smooth_filter = TransferFunction(
+            [1],
+            [self.smooth_factor, 1]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_tpr = TransferFunction(
+            [self.dist_intub_tpr_k],
+            [self.dist_intub_tpr_tau, 1, 0]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_sv = TransferFunction(
+            [self.dist_intub_sv_k],
+            [self.dist_intub_sv_tau, 1, 0]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_hr = TransferFunction(
+            [self.dist_intub_hr_k],
+            [self.dist_intub_hr_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+
+        input_smooth = lfilter(smooth_filter.num, smooth_filter.den, self.intub_input)
+        self.dist_tpr = lfilter(tf_dist_tpr.num, tf_dist_tpr.den, input_smooth)
+        self.dist_sv = lfilter(tf_dist_sv.num, tf_dist_sv.den, input_smooth)
+        self.dist_hr = lfilter(tf_dist_hr.num, tf_dist_hr.den, input_smooth)
+
+        tf_dist_tpr = TransferFunction(
+            [self.dist_surg_tpr_k],
+            [self.dist_surg_tpr_tau**2, 2 * self.dist_surg_tpr_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_sv = TransferFunction(
+            [self.dist_surg_sv_k],
+            [self.dist_surg_sv_tau**2, 2 * self.dist_surg_sv_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_hr = TransferFunction(
+            [self.dist_surg_hr_k],
+            [self.dist_surg_hr_tau**2, 2 * self.dist_surg_hr_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+
+        self.dist_tpr += lfilter(tf_dist_tpr.num, tf_dist_tpr.den, self.surg_input)
+        self.dist_sv += lfilter(tf_dist_sv.num, tf_dist_sv.den, self.surg_input)
+        self.dist_hr += lfilter(tf_dist_hr.num, tf_dist_hr.den, self.surg_input)
+
     def continuous_dynamic(
             self,
             x: np.ndarray,
@@ -1047,6 +1135,9 @@ class Hemo_meca_PD_model:
         cp_remi = u[1]
         map_wanted = u[2]
         sv_wanted = u[3]
+        tpr_stim = u[4]
+        sv_stim = u[5]
+        hr_stim = u[6]
 
         eff_propo_tpr = (self.emax_propo_tpr + self.int_tpr * fsig(cp_remi, self.c50_remi_tpr, 1)) * \
             fsig(cp_propo, self.c50_propo_tpr, self.gamma_propo_tpr)
@@ -1056,11 +1147,12 @@ class Hemo_meca_PD_model:
         eff_remi_tpr = self.emax_remi_tpr * fsig(cp_remi, self.c50_remi_tpr, 1)
 
         # compute apparent values
-        dsv = x[1] + x[3]
-        dhr = x[2] + x[4]
+        dtpr = x[0] + tpr_stim
+        dsv = x[1] + x[3] + sv_stim
+        dhr = x[2] + x[4] + hr_stim
 
         a_sv = dsv * (1 - self.hr_sv * np.log(dhr / self.abase_hr))
-        a_map = a_sv * dhr * x[0]
+        a_map = a_sv * dhr * dtpr
 
         rmap = a_map / self.base_map
 
@@ -1088,7 +1180,7 @@ class Hemo_meca_PD_model:
         """ Same as continuous_dynamic but with time as first arguments (for scipy simulation)."""
         return self.continuous_dynamic(x, u)
 
-    def output_function(self, x: np.ndarray) -> np.ndarray:
+    def output_function(self, x: np.ndarray, dist: np.ndarray = np.zeros(3)) -> np.ndarray:
         """_summary_
 
         Parameters
@@ -1103,9 +1195,9 @@ class Hemo_meca_PD_model:
             heart rate (beat / min), mean arterial pressure (mmHg),
             cardiac output (L/min)
         """
-        tpr = x[0]
-        sv = x[1] + x[3]
-        hr = x[2] + x[4]
+        tpr = x[0] + dist[0]
+        sv = x[1] + x[3] + dist[1]
+        hr = x[2] + x[4] + dist[2]
         sv = sv * (1 - self.hr_sv * np.log(hr / self.abase_hr))
         map = tpr * sv * hr
         co = hr * sv / 1000  # fro mL/min to L/min
@@ -1144,6 +1236,15 @@ class Hemo_meca_PD_model:
         v_ratio : float
             blood volume as a fraction of init volume, 1 mean no loss, 0 mean 100% loss, default is 1.
         """
+        # simulate disturbance
+        dist_tpr = self.dist_tpr[self.time_id]
+        dist_sv = self.dist_sv[self.time_id]
+        dist_hr = self.dist_hr[self.time_id]
+        dist = [dist_tpr, dist_sv, dist_hr]
+        self.time_id += 1
+        if self.time_id >= len(self.intub_input):
+            self.time_id = len(self.intub_input) - 1
+
         c_propo_sim = (self.previous_cp_propo + cp_propo) / 2
         c_remi_sim = (self.previous_cp_remi + cp_remi) / 2
         # run computation for model without nore effect and without blood loss
@@ -1152,7 +1253,7 @@ class Hemo_meca_PD_model:
             t_span=np.array([0, self.ts]),
             t_eval=np.array([0, self.ts]),
             y0=self.x,
-            args=([c_propo_sim, c_remi_sim, 0, 0],),
+            args=([c_propo_sim, c_remi_sim, 0, 0] + dist,),
         )
         self.x = results.y[:, -1]
 
@@ -1161,14 +1262,14 @@ class Hemo_meca_PD_model:
                 self.flag_nore_used = True
             if v_ratio != 1:
                 print("Warning: norepinephrine effect is not computed with blood loss")
-            map_no_nore = self.output_function(self.x)[3]
+            map_no_nore = self.output_function(self.x, dist)[3]
             map_wanted = map_no_nore + self.nore_map_effect(cp_nore)
             # run computation for model with nore effect
             results_w_nore = solve_ivp(
                 self.continuous_dynamic_sys,
                 t_span=np.array([0, self.ts]),
                 y0=self.x_effect,
-                args=([c_propo_sim, c_remi_sim, map_wanted, 0],),
+                args=([c_propo_sim, c_remi_sim, map_wanted, 0] + dist,),
             )
             self.x_effect = results_w_nore.y[:, -1]
         elif (v_ratio < 1 or self.flag_blood_loss) and not self.flag_nore_used:
@@ -1176,13 +1277,13 @@ class Hemo_meca_PD_model:
                 self.flag_blood_loss = True
             if cp_nore > 0:
                 print("Warning: norepinephrine effect is not computed with blood loss")
-            sv_no_blood_loss = self.output_function(self.x)[1]
+            sv_no_blood_loss = self.output_function(self.x, dist)[1]
             sv_wanted = sv_no_blood_loss * v_ratio
             results_blood_loss = solve_ivp(
                 self.continuous_dynamic_sys,
                 t_span=np.array([0, self.ts]),
                 y0=self.x_effect,
-                args=([c_propo_sim, c_remi_sim, 0, sv_wanted],),
+                args=([c_propo_sim, c_remi_sim, 0, sv_wanted] + dist,),
             )
             self.x_effect = results_blood_loss.y[:, -1]
         else:
@@ -1190,7 +1291,7 @@ class Hemo_meca_PD_model:
 
         self.previous_cp_propo = cp_propo
         self.previous_cp_remi = cp_remi
-        output = self.output_function(self.x_effect)
+        output = self.output_function(self.x_effect, dist)
         return output  # tpr, sv, hr, map, co
 
     def full_sim(self,
@@ -1260,7 +1361,7 @@ class Hemo_meca_PD_model:
 
         # solve equilibrium without nore
         x = cas.MX.sym('x', 5)
-        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0]))
+        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + 3 * [0]))
         F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
         sol = F_root(x0=x0)
         x_no_nore = sol['x'].full().flatten()
@@ -1272,7 +1373,7 @@ class Hemo_meca_PD_model:
             map_eq = output_no_nore[3] + self.nore_map_effect(cp_nore_eq)
             # solve equilibrium with nore
             x = cas.MX.sym('x', 5)
-            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0]))
+            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + 3 * [0]))
             # map_nore = self.output_function(x)[3]
             # dx[0] = (map_nore - map_eq)**2
             F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})

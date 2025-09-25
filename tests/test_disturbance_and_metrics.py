@@ -16,11 +16,12 @@ George_2 = simulator.Patient([age, height, weight, gender], ts=ts,
                              model_propo="Schnider", model_remi="Minto", random_PD=False)
 George_3 = simulator.Patient([age, height, weight, gender], ts=ts,
                              model_propo="Schnider", model_remi="Minto", random_PD=False)
-
+George_4 = simulator.Patient([age, height, weight, gender], ts=ts,
+                             model_propo="Schnider", model_remi="Minto", random_PD=False, model_stimuli='VitalDB')
 
 # %% Simulation
 
-N_simu = int(60 * 60/ts)
+N_simu = int(60 * 60 / ts)
 
 
 uP, uR = 0.13, 0.5
@@ -30,17 +31,20 @@ end_step = 30 * 60
 # George_2.save_data([0, 0, 0])
 # George_3.save_data([0, 0, 0])
 for index in range(N_simu):
-    Dist_1 = disturbances.compute_disturbances(index*ts, dist_profil='realistic')
+    Dist_1 = disturbances.compute_disturbances(index * ts, dist_profil='realistic')
     George_1.one_step(uP, uR, dist=Dist_1, noise=False)
-    Dist_2 = disturbances.compute_disturbances(index*ts, dist_profil='simple')
+    Dist_2 = disturbances.compute_disturbances(index * ts, dist_profil='simple')
     George_2.one_step(uP, uR, dist=Dist_2, noise=False)
-    Dist_3 = disturbances.compute_disturbances(index*ts, dist_profil='step', start_step=start_step, end_step=end_step)
+    Dist_3 = disturbances.compute_disturbances(index * ts, dist_profil='step', start_step=start_step, end_step=end_step)
     George_3.one_step(uP, uR, dist=Dist_3, noise=False)
+    Dist_4 = disturbances.compute_disturbances(
+        index * ts, dist_profil='VitalDB', start_step=start_step, end_step=end_step)
+    George_4.one_step(uP, uR, dist=Dist_4, noise=False)
 
 # %% plots
 
 if __name__ == '__main__':
-    Time = George_1.dataframe['Time']/60
+    Time = George_1.dataframe['Time'] / 60
 
     fig, ax = plt.subplots(3)
     ax[0].plot(Time, George_1.dataframe['u_propo'])
@@ -67,6 +71,10 @@ if __name__ == '__main__':
     ax[1].plot(Time, George_3.dataframe['MAP'])
     ax[2].plot(Time, George_3.dataframe['CO'])
     ax[3].plot(Time, George_3.dataframe['TOL'])
+    ax[0].plot(Time, George_4.dataframe['BIS'])
+    ax[1].plot(Time, George_4.dataframe['MAP'])
+    ax[2].plot(Time, George_4.dataframe['CO'])
+    ax[3].plot(Time, George_4.dataframe['TOL'])
 
     ax[0].set_ylabel("BIS")
     ax[1].set_ylabel("MAP")
@@ -80,13 +88,13 @@ if __name__ == '__main__':
 # %% metrics
 
 metric_1 = metrics.compute_control_metrics(
-    George_1.dataframe.loc[:10*60/ts, 'Time'],
-    George_1.dataframe.loc[:10*60/ts, 'BIS'],
+    George_1.dataframe.loc[:10 * 60 / ts, 'Time'],
+    George_1.dataframe.loc[:10 * 60 / ts, 'BIS'],
     phase='induction'
 )
 metric_2 = metrics.compute_control_metrics(
-    George_2.dataframe.loc[:10*60/ts, 'Time'],
-    George_2.dataframe.loc[:10*60/ts, 'BIS'],
+    George_2.dataframe.loc[:10 * 60 / ts, 'Time'],
+    George_2.dataframe.loc[:10 * 60 / ts, 'BIS'],
     phase='induction'
 )
 metric_3 = metrics.compute_control_metrics(
@@ -98,13 +106,13 @@ metric_3 = metrics.compute_control_metrics(
 )
 
 metric_1_new = metrics.new_metrics_induction(
-    George_1.dataframe.loc[:10*60/ts, 'Time'].values,
-    George_1.dataframe.loc[:10*60/ts, 'BIS'].values,
+    George_1.dataframe.loc[:10 * 60 / ts, 'Time'].values,
+    George_1.dataframe.loc[:10 * 60 / ts, 'BIS'].values,
 )
 
 metric_3_new = metrics.new_metrics_maintenance(
-    George_3.dataframe.loc[10*60/ts:, 'Time'].values,
-    George_3.dataframe.loc[10*60/ts:, 'BIS'].values,
+    George_3.dataframe.loc[10 * 60 / ts:, 'Time'].values,
+    George_3.dataframe.loc[10 * 60 / ts:, 'BIS'].values,
 )
 
 
