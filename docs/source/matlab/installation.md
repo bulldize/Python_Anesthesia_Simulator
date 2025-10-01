@@ -1,24 +1,23 @@
-# Getting Started (for MATLAB Users)
+# Getting Started
 
 This guide is intended for MATLAB users who want to exploit the features of the **Python Anesthesia Simulator**.
 It walks you through setting up your environment and instantiating a `Patient` object from MATLAB using the Python backend.
 
-
-## 1. Prerequisites
+## Prerequisites
 
 * MATLAB R2024b or later
 * Python 3.12 (recommended: use a virtual environment)
 * Required Python packages (see below)
 
-## 2. Set Up Python Environment
+## Set Up Python Environment
 
-### 1. Create a virtual environment (optional but recommended):
+### Create a virtual environment (optional but recommended)
 
 ```bash
     python -m venv your_environment
 ```
 
-### 2. Activate the environment:
+### Activate the environment
 
 * On Windows:
 
@@ -27,11 +26,12 @@ It walks you through setting up your environment and instantiating a `Patient` o
 ```
 
 * On MacOS/Linux:
+
 ```bash
     source your_environment/bin/activate
 ```
 
-### 3. Install required packages:
+### Install required packages
 
 Clone this repository and install the package with:
 
@@ -39,7 +39,7 @@ Clone this repository and install the package with:
     pip install .
 ```
 
-## 3. Using the Simulator in MATLAB
+## Using the Simulator in MATLAB
 
 ### Step-by-step Example
 

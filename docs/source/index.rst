@@ -25,6 +25,7 @@ If you are using PAS for your research, please cite the previous paper.
    modelling_anesthesia
    python_anesthesia_simulator
    examples
+   matlab
    contributing
 
 

@@ -1,11 +1,12 @@
-# MATLAB Script for Anesthesia Simulation with PID Controller
+# Closed-Loop simulation
 
 This script demonstrates how to perform a closed loop simulation by calling the Python Anesthesia Simulator in MATLAB.
-This script simulates the administration of Propofol and Remifentanil to control the depth of anesthesia by using a PID controller.
+
+You can download the `pid_ratio` function used in this example from [here](pid_ratio.m), and the overall simulation script from [here](closed_loop_simulation.m).
 
 ---
 
-## Environment Setup
+## 🧪 Environment Setup
 
 Set the Python environment to be used by MATLAB.
 
@@ -26,7 +27,7 @@ env = pyenv('Version', ...
 
 ---
 
-## Instantiate a Patient Object
+## 🧍 Instantiate a Patient Object
 
 Import the Python module and create a patient object with the specified characteristics.
 
@@ -45,7 +46,7 @@ George = simulator.Patient([age, height, weight, gender],...
 
 ---
 
-## Controller Setup
+## 🛠️ Controller Setup
 
 Define the PID parameters and saturation limits.
 
@@ -70,7 +71,7 @@ y_sp = 50; % Setpoint for BIS
 
 ---
 
-## Simulation Setup
+## 🛠️  Simulation Setup
 
 Initialize simulation time and vectors for results.
 
@@ -81,7 +82,7 @@ T_sim  = sampling_time:sampling_time:T_simu;
 
 BIS = zeros(1,N_simu);
 uProp = zeros(1,N_simu);
-uRem  = zeros(1,N_simu);
+uRem  = zeros(1,N_simu);📊
 
 uProp_k = PID_params.uref_p;
 uRem_k = PID_params.uref_r;
@@ -89,7 +90,7 @@ uRem_k = PID_params.uref_r;
 
 ---
 
-## Run the Simulation
+## ▶️ Run the Simulation
 
 Simulate the closed-loop control process using the PID controller.
 
@@ -115,7 +116,7 @@ end
 
 ---
 
-## Plotting Results
+## 📊 Plotting Results
 
 Visualize BIS response and drug infusion rates.
 
