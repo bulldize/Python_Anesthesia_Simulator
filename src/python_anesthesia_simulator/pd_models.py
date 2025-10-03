@@ -511,7 +511,7 @@ class LOC_model:
 
     .. math:: LOC = \frac{U^\gamma}{1+U^\gamma}
 
-     with the Greco-type surface response model:
+    with the Greco-type surface response model:
 
     .. math:: U = U_p + U_r + \beta U_p U_r
 
@@ -521,59 +521,59 @@ class LOC_model:
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
 
 
-     Parameters
-     ----------
-     hill_model : str, optional
-         'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type surface model).
-         'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type surface model).
-         'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type surface model).
-         Ignored if hill_param is specified.
-         Default is 'Kern'.
-     hill_param : list, optional
-         Parameters of the model
-         list [c50p_LOC, c50r_LOC, gamma_LOC, beta_LOC]:
-         - **c50p_LOC**: Concentration at half effect for propofol effect on LOC (µg/mL).
-         - **c50r_LOC**: Concentration at half effect for remifentanil effect on LOC (ng/mL).
-         - **gamma_LOC**: Slope coefficient for the LOC model.
-         - **beta_LOC**: Interaction coefficient for the LOC model (beta_LOC = 0 signifies an additive interaction, beta_LOC > 0 indicates synergy).
-     random : bool, optional
-         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
-     ts : float
-         Sampling time, in s.        
+    Parameters
+    ----------
+    hill_model : str, optional
+        'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type surface model).
+        Ignored if hill_param is specified.
+        Default is 'Kern'.
+    hill_param : list, optional
+        Parameters of the model
+        list [c50p_LOC, c50r_LOC, gamma_LOC, beta_LOC]:
+        - **c50p_LOC**: Concentration at half effect for propofol effect on LOC (µg/mL).
+        - **c50r_LOC**: Concentration at half effect for remifentanil effect on LOC (ng/mL).
+        - **gamma_LOC**: Slope coefficient for the LOC model.
+        - **beta_LOC**: Interaction coefficient for the LOC model (beta_LOC = 0 signifies an additive interaction, beta_LOC > 0 indicates synergy).
+    random : bool, optional
+        Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
+    ts : float
+        Sampling time, in s.        
 
 
-     Attributes
-     ----------
-     c50p : float
-         Concentration at half effect for propofol effect on LOC (µg/mL).
-     c50r : float
-         Concentration at half effect for remifentanil effect on LOC (ng/mL).
-     gamma : float
-         Slope coefficient for the LOC  model.
-     beta : float
-         Interaction coefficient for the LOC model (beta_LOC = 0 signifies an additive interaction, beta_LOC > 0 indicates synergy). 
-     hill_param : list
-         Parameters of the model
-         list [c50p_LOC, c50r_LOC, gamma_LOC, beta_LOC]
-     hill_model : str
-         'Kern'[Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
-         'Mertens'[Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
-         'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
-     ts : float
-         Sampling time, in s.    
+    Attributes
+    ----------
+    c50p : float
+        Concentration at half effect for propofol effect on LOC (µg/mL).
+    c50r : float
+        Concentration at half effect for remifentanil effect on LOC (ng/mL).
+    gamma : float
+        Slope coefficient for the LOC  model.
+    beta : float
+        Interaction coefficient for the LOC model (beta_LOC = 0 signifies an additive interaction, beta_LOC > 0 indicates synergy). 
+    hill_param : list
+        Parameters of the model
+        list [c50p_LOC, c50r_LOC, gamma_LOC, beta_LOC]
+    hill_model : str
+        'Kern' [Kern2004]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Mertens' [Mertens2003]_, considers the synergistic effect of remifentanil (Greco-type).
+        'Johnson' [Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
+    ts : float
+        Sampling time, in s.    
 
-     References
-     ---------- 
-     .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
-             interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
-     .. [Mertens2003] M. J. Mertens et al. "Propofol reduces perioperative remifentanil requirements 
-             in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
-             Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
-     .. [Johnson2008] K. B. Johnson et al. "Validation of remifentanil propofol response surfaces for sedation, 
-             surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
-             analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
+    References
+    ---------- 
+    .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
+            interaction in volunteers." Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
+    .. [Mertens2003] M. J. Mertens et al. "Propofol reduces perioperative remifentanil requirements 
+            in a synergistic manner: response surface modeling of perioperative remifentanil–propofol interactions." 
+            Anesthesiology 99.2 (2003): 347-359. doi : 10.1097/00000542-200308000-00016
+    .. [Johnson2008] K. B. Johnson et al. "Validation of remifentanil propofol response surfaces for sedation, 
+            surrogates of surgical stimulus, and laryngoscopy in patients undergoing surgery." Anesthesia and 
+            analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
 
-     """
+    """
 
     def __init__(self, hill_model: str = 'Kern', hill_param: Optional[list] = None,
                  random: Optional[bool] = False, ts: float = 1, **kwargs):
