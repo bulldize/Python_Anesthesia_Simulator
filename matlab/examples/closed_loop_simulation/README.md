@@ -97,19 +97,24 @@ Simulate the closed-loop control process using the PID controller.
 simulation_tuple = George.one_step(u_propo=uProp_k,...
         u_remi=uRem_k,...
         noise = false);
-BIS_k = double(simulation_tuple{1}.item());
+simulation_cell = cell(simulation_tuple);
+BIS_k = double(simulation_cell{1});
 
+% Executes the simulation
 for k=1:1:N_simu
+
     [uProp_k, uRem_k] = pid_ratio(BIS_k, y_sp, PID_params);
 
     simulation_tuple = George.one_step(u_propo=uProp_k,...
         u_remi=uRem_k,...
         noise = false);
-    BIS_k = double(simulation_tuple{1}.item());
+    simulation_cell = cell(simulation_tuple);
+    BIS_k = double(simulation_cell{1});
 
     BIS(k) = BIS_k;
     uProp(k) = uProp_k;
     uRem(k) = uRem_k;
+
 end
 ```
 
