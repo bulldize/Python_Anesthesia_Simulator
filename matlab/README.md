@@ -23,7 +23,7 @@ It walks you through setting up your environment and instantiating a `Patient` o
 * On Windows:
 
 ```bash
-    python -m venv your_environment
+    your_environment\Scripts\activate
 ```
 
 * On MacOS/Linux:
