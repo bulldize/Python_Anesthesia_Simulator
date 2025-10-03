@@ -88,7 +88,8 @@ uRem_k = PID_params.uref_r;
 simulation_tuple = George.one_step(u_propo=uProp_k,...
         u_remi=uRem_k,...
         noise = false);
-BIS_k = double(simulation_tuple{1}.item());
+simulation_cell = cell(simulation_tuple);
+BIS_k = double(simulation_cell{1});
 
 % Executes the simulation
 for k=1:1:N_simu
@@ -98,7 +99,8 @@ for k=1:1:N_simu
     simulation_tuple = George.one_step(u_propo=uProp_k,...
         u_remi=uRem_k,...
         noise = false);
-    BIS_k = double(simulation_tuple{1}.item());
+    simulation_cell = cell(simulation_tuple);
+    BIS_k = double(simulation_cell{1});
 
     BIS(k) = BIS_k;
     uProp(k) = uProp_k;
