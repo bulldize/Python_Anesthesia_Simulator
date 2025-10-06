@@ -17,8 +17,8 @@ clc                % Clear command window
 % Replace 'your_path\your_environment\Scripts\python.exe' with the actual
 % path on your machine.
 
-%env = pyenv('Version', ...
-%    'your_path\your_environment\Scripts\python.exe');
+env = pyenv('Version', ...
+    'your_path\your_environment\Scripts\python.exe');
 
 
 % For Linux/macOS users
@@ -28,8 +28,6 @@ clc                % Clear command window
 % env = pyenv('Version', ...
 %    '/Users/your_username/your_environment/bin/python');
 
-env = pyenv('Version', ...
-    'C:\Users\michele.schiavo\python_anesthesia_simulator_env\Scripts\python.exe');
 
 %% 3. Define Simulation Parameters
 simulation_time = 3600;   % Total simulation time in seconds (1 hour)
