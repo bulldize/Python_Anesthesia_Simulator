@@ -18,3 +18,9 @@ docs/build/
 *.asv
 # virtual documents
 .virtual_documents/
+# simulink slprj folder
+**/slprj/
+# simulink .slxc files
+*.slxc
+# simulink autosave files
+*.slx.autosave
