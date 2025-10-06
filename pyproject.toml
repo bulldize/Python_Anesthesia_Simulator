@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "python_anesthesia_simulator"
-version = "1.0.0"
+version = "2.0.0"
 authors = [
-  {name="Bob Aubouin--Pairault"},
+  {name="Bob Aubouin--Pairault, Michele Schiavo, Erhan Yumuk"},
   {email="bob.aubouin@tutanota.com"},
 ]
-description = """Anesthesia simulator: modellize the effect of drugs (Propofol, Remifentanil, Norepinephrine) \
+description = """Anesthesia simulator: modellize the effect of drugs (Propofol, Remifentanil, Norepinephrine, Atracurium) \
                  during general anesthesia. Specially build for control design."""
 readme = "README.md"
 requires-python = ">=3.12"

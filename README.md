@@ -54,10 +54,6 @@ Contribution and discussions are welcomed! Please feel free to use the [issue tr
 
 _GNU General Public License 3.0_
 
-## Project status
+## Authors
 
-Published in the journal of Open Source Software!
-
-## Author
-
-Bob Aubouin--Paitault
+Bob Aubouin--Pairault, Michele Schiavo, Erhan Yumuk
