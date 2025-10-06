@@ -1042,18 +1042,18 @@ class Hemo_meca_PD_model:
             self.dist_surg_sv_k = 1e-4
             self.dist_surg_hr_k = 1e-4
         elif stimuli_model == 'VitalDB':
-            self.dist_intub_tpr_k = 1.1256e-05
-            self.dist_intub_sv_k = 0.180
-            self.dist_intub_hr_k = 8.677
+            self.dist_intub_tpr_k = 8.8e-6
+            self.dist_intub_sv_k = 0.176
+            self.dist_intub_hr_k = 11.94
 
-            self.dist_surg_tpr_k = 0.0008
-            self.dist_surg_sv_k = 14.052
-            self.dist_surg_hr_k = 9.4613
+            self.dist_surg_tpr_k = 8.8e-4
+            self.dist_surg_sv_k = 13.65
+            self.dist_surg_hr_k = 9.92
 
             # update model param
-            self.int_hr = -0.085
-            self.emax_propo_tpr = -0.0237
-            self.fb = -0.3673
+            self.int_hr = -0.097
+            self.emax_propo_tpr = -0.03
+            self.fb = -0.5
         self.start_intub = 3 * 60  # seconds
         self.start_surg = 40 * 60  # seconds
         self.time_id = 0
