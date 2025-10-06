@@ -70,7 +70,9 @@ sampling_time = 1;
 George = simulator.Patient([age, height, weight, gender], ts=sampling_time);
 
 ```
+
 Once instantiated, you can call methods on the Python `Patient` object directly from MATLAB.
+
 ---
 
 ## 5. Using the Simulator in Simulink
