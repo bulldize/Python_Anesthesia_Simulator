@@ -1,6 +1,7 @@
-# MATLAB Script: perform an open loop simulation with the Python Anesthesia Simulator
+# Open loop simulation
 
 This script demonstrates how to perform an open loop simulation by calling the Python Anesthesia Simulator in MATLAB.
+You can download the overall simulation script from [here](open_loop_simulation.m).
 
 ---
 
@@ -8,7 +9,7 @@ This script demonstrates how to perform an open loop simulation by calling the P
 
 To use Python functions inside MATLAB, configure the Python environment:
 
-### For **Windows** users:
+### For **Windows** users
 
 Replace the path with your actual Python environment path:
 
@@ -17,7 +18,7 @@ env = pyenv('Version', ...
     'your_path\your_environment\Scripts\python.exe');
 ```
 
-### For **Linux/macOS** users:
+### For **Linux/macOS** users
 
 ```matlab
 % env = pyenv('Version', ...
