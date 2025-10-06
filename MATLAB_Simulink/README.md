@@ -69,10 +69,8 @@ sampling_time = 1;
 % Create a Patient object
 George = simulator.Patient([age, height, weight, gender], ts=sampling_time);
 
-% Perform one simulation step
-result = George.one_step(u_propo=0.5, u_remi=0.2, u_nore=0.0, u_atra=0.0, noise=false);
 ```
-
+Once instantiated, you can call methods on the Python `Patient` object directly from MATLAB.
 ---
 
 ## 5. Using the Simulator in Simulink
@@ -174,7 +172,7 @@ end
 
 1. Add a **MATLAB Function Block** to your Simulink model.  
 2. Replace its code with the content of `PythonStep.m`.  
-3. Add **nine inputs** and **five outputs**:  
+3. Add the Inputs and Outputs:  
    - Inputs: `u_p`, `u_r`, `u_n`, `u_a`, `age`, `height`, `weight`, `gender`, `sampling_time`  
    - Outputs: `bis`, `co`, `map`, `tol`, `nmb`
 4. Connect your infusion control signals and monitoring scopes as needed.  
