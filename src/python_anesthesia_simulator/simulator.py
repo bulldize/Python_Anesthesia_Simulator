@@ -7,7 +7,7 @@ import casadi as cas
 from scipy.signal import dlsim, TransferFunction
 # Local imports
 from .pk_models import CompartmentModel, AtracuriumModel
-from .pd_models import BIS_model, TOL_model, Hemo_simple_PD_model, Hemo_meca_PD_model, NMB_model
+from .pd_models import BIS_model, TOL_model, Hemo_meca_PD_model, NMB_model
 
 
 class Patient:
@@ -34,7 +34,9 @@ class Patient:
     model_bis : str, optional
         Name of the BIS PD Model. The default is 'Bouillon'.    
     model_nmb, : str, optional
-        Name of the NMB PD Model. The default is 'Weatherley'.    
+        Name of the NMB PD Model. The default is 'Weatherley'.
+    model_stimuli : str, optional
+        Name of the stimuli model. The default is 'none'.
     ts : float, optional
         Sampling time (s). The default is 1.
     hill_param : list
@@ -89,7 +91,9 @@ class Patient:
     model_bis : str
         Name of the BIS PD model.
     model_nmb : str
-        Name of the NMB PD model.    
+        Name of the NMB PD model.
+    model_stimuli : str
+        Name of the stimuli model.   
     hill_param : list
         Parameter of the BIS model (Propo Remi interaction)
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
@@ -150,7 +154,7 @@ class Patient:
         Maximum value of the BIS delay caused by signal quality index expressed in (s). 
     bis_delay_buffer: array
         Buffer of BIS values to simulate delay.
-        
+
     References
     ---------- 
     .. [Wahlquist2025] Y. Wahlquist, et al. "Kalman filter soft sensor to handle signal quality loss in closed-loop controlled anesthesia" 
@@ -169,6 +173,7 @@ class Patient:
                  model_atracurium: str = 'WardWeatherleyLago',
                  model_bis: str = 'Bouillon',
                  model_nmb: str = 'Weatherley',
+                 model_stimuli: str = 'none',
                  ts: float = 1,
                  hill_param: list = None,
                  atracurium_model_params: dict = {},
@@ -199,6 +204,7 @@ class Patient:
         self.model_remi = model_remi
         self.model_nore = model_nore
         self.model_atracurium = model_atracurium
+        self.model_stimuli = model_stimuli
         self.hill_param = hill_param
         self.atracurium_model_params = atracurium_model_params
         self.atracurium_hill_params = atracurium_hill_params
@@ -224,8 +230,8 @@ class Patient:
         self.nore_pk = CompartmentModel(patient_characteristic, self.lbm, drug="Norepinephrine",
                                         ts=self.ts, model=model_nore, random=random_PK)
         self.atracurium_pk = AtracuriumModel(patient_characteristic,
-                                        ts=self.ts, model=model_atracurium,
-                                        model_params=atracurium_model_params)
+                                             ts=self.ts, model=model_atracurium,
+                                             model_params=atracurium_model_params)
 
         # Init PD model for BIS
         self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD, ts=self.ts, age=self.age)
@@ -241,9 +247,10 @@ class Patient:
             random=random_PD,
             hr_base=hr_base,
             sv_base=co_base / hr_base * 1000,  # L to ml
-            map_base=map_base
+            map_base=map_base,
+            stimuli_model=model_stimuli,
         )
-        
+
         # Init PD model fo NMB
         self.nmb_pd = NMB_model(hill_model=model_nmb, hill_param=atracurium_hill_params)
 
@@ -273,7 +280,7 @@ class Patient:
         self.hr = self.hemo_pd.abase_hr
         self.map = map_base
         self.co = co_base
-        
+
         # Initialize the buffer to simulate BIS delay
         self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.bis
 
@@ -359,16 +366,16 @@ class Patient:
         self.bis += dist[0]
         self.map += dist[1]
         self.co += dist[2]
-        
+
         # add noise
         if noise:
             self.add_noise()
-            
+
         # bis delay
-        delay = self.bis_delay_max * (1 - sqi/100)
-        delay_steps = int(np.ceil(delay/self.ts))-1
-        if delay_steps>0:
-            
+        delay = self.bis_delay_max * (1 - sqi / 100)
+        delay_steps = int(np.ceil(delay / self.ts)) - 1
+        if delay_steps > 0:
+
             # Approximated by excess
             self.bis_delay_buffer = np.roll(self.bis_delay_buffer, -1)
             self.bis_delay_buffer[delay_steps:] = [self.bis] * len(self.bis_delay_buffer[delay_steps:])
@@ -663,7 +670,7 @@ class Patient:
             Remifentanil infusion rate (µg/s).
         u_nore : float:
             Norepinephrine infusion rate (µg/s).
-            
+
         """
         # Find equilibrium point
 
@@ -706,7 +713,7 @@ class Patient:
 
     def init_dataframe(self):
         r"""Initilize the dataframe variable with the following columns:
-            
+
             - 'Time': Simulation time (s)
             - 'BIS': Bispectral Index
             - 'SQI': Signal Quality Index
@@ -726,7 +733,7 @@ class Patient:
             - 'x_nore': State of the norepinephrine PK model
             - 'x_atra_1' to 'x_atra_6': States of the atracurium PK model
             - 'blood_volume': Blood volume (L)
-            
+
         """
         self.Time = 0
         column_names = ['Time',  # time
@@ -750,7 +757,8 @@ class Patient:
                     'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr, 'NMB': self.nmb,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
                     'SAP': sap, 'DAP': dap,
-                    'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2], 'u_atra': inputs[3], 'SQI': inputs[4],  # inputs
+                    # inputs
+                    'u_propo': inputs[0], 'u_remi': inputs[1], 'u_nore': inputs[2], 'u_atra': inputs[3], 'SQI': inputs[4],
                     'blood_volume': self.blood_volume}  # blood volume
 
         line_x_propo = {f'x_propo_{i + 1}': self.propo_pk.x[i, 0] for i in range(len(self.propo_pk.x))}
@@ -807,7 +815,7 @@ class Patient:
         # INPUT check
         if u_propo is None and u_remi is None and u_nore is None and u_atra is None:
             raise ValueError('No input given')
-        # Propofol infusion    
+        # Propofol infusion
         if u_propo is None:
             if u_remi is not None:
                 u_propo = np.zeros_like(u_remi)
@@ -815,7 +823,7 @@ class Patient:
                 u_propo = np.zeros_like(u_nore)
             else:
                 u_propo = np.zeros_like(u_atra)
-        # Remifentanil infusion        
+        # Remifentanil infusion
         if u_remi is None:
             if u_propo is not None:
                 u_remi = np.zeros_like(u_propo)
@@ -823,7 +831,7 @@ class Patient:
                 u_remi = np.zeros_like(u_nore)
             else:
                 u_remi = np.zeros_like(u_atra)
-        # Norepinephrine infusion        
+        # Norepinephrine infusion
         if u_nore is None:
             if u_propo is not None:
                 u_nore = np.zeros_like(u_propo)
@@ -831,15 +839,15 @@ class Patient:
                 u_nore = np.zeros_like(u_remi)
             else:
                 u_nore = np.zeros_like(u_atra)
-        # Atracurium infusion        
+        # Atracurium infusion
         if u_atra is None:
             if u_propo is not None:
                 u_atra = np.zeros_like(u_propo)
             elif u_remi is not None:
                 u_atra = np.zeros_like(u_remi)
             else:
-                u_atra = np.zeros_like(u_nore)  
-        # INPUT consistency check        
+                u_atra = np.zeros_like(u_nore)
+        # INPUT consistency check
         if not (len(u_propo) == len(u_remi) and len(u_propo) == len(u_nore) == len(u_atra)):
             raise ValueError('Inputs must have the same length')
 
@@ -882,7 +890,7 @@ class Patient:
         for i in range(np.shape(x_remi)[0]):
             df['x_remi_' + str(i + 1)] = x_remi[i, :]
         for i in range(np.shape(x_atra)[0]):
-            df['x_atra_' + str(i + 1)] = x_atra[i, :]    
+            df['x_atra_' + str(i + 1)] = x_atra[i, :]
         if x_nore.ndim == 1:
             df['x_nore'] = x_nore
         else:
@@ -890,7 +898,6 @@ class Patient:
                 df['x_nore' + str(i + 1)] = x_nore[i, :]
 
         return df
-
 
     def initialized_at_given_state(self, x0_atra: np.ndarray):
         r"""

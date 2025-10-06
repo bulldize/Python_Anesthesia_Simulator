@@ -5,6 +5,7 @@ from scipy.integrate import solve_ivp
 import casadi as cas
 from matplotlib import pyplot as plt
 from matplotlib import cm
+from scipy.signal import TransferFunction, lfilter
 
 
 def fsig(x, c50, gam): return x**gam / (c50**gam + x**gam)  # quick definition of sigmoidal function
@@ -24,18 +25,18 @@ class BIS_model:
     If the interaction with remifentanil is considered the equation represents a Surface Response model, where:
 
     .. math:: U = \frac{U_p + U_r}{1 - \beta \theta + \beta \theta^2}
-    
+
     for Minto-type surface model and:
-    
+
     .. math:: U = U_p + U_r + \beta U_p U_r
 
     for Greco-type surface model, with: 
-        
+
     .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
     .. math:: \theta = \frac{U_p}{U_r+U_p}
 
-    
+
     Parameters
     ----------
     hill_model : str, optional
@@ -95,7 +96,7 @@ class BIS_model:
         'Yumuk'[Yumuk2024]_, considers the synergistic effect of remifentanil (Greco-type).
     ts : float
         Sampling time, in s.    
-        
+
     References
     ----------
     .. [Bouillon2004] T. W. Bouillon et al., “Pharmacodynamic Interaction between Propofol and Remifentanil
@@ -197,7 +198,7 @@ class BIS_model:
 
             # function used in the model
             def faging(x): return np.exp(x * (age - AGE_ref))
-            def fdelay(x): return 15 + np.exp(x*age)
+            def fdelay(x): return 15 + np.exp(x * age)
 
             # model parameters and their coefficient of variation
             self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
@@ -267,7 +268,7 @@ class BIS_model:
 
         If the BIS model chosen considers only the effect of propofol the effect site concentration of remifentanil is ignored.
         Inputs can be either nd.array or float, the format of the output will be the same as the input
-        
+
         Parameters
         ----------
         c_es_propo : float
@@ -317,27 +318,26 @@ class BIS_model:
         bis = self.E0 - self.Emax * interaction_gamma / (1 + interaction_gamma)
 
         return bis
-    
-    
+
     def one_step(self, c_es_propo: float, c_es_remi: Optional[float] = 0) -> float:
         """Compute one step time of the BIS model
-        
+
         Parameters
         ----------
         c_es_propo : float
             Propofol effect site concentration (µg/mL).
         c_es_remi : float, optional
             Remifentanil effect site concentration (ng/mL). The default is 0.
-            
+
         Returns
         -------
         BIS : float
             Bis value.
-            
+
         """
 
         bis_temp = self.compute_bis(c_es_propo, c_es_remi)
-        if len(self.bis_buffer)>1:
+        if len(self.bis_buffer) > 1:
             self.bis_buffer = np.roll(self.bis_buffer, -1)
             bis = self.bis_buffer[0]
             self.bis_buffer[-1] = float(bis_temp.item())
@@ -346,22 +346,21 @@ class BIS_model:
 
         return bis
 
-
     def full_sim(self, c_es_propo: np.ndarray, c_es_remi: Optional[np.ndarray] = None) -> np.ndarray:
         """ Simulate BIS model with a given input.
-        
+
         Parameters
         ----------
         c_es_propo : np.ndarray
             List of propofol effect site concentrations (µg/ml).
         c_es_remi : np.ndarray, optional
             List of remifentanil effect site concentrations (ng/ml).
-            
+
         Returns
         -------
         np.ndarray
             List of the output BIS values during the simulation.
-            
+
         """
         if c_es_remi is not None:
             if len(c_es_propo) != len(c_es_remi):
@@ -373,7 +372,7 @@ class BIS_model:
         for index in range(len(c_es_propo)):
             BIS_output[index] = self.one_step(c_es_propo[index], c_es_remi[index])
 
-        return BIS_output    
+        return BIS_output
 
     def update_param_blood_loss(self, v_ratio: float):
         """Update PK coefficient to mimic a blood loss.
@@ -504,6 +503,7 @@ class BIS_model:
             ax.view_init(20, 60, 0)
             plt.show()
 
+
 class LOC_model:
     r"""Propofol + Remifentanil -> LOC (Loss of Consciousness) model (Greco-type interaction).
 
@@ -512,15 +512,15 @@ class LOC_model:
     .. math:: LOC = \frac{U^\gamma}{1+U^\gamma}
 
      with the Greco-type surface response model:
-    
+
     .. math:: U = U_p + U_r + \beta U_p U_r
 
     where 
-    
+
     .. math:: U_p = \frac{C_{p,es}}{C_{p,50}}
     .. math:: U_r = \frac{C_{r,es}}{C_{r,50}}
-    
-     
+
+
      Parameters
      ----------
      hill_model : str, optional
@@ -561,7 +561,7 @@ class LOC_model:
          'Johnson'[Johnson2008]_, considers the synergistic effect of remifentanil (Greco-type).
      ts : float
          Sampling time, in s.    
-         
+
      References
      ---------- 
      .. [Kern2004] S. E. Kern et al. "A response surface analysis of propofol-remifentanil pharmacodynamic 
@@ -574,87 +574,86 @@ class LOC_model:
              analgesia 106.2 (2008): 471. doi : 10.1213/ane.0b013e3181606c62
 
      """
-     
+
     def __init__(self, hill_model: str = 'Kern', hill_param: Optional[list] = None,
-                  random: Optional[bool] = False, ts: float = 1, **kwargs):
-         """
-         Init the class.
+                 random: Optional[bool] = False, ts: float = 1, **kwargs):
+        """
+        Init the class.
 
-         Returns
-         -------
-         None.
+        Returns
+        -------
+        None.
 
-         """
+        """
 
-         self.hill_model = hill_model
-         self.ts = ts
+        self.hill_model = hill_model
+        self.ts = ts
 
-         if hill_param is not None:  # Parameter given as an input
-             if len(hill_param) == 4:
-                 self.c50p = hill_param[0]
-                 self.c50r = hill_param[1]
-                 self.gamma = hill_param[2]
-                 self.beta = hill_param[3]
-             else:
-                 raise ValueError("The model parameters provided are not valid")
+        if hill_param is not None:  # Parameter given as an input
+            if len(hill_param) == 4:
+                self.c50p = hill_param[0]
+                self.c50r = hill_param[1]
+                self.gamma = hill_param[2]
+                self.beta = hill_param[3]
+            else:
+                raise ValueError("The model parameters provided are not valid")
 
+        elif self.hill_model == 'Kern':
+            # See [Kern2004]  Kern, Steven E., et al.
+            # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers."
+            # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
 
-         elif self.hill_model == 'Kern':
-             # See [Kern2004]  Kern, Steven E., et al.
-             # "A response surface analysis of propofol-remifentanil pharmacodynamic interaction in volunteers."
-             # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
+            # model parameters and their coefficient of variation
+            self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
+            self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
+            self.gamma = 3.76;          cv_gamma = 0
+            self.beta = 5.1;            cv_beta = 0
 
-             # model parameters and their coefficient of variation
-             self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
-             self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
-             self.gamma = 3.76;          cv_gamma = 0
-             self.beta = 5.1;            cv_beta = 0
+        elif self.hill_model == 'Mertens':
+            # See [Mertens2003]  Mertens, Martijn J., et al.
+            # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface
+            # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359.
+            # doi : 10.1097/00000542-200308000-00016
 
-         elif self.hill_model == 'Mertens':
-             # See [Mertens2003]  Mertens, Martijn J., et al.
-             # "Propofol reduces perioperative remifentanil requirements in a synergistic manner: response surface
-             # modeling of perioperative remifentanil–propofol interactions." Anesthesiology 99.2 (2003): 347-359.
-             # doi : 10.1097/00000542-200308000-00016
+            # model parameters and their coefficient of variation
+            self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
+            self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
+            self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
+            self.beta = 0;              cv_beta = 0
 
-             # model parameters and their coefficient of variation
-             self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
-             self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
-             self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
-             self.beta = 0;              cv_beta = 0
+        elif self.hill_model == 'Johnson':
+            # See [Johnson2008] Johnson, Ken B., et al.
+            # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus,
+            # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471.
+            # doi : 10.1213/ane.0b013e3181606c62
 
-         elif self.hill_model == 'Johnson':
-             # See [Johnson2008] Johnson, Ken B., et al.
-             # "Validation of remifentanil propofol response surfaces for sedation, surrogates of surgical stimulus,
-             # and laryngoscopy in patients undergoing surgery." Anesthesia and analgesia 106.2 (2008): 471.
-             # doi : 10.1213/ane.0b013e3181606c62
+            # model parameters and their coefficient of variation
+            self.c50p = 2.20;           cv_c50p = 0
+            self.c50r = 33.1;           cv_c50r = 0
+            self.gamma = 5.00;          cv_gamma = 0
+            self.beta = 3.60;           cv_beta = 0
 
-             # model parameters and their coefficient of variation
-             self.c50p = 2.20;           cv_c50p = 0
-             self.c50r = 33.1;           cv_c50r = 0
-             self.gamma = 5.00;          cv_gamma = 0
-             self.beta = 3.60;           cv_beta = 0
+        if random and hill_param is None:
+            # estimation of log normal standard deviation
+            w_c50p = np.sqrt(np.log(1 + cv_c50p**2))
+            w_c50r = np.sqrt(np.log(1 + cv_c50r**2))
+            w_gamma = np.sqrt(np.log(1 + cv_gamma**2))
+            w_beta = np.sqrt(np.log(1 + cv_beta**2))
 
-         if random and hill_param is None:
-             # estimation of log normal standard deviation
-             w_c50p = np.sqrt(np.log(1 + cv_c50p**2))
-             w_c50r = np.sqrt(np.log(1 + cv_c50r**2))
-             w_gamma = np.sqrt(np.log(1 + cv_gamma**2))
-             w_beta = np.sqrt(np.log(1 + cv_beta**2))
+        if random and hill_param is None:
+            self.c50p *= np.exp(np.random.normal(scale=w_c50p))
+            self.c50r *= np.exp(np.random.normal(scale=w_c50r))
+            self.beta *= np.exp(np.random.normal(scale=w_beta))
+            self.gamma *= np.exp(np.random.normal(scale=w_gamma))
 
-         if random and hill_param is None:
-             self.c50p *= np.exp(np.random.normal(scale=w_c50p))
-             self.c50r *= np.exp(np.random.normal(scale=w_c50r))
-             self.beta *= np.exp(np.random.normal(scale=w_beta))
-             self.gamma *= np.exp(np.random.normal(scale=w_gamma))
-
-         self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta]
+        self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta]
 
     def compute_loc(self, c_es_propo, c_es_remi):
         """Compute LOC function (0-1) from propofol and remifentanil effect site concentration.
-        
+
         LOC = 0  means fully awake, LOC = 1 deep LOC
 
-        
+
         Parameters
         ----------
         c_es_propo : float
@@ -672,16 +671,16 @@ class LOC_model:
         interaction = up + ur + self.beta * up * ur
         interaction_gamma = interaction ** self.gamma
         loc =  interaction_gamma / (1 + interaction_gamma)
-        
-        return loc      
-     
+
+        return loc
+
     def plot_surface(self):
-        """Plot the 3D-Hill surface of the LOC related to Propofol and Remifentanil effect site concentration""" 
+        """Plot the 3D-Hill surface of the LOC related to Propofol and Remifentanil effect site concentration"""
         cer = np.linspace(0, 8, 9)   # ng/mL
         cep = np.linspace(0, 12, 13)    # µg/mL
-        cer, cep = np.meshgrid(cer, cep) 
+        cer, cep = np.meshgrid(cer, cep)
         effect = self.compute_loc(cep, cer)
-        fig, ax = plt.subplots(subplot_kw={"projection": "3d"}) 
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
         surf = ax.plot_surface(cer, cep, effect, cmap=cm.jet, linewidth=0.1)
         ax.set_xlabel('Remifentanil Ce [ng/mL]')
         ax.set_ylabel('Propofol Ce [µg/mL]')
@@ -691,7 +690,7 @@ class LOC_model:
         ax.view_init(15, -70)
         plt.show()
 
-    
+
 class TOL_model():
     r"""Hierarchical model to link drug effect site concentration to Tolerance of Laringoscopy.
 
@@ -809,337 +808,6 @@ class TOL_model():
         plt.show()
 
 
-class Hemo_simple_PD_model():
-    """Modelize the effect of Propofol, Remifentanil, Norepinephrine on Mean Arterial Pressure and Cardiac Output.
-
-    Use the addition of sigmoid curve to model the effect of each drugs on MAP and CO.
-    The following articles are used to define the parameters of the model:
-
-    - Norepinephrine to MAP: [Beloeil2005]_
-    - Noepinephrine to CO: [Monnet2011]_
-    - Propofol to MAP: [Jeleazcov2011]_
-    - Propofol to CO: [Fairfield1991]_
-    - Remifentanil to MAP: [Standing2010]_
-    - Remifentanil to CO: [Chanavaz2005]_
-
-    Parameters
-    ----------
-    nore_param : list, optional
-        List of hill curve parameters for Norepinephrine action
-        [Emax_map, c50_map, gamma_map, Emax_co, c50_co, gamma_co].
-        The default is None.
-    propo_param : list, optional
-        List of hill curve parameters for Propofol action
-        [emax_SAP, emax_DAP, c50_map_1, c50_map_2, gamma_map_1, gamma_map_2, Emax_co, c50_co, gamma_co].
-        The default is None.
-    remi_param : list, optional
-        List of hill curve parameters for Remifentanil action
-        [Emax_map, c50_map, gamma_map, Emax_co, c50_co, gamma_co].
-        The default is None.
-    random : bool, optional
-        Add uncertainties in the parameters. The default is False.
-    co_base: float, optional
-        Baseline Cardiac output (L/min). The default is 6.5 L/min.
-    map_base: float, optional
-        Baseline mean arterial pressure (mmHg). The default is 90mmHg.
-
-    Attributes
-    ----------
-    co_base : float
-        Baseline cardiac output.
-    map_base : float
-        Baseline mean arterial pressure.
-    emax_nore_map : float
-        Maximal effect of Norepinephrine on MAP.
-    c50_nore_map : float
-        Concentration of Norepinephrine that produce half of the maximal effect on MAP.
-    gamma_nore_map : float
-        Slope of the sigmoid curve for Norepinephrine effect on MAP.
-    emax_nore_co : float
-        Maximal effect of Norepinephrine on CO.
-    c50_nore_co : float
-        Concentration of Norepinephrine that produce half of the maximal effect on CO.
-    gamma_nore_co : float
-        Slope of the sigmoid curve for Norepinephrine effect on CO.
-    emax_propo_SAP : float
-        Maximal effect of Propofol on SAP.
-    emax_propo_DAP : float
-        Maximal effect of Propofol on DAP.
-    emax_propo_co : float
-        Maximal effect of Propofol on CO.
-    c50_propo_map_1 : float
-        Concentration of Propofol that produce half of the maximal effect on MAP.
-    c50_propo_map_2 : float
-        Concentration of Propofol that produce half of the maximal effect on MAP.
-    gamma_propo_map_1 : float
-        Slope of the sigmoid curve for Propofol effect on MAP.
-    gamma_propo_map_2 : float
-        Slope of the sigmoid curve for Propofol effect on MAP.
-    c50_propo_co : float
-        Concentration of Propofol that produce half of the maximal effect on CO.
-    gamma_propo_co : float
-        Slope of the sigmoid curve for Propofol effect on CO.
-    emax_remi_map : float
-        Maximal effect of Remifentanil on MAP.
-    emax_remi_co : float
-        Maximal effect of Remifentanil on CO.
-    c50_remi_map : float
-        Concentration of Remifentanil that produce half of the maximal effect on MAP.
-    gamma_remi_map : float
-        Slope of the sigmoid curve for Remifentanil effect on MAP.
-    c50_remi_co : float
-        Concentration of Remifentanil that produce half of the maximal effect on CO.
-    gamma_remi_co : float
-        Slope of the sigmoid curve for Remifentanil effect on CO.
-    map : float
-        Mean arterial pressure.
-    co : float
-        Cardiac output.
-
-    References
-    ----------
-    .. [Beloeil2005]  H. Beloeil, J.-X. Mazoit, D. Benhamou, and J. Duranteau,
-            “Norepinephrine kinetics and dynamics in septic shock and trauma patients,”
-            BJA: British Journal of Anaesthesia, vol. 95, no. 6, pp. 782–788, Dec. 2005,
-            doi: 10.1093/bja/aei261.
-    .. [Monnet2011]  X. Monnet, J. Jabot, J. Maizel, C. Richard, and J.-L. Teboul,
-            “Norepinephrine increases cardiac preload and reduces preload dependency assessed by passive leg
-            raising in septic shock patients”
-            Critical Care Medicine, vol. 39, no. 4, p. 689, Apr. 2011, doi: 10.1097/CCM.0b013e318206d2a3.
-    .. [Jeleazcov2011]  C. Jeleazcov, M. Lavielle, J. Schüttler, and H. Ihmsen,
-            “Pharmacodynamic response modelling of arterial blood pressure in adult
-            volunteers during propofol anaesthesia,”
-            BJA: British Journal of Anaesthesia,
-            vol. 115, no. 2, pp. 213–226, Aug. 2015, doi: 10.1093/bja/aeu553.
-    .. [Fairfield1991]  J. E. Fairfield, A. Dritsas, and R. J. Beale,
-            “HAEMODYNAMIC EFFECTS OF PROPOFOL: INDUCTION WITH 2.5 MG KG-1,”
-            British Journal of Anaesthesia, vol. 67, no. 5, pp. 618–620, Nov. 1991, doi: 10.1093/bja/67.5.618.
-    .. [Standing2010]  J. F. Standing, G. B. Hammer, W. J. Sam, and D. R. Drover,
-            “Pharmacokinetic–pharmacodynamic modeling of the hypotensive effect of
-            remifentanil in infants undergoing cranioplasty,”
-            Pediatric Anesthesia, vol. 20, no. 1, pp. 7–18, 2010, doi: 10.1111/j.1460-9592.2009.03174.x.
-    .. [Chanavaz2005]  C. Chanavaz et al.,
-            “Haemodynamic effects of remifentanil in children with and
-            without intravenous atropine. An echocardiographic study,”
-            BJA: British Journal of Anaesthesia, vol. 94, no. 1, pp. 74–79, Jan. 2005, doi: 10.1093/bja/aeh293.
-
-    """
-
-    def __init__(self, nore_param: list = None, propo_param: list = None,
-                 remi_param: list = None, random: bool = False,
-                 co_base: float = 6.5, map_base: float = 90):
-        """
-        Initialize the class.
-
-        Returns
-        -------
-        None.
-
-        """
-        self.co_base = co_base
-        self.map_base = map_base
-        w_not_known = 0.4
-        std_not_known = 1
-        if nore_param is None:
-            # see H. Beloeil, J.-X. Mazoit, D. Benhamou, and J. Duranteau, “Norepinephrine kinetics and dynamics
-            # in septic shock and trauma patients,” BJA: British Journal of Anaesthesia,
-            # vol. 95, no. 6, pp. 782–788, Dec. 2005, doi: 10.1093/bja/aei259.
-            self.emax_nore_map = 98.7
-            self.c50_nore_map = 70.4
-            self.gamma_nore_map = 1.8
-            w_emax_nore_map = 0
-            w_c50_nore_map = 1.64
-            w_gamma_nore_map = 0
-
-            # see X. Monnet, J. Jabot, J. Maizel, C. Richard, and J.-L. Teboul,
-            # “Norepinephrine increases cardiac preload and reduces preload dependency assessed by passive leg
-            # raising in septic shock patients*,”
-            # Critical Care Medicine, vol. 39, no. 4, p. 689, Apr. 2011, doi: 10.1097/CCM.0b013e318206d2a3.
-
-            self.emax_nore_co = 0.3 * self.co_base
-            self.c50_nore_co = 0.36
-            self.gamma_nore_co = 2.3  # to have an increase of 11% for a change between 0.24 and 0.48 of concentration
-            std_emax_nore_co = std_not_known
-            w_c50_nore_co = w_not_known
-            w_gamma_nore_co = w_not_known
-
-        else:
-            self.emax_nore_map = nore_param[0]
-            self.c50_nore_map = nore_param[1]
-            self.gamma_nore_ma = nore_param[2]
-            self.emax_nore_co = nore_param[3]
-            self.c50_nore_co = nore_param[4]
-            self.gamma_nore_co = nore_param[5]
-
-            # variability set to 0 if value are given
-            w_emax_nore_map = 0
-            w_c50_nore_map = 0
-            w_gamma_nore_map = 0
-            std_emax_nore_co = 0
-            w_c50_nore_co = 0
-            w_gamma_nore_co = 0
-
-        if propo_param is None:
-            # see C. Jeleazcov, M. Lavielle, J. Schüttler, and H. Ihmsen,
-            # “Pharmacodynamic response modelling of arterial blood pressure in adult
-            # volunteers during propofol anaesthesia,”
-            # BJA: British Journal of Anaesthesia, vol. 115, no. 2, pp. 213–226, Aug. 2015, doi: 10.1093/bja/aeu553.
-
-            self.emax_propo_SAP = 54.8
-            self.emax_propo_DAP = 18.1
-            self.c50_propo_map_1 = 1.96
-            self.gamma_propo_map_1 = 4.77
-            self.c50_propo_map_2 = 2.20
-            self.gamma_propo_map_2 = 8.49
-            w_emax_propo_SAP = 0.0871
-            w_emax_propo_DAP = 0.207
-            w_c50_propo_map_1 = 0.165
-            w_c50_propo_map_2 = 0.148
-            w_gamma_propo_map_1 = np.sqrt(np.log(1 + 5.59**2))
-            w_gamma_propo_map_2 = np.sqrt(np.log(1 + 6.33**2))
-
-            # see J. E. Fairfield, A. Dritsas, and R. J. Beale,
-            # “HAEMODYNAMIC EFFECTS OF PROPOFOL: INDUCTION WITH 2.5 MG KG−1,”
-            # British Journal of Anaesthesia, vol. 67, no. 5, pp. 618–620, Nov. 1991, doi: 10.1093/bja/67.5.618.
-
-            self.emax_propo_co = -2
-            self.c50_propo_co = 2.6
-            self.gamma_propo_co = 2
-            std_emax_propo_co = std_not_known
-            w_c50_propo_co = w_not_known
-            w_gamma_propo_co = w_not_known
-        else:
-            self.emax_propo_SAP = propo_param[0]
-            self.emax_propo_DAP = propo_param[1]
-            self.c50_propo_map_1 = propo_param[2]
-            self.gamma_propo_map_1 = propo_param[3]
-            self.c50_propo_map_2 = propo_param[4]
-            self.gamma_propo_map_2 = propo_param[5]
-            self.emax_propo_co = propo_param[6]
-            self.c50_propo_co = propo_param[7]
-            self.gamma_propo_co = propo_param[8]
-
-            # variability set to 0 if value are given
-            w_emax_propo_SAP = 0
-            w_emax_propo_DAP = 0
-            w_c50_propo_map_1 = 0
-            w_c50_propo_map_2 = 0
-            w_gamma_propo_map_1 = 0
-            w_gamma_propo_map_2 = 0
-            std_emax_propo_co = 0
-            w_c50_propo_co = 0
-            w_gamma_propo_co = 0
-
-        if remi_param is None:
-            # see J. F. Standing, G. B. Hammer, W. J. Sam, and D. R. Drover,
-            # “Pharmacokinetic–pharmacodynamic modeling of the hypotensive effect of
-            # remifentanil in infants undergoing cranioplasty,”
-            # Pediatric Anesthesia, vol. 20, no. 1, pp. 7–18, 2010, doi: 10.1111/j.1460-9592.2009.03174.x.
-
-            self.emax_remi_map = -map_base
-            self.c50_remi_map = 17.1
-            self.gamma_remi_map = 4.56
-            w_emax_remi_map = 0
-            w_c50_remi_map = 0.09
-            w_gamma_remi_map = 0
-
-            # see C. Chanavaz et al.,
-            # “Haemodynamic effects of remifentanil in children with and
-            # without intravenous atropine. An echocardiographic study,”
-            # BJA: British Journal of Anaesthesia, vol. 94, no. 1, pp. 74–79, Jan. 2005, doi: 10.1093/bja/aeh293.
-
-            self.emax_remi_co = -1.5
-            self.c50_remi_co = 5
-            self.gamma_remi_co = 2
-            w_emax_remi_co = w_not_known
-            w_c50_remi_co = w_not_known
-            w_gamma_remi_co = w_not_known
-        else:
-            self.emax_remi_map = remi_param[0]
-            self.c50_remi_map = remi_param[1]
-            self.gamma_remi_ma = remi_param[2]
-            self.emax_remi_co = remi_param[3]
-            self.c50_remi_co = remi_param[4]
-            self.gamma_remi_co = remi_param[5]
-
-            # variability set to 0 if value are given
-            w_emax_remi_map = 0
-            w_c50_remi_map = 0
-            w_gamma_remi_map = 0
-            w_emax_remi_co = 0
-            w_c50_remi_co = 0
-            w_gamma_remi_co = 0
-
-        if random:
-            # Norepinephrine
-            self.emax_nore_map *= np.exp(np.random.normal(scale=w_emax_nore_map))
-            self.c50_nore_map *= np.exp(np.random.normal(scale=w_c50_nore_map))
-            self.gamma_nore_map *= np.exp(np.random.normal(scale=w_gamma_nore_map))
-
-            self.emax_nore_co += np.random.normal(scale=std_emax_nore_co)
-            self.c50_nore_co *= np.exp(np.random.normal(scale=w_c50_nore_co))
-            self.gamma_nore_co *= np.exp(np.random.normal(scale=w_gamma_nore_co))
-
-            # Propofol
-            self.emax_propo_SAP *= np.exp(np.random.normal(scale=w_emax_propo_SAP))
-            self.emax_propo_DAP *= np.exp(np.random.normal(scale=w_emax_propo_DAP))
-            self.c50_propo_map_1 *= np.exp(np.random.normal(scale=w_c50_propo_map_1))
-            self.gamma_propo_map_1 *= min(3, np.exp(np.random.normal(scale=w_gamma_propo_map_1)))
-            self.c50_propo_map_2 *= np.exp(np.random.normal(scale=w_c50_propo_map_2))
-            self.gamma_propo_map_2 *= min(3, np.exp(np.random.normal(scale=w_gamma_propo_map_2)))
-
-            self.emax_propo_co += np.random.normal(scale=std_emax_propo_co)
-            self.c50_propo_co *= np.exp(np.random.normal(scale=w_c50_propo_co))
-            self.gamma_propo_co *= np.exp(np.random.normal(scale=w_gamma_propo_co))
-
-            # Remifentanil
-            self.emax_remi_map *= np.exp(np.random.normal(scale=w_emax_remi_map))
-            self.c50_remi_map *= np.exp(np.random.normal(scale=w_c50_remi_map))
-            self.gamma_remi_map *= np.exp(np.random.normal(scale=w_gamma_remi_map))
-
-            self.emax_remi_co *= np.exp(np.random.normal(scale=w_emax_remi_co))
-            self.c50_remi_co *= np.exp(np.random.normal(scale=w_c50_remi_co))
-            self.gamma_remi_co *= np.exp(np.random.normal(scale=w_gamma_remi_co))
-
-    def compute_hemo(self, c_es_propo: list, c_es_remi: float, c_es_nore: float) -> tuple[float, float]:
-        """
-        Compute current MAP and CO using addition of hill curves, one for each drug.
-
-        Parameters
-        ----------
-        c_es_propo : list
-            Propofol concentration on both hemodynamic effect site concentration µg/mL.
-        c_es_remi : float
-            Remifentanil hemodynamic effect site concentration µg/mL.
-        c_es_nore : float
-            Norepinephrine hemodynamic effect site concentration µg/mL.
-
-        Returns
-        -------
-        map : float
-            Mean arterial pressure (mmHg), without blood loss.
-        co : float
-            Cardiac output (L/min), without blood loss.
-
-        """
-        map_nore = self.emax_nore_map * fsig(c_es_nore, self.c50_nore_map, self.gamma_nore_map)
-        u_propo = ((c_es_propo[0] / self.c50_propo_map_1)**self.gamma_propo_map_1 +
-                   (c_es_propo[1] / self.c50_propo_map_2)**self.gamma_propo_map_2)
-        map_propo = - (self.emax_propo_DAP + (self.emax_propo_SAP + self.emax_propo_DAP) / 3) * u_propo / (1 + u_propo)
-        map_remi = self.emax_remi_map * fsig(c_es_remi, self.c50_remi_map, self.gamma_remi_map)
-
-        self.map = self.map_base + map_nore + map_propo + map_remi
-
-        co_nore = self.emax_nore_co * fsig(c_es_nore, self.c50_nore_co, self.gamma_nore_co)
-        co_propo = self.emax_propo_co * \
-            fsig((c_es_propo[0] + c_es_propo[1]) / 2, self.c50_propo_co, self.gamma_propo_co)
-        co_remi = self.emax_remi_co * fsig(c_es_remi, self.c50_remi_co, self.gamma_remi_co)
-
-        self.co = self.co_base + co_nore + co_propo + co_remi
-
-        return self.map, self.co
-
-
 class Hemo_meca_PD_model:
     r"""This class implements the mechanically based model of Haemodynamics proposed in [Su2023]_.
 
@@ -1189,6 +857,8 @@ class Hemo_meca_PD_model:
         Model to use, only 'Su' is available. The default is 'Su'.
     nore_model : str, optional
         Model to use for norepinephrine, 'Beloeil' and 'Oualha' are available. The default is 'Beloeil'.
+    stimuli_model : str, optional
+        Model to use for stimuli, 'none' and 'VitalDB' are available. The default is 'none'.
     random : bool, optional
         Add uncertainties in the parameters. The default is False.
     hr_base : float, optional
@@ -1220,6 +890,7 @@ class Hemo_meca_PD_model:
                  ts: float,
                  model: str = 'Su',
                  nore_model: str = 'Beloeil',
+                 stimuli_model: str = 'none',
                  random: bool = False,
                  hr_base: float = None,
                  sv_base: float = None,
@@ -1353,6 +1024,90 @@ class Hemo_meca_PD_model:
         self.previous_cp_propo = 0
         self.previous_cp_remi = 0
 
+        # stimuli models
+        self.dist_intub_tpr_tau = 3
+        self.dist_intub_sv_tau = 2.7
+        self.dist_intub_hr_tau = 40
+        self.smooth_factor = 50
+        self.dist_surg_tpr_tau = 5 * 60
+        self.dist_surg_sv_tau = 3 * 60
+        self.dist_surg_hr_tau = 8 * 60
+        if stimuli_model == 'none':
+            # intubation stimuli filter
+            self.dist_intub_tpr_k = 1e-6
+            self.dist_intub_sv_k = 1e-4
+            self.dist_intub_hr_k = 1e-4
+
+            self.dist_surg_tpr_k = 1e-6
+            self.dist_surg_sv_k = 1e-4
+            self.dist_surg_hr_k = 1e-4
+        elif stimuli_model == 'VitalDB':
+            self.dist_intub_tpr_k = 8.8e-6
+            self.dist_intub_sv_k = 0.176
+            self.dist_intub_hr_k = 11.94
+
+            self.dist_surg_tpr_k = 8.8e-4
+            self.dist_surg_sv_k = 13.65
+            self.dist_surg_hr_k = 9.92
+
+            # update model param
+            self.int_hr = -0.097
+            self.emax_propo_tpr = -0.03
+            self.fb = -0.5
+        self.start_intub = 3 * 60  # seconds
+        self.start_surg = 40 * 60  # seconds
+        self.time_id = 0
+
+        self.disturbance_dynamic()
+
+    def disturbance_dynamic(self):
+        """Apply the dynamic on the input disturbance signal.
+        """
+        # stimuli input
+        self.intub_input = np.zeros(50000)
+        # step disturbance after 3 minutes
+        self.intub_input[self.start_intub // self.ts:(self.start_intub + 2 * 60) // self.ts] = 1
+        self.surg_input = np.zeros(50000)
+        self.surg_input[self.start_surg // self.ts:] = 1  # step disturbance after 40 minutes
+        smooth_filter = TransferFunction(
+            [1],
+            [self.smooth_factor, 1]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_tpr = TransferFunction(
+            [self.dist_intub_tpr_k],
+            [self.dist_intub_tpr_tau, 1, 0]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_sv = TransferFunction(
+            [self.dist_intub_sv_k],
+            [self.dist_intub_sv_tau, 1, 0]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_hr = TransferFunction(
+            [self.dist_intub_hr_k],
+            [self.dist_intub_hr_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+
+        input_smooth = lfilter(smooth_filter.num, smooth_filter.den, self.intub_input)
+        self.dist_tpr = lfilter(tf_dist_tpr.num, tf_dist_tpr.den, input_smooth)
+        self.dist_sv = lfilter(tf_dist_sv.num, tf_dist_sv.den, input_smooth)
+        self.dist_hr = lfilter(tf_dist_hr.num, tf_dist_hr.den, input_smooth)
+
+        tf_dist_tpr = TransferFunction(
+            [self.dist_surg_tpr_k],
+            [self.dist_surg_tpr_tau**2, 2 * self.dist_surg_tpr_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_sv = TransferFunction(
+            [self.dist_surg_sv_k],
+            [self.dist_surg_sv_tau**2, 2 * self.dist_surg_sv_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+        tf_dist_hr = TransferFunction(
+            [self.dist_surg_hr_k],
+            [self.dist_surg_hr_tau**2, 2 * self.dist_surg_hr_tau, 1]
+        ).to_discrete(self.ts, method='bilinear')
+
+        self.dist_tpr += lfilter(tf_dist_tpr.num, tf_dist_tpr.den, self.surg_input)
+        self.dist_sv += lfilter(tf_dist_sv.num, tf_dist_sv.den, self.surg_input)
+        self.dist_hr += lfilter(tf_dist_hr.num, tf_dist_hr.den, self.surg_input)
+
     def continuous_dynamic(
             self,
             x: np.ndarray,
@@ -1380,6 +1135,9 @@ class Hemo_meca_PD_model:
         cp_remi = u[1]
         map_wanted = u[2]
         sv_wanted = u[3]
+        tpr_stim = u[4]
+        sv_stim = u[5]
+        hr_stim = u[6]
 
         eff_propo_tpr = (self.emax_propo_tpr + self.int_tpr * fsig(cp_remi, self.c50_remi_tpr, 1)) * \
             fsig(cp_propo, self.c50_propo_tpr, self.gamma_propo_tpr)
@@ -1389,11 +1147,12 @@ class Hemo_meca_PD_model:
         eff_remi_tpr = self.emax_remi_tpr * fsig(cp_remi, self.c50_remi_tpr, 1)
 
         # compute apparent values
-        dsv = x[1] + x[3]
-        dhr = x[2] + x[4]
+        dtpr = x[0] + tpr_stim
+        dsv = x[1] + x[3] + sv_stim
+        dhr = x[2] + x[4] + hr_stim
 
         a_sv = dsv * (1 - self.hr_sv * np.log(dhr / self.abase_hr))
-        a_map = a_sv * dhr * x[0]
+        a_map = a_sv * dhr * dtpr
 
         rmap = a_map / self.base_map
 
@@ -1421,7 +1180,7 @@ class Hemo_meca_PD_model:
         """ Same as continuous_dynamic but with time as first arguments (for scipy simulation)."""
         return self.continuous_dynamic(x, u)
 
-    def output_function(self, x: np.ndarray) -> np.ndarray:
+    def output_function(self, x: np.ndarray, dist: np.ndarray = np.zeros(3)) -> np.ndarray:
         """_summary_
 
         Parameters
@@ -1436,9 +1195,9 @@ class Hemo_meca_PD_model:
             heart rate (beat / min), mean arterial pressure (mmHg),
             cardiac output (L/min)
         """
-        tpr = x[0]
-        sv = x[1] + x[3]
-        hr = x[2] + x[4]
+        tpr = x[0] + dist[0]
+        sv = x[1] + x[3] + dist[1]
+        hr = x[2] + x[4] + dist[2]
         sv = sv * (1 - self.hr_sv * np.log(hr / self.abase_hr))
         map = tpr * sv * hr
         co = hr * sv / 1000  # fro mL/min to L/min
@@ -1477,6 +1236,15 @@ class Hemo_meca_PD_model:
         v_ratio : float
             blood volume as a fraction of init volume, 1 mean no loss, 0 mean 100% loss, default is 1.
         """
+        # simulate disturbance
+        dist_tpr = self.dist_tpr[self.time_id]
+        dist_sv = self.dist_sv[self.time_id]
+        dist_hr = self.dist_hr[self.time_id]
+        dist = [dist_tpr, dist_sv, dist_hr]
+        self.time_id += 1
+        if self.time_id >= len(self.intub_input):
+            self.time_id = len(self.intub_input) - 1
+
         c_propo_sim = (self.previous_cp_propo + cp_propo) / 2
         c_remi_sim = (self.previous_cp_remi + cp_remi) / 2
         # run computation for model without nore effect and without blood loss
@@ -1485,7 +1253,7 @@ class Hemo_meca_PD_model:
             t_span=np.array([0, self.ts]),
             t_eval=np.array([0, self.ts]),
             y0=self.x,
-            args=([c_propo_sim, c_remi_sim, 0, 0],),
+            args=([c_propo_sim, c_remi_sim, 0, 0] + dist,),
         )
         self.x = results.y[:, -1]
 
@@ -1494,14 +1262,14 @@ class Hemo_meca_PD_model:
                 self.flag_nore_used = True
             if v_ratio != 1:
                 print("Warning: norepinephrine effect is not computed with blood loss")
-            map_no_nore = self.output_function(self.x)[3]
+            map_no_nore = self.output_function(self.x, dist)[3]
             map_wanted = map_no_nore + self.nore_map_effect(cp_nore)
             # run computation for model with nore effect
             results_w_nore = solve_ivp(
                 self.continuous_dynamic_sys,
                 t_span=np.array([0, self.ts]),
                 y0=self.x_effect,
-                args=([c_propo_sim, c_remi_sim, map_wanted, 0],),
+                args=([c_propo_sim, c_remi_sim, map_wanted, 0] + dist,),
             )
             self.x_effect = results_w_nore.y[:, -1]
         elif (v_ratio < 1 or self.flag_blood_loss) and not self.flag_nore_used:
@@ -1509,13 +1277,13 @@ class Hemo_meca_PD_model:
                 self.flag_blood_loss = True
             if cp_nore > 0:
                 print("Warning: norepinephrine effect is not computed with blood loss")
-            sv_no_blood_loss = self.output_function(self.x)[1]
+            sv_no_blood_loss = self.output_function(self.x, dist)[1]
             sv_wanted = sv_no_blood_loss * v_ratio
             results_blood_loss = solve_ivp(
                 self.continuous_dynamic_sys,
                 t_span=np.array([0, self.ts]),
                 y0=self.x_effect,
-                args=([c_propo_sim, c_remi_sim, 0, sv_wanted],),
+                args=([c_propo_sim, c_remi_sim, 0, sv_wanted] + dist,),
             )
             self.x_effect = results_blood_loss.y[:, -1]
         else:
@@ -1523,7 +1291,7 @@ class Hemo_meca_PD_model:
 
         self.previous_cp_propo = cp_propo
         self.previous_cp_remi = cp_remi
-        output = self.output_function(self.x_effect)
+        output = self.output_function(self.x_effect, dist)
         return output  # tpr, sv, hr, map, co
 
     def full_sim(self,
@@ -1593,7 +1361,7 @@ class Hemo_meca_PD_model:
 
         # solve equilibrium without nore
         x = cas.MX.sym('x', 5)
-        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0]))
+        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + 3 * [0]))
         F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
         sol = F_root(x0=x0)
         x_no_nore = sol['x'].full().flatten()
@@ -1605,7 +1373,7 @@ class Hemo_meca_PD_model:
             map_eq = output_no_nore[3] + self.nore_map_effect(cp_nore_eq)
             # solve equilibrium with nore
             x = cas.MX.sym('x', 5)
-            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0]))
+            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + 3 * [0]))
             # map_nore = self.output_function(x)[3]
             # dx[0] = (map_nore - map_eq)**2
             F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
@@ -1658,7 +1426,7 @@ class NMB_model:
     The equation is:
 
     .. math:: NMB = \frac{100*C_{50}^\gamma}{C_{50}^\gamma + C_e^\gamma}
-    
+
     Parameters
     ----------
     hill_model : str, optional
@@ -1667,10 +1435,10 @@ class NMB_model:
         Default is 'Weatherley'.
     hill_param : dict, optional
         Parameters of the model:
-            
+
         - **'c50'**: Half effect concentration (µg/mL).
         - **'gamma'**: Stepness of the Hill curve.
-        
+
         If it is not provided default values are used.
 
 
@@ -1683,7 +1451,7 @@ class NMB_model:
         slope coefficient for the Hill curve.
     hill_model : str
         'Weatherley' [Weatherley1983]_
-        
+
     References
     ----------
     .. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v." 
@@ -1705,12 +1473,9 @@ class NMB_model:
         self.hill_model = hill_model
 
         if self.hill_model == 'Weatherley':
-        
-            self.C50 = hill_param.get('C50', 0.625) 
-            self.gamma = hill_param.get('gamma', 4.25) 
 
-
-
+            self.C50 = hill_param.get('C50', 0.625)
+            self.gamma = hill_param.get('gamma', 4.25)
 
     def compute_nmb(self, Ce):
         """Compute NMB from atracurium effect site concentration.
@@ -1727,13 +1492,11 @@ class NMB_model:
             NMB value.
 
         """
-        
+
         if self.hill_model == 'Weatherley':
-            nmb = (100*self.C50**self.gamma) / (self.C50**self.gamma + Ce**self.gamma)
+            nmb = (100 * self.C50**self.gamma) / (self.C50**self.gamma + Ce**self.gamma)
 
         return nmb
-
-    
 
     def plot_surface(self):
         """Plot the 2D-Hill curve of the NMB level related to Atracurium effect site concentration"""
