@@ -173,7 +173,12 @@ def compute_disturbances(
     elif dist_profil == 'null':
         return [0, 0, 0]
     elif dist_profil == 'VitalDB':
-        p = [1.56236133e-17, -1.14587483e-11,  4.66974382e-08, -5.91131326e-05, 1.36237538e-02,  1.48284014e+01]
+        p = [
+            -8.59031903e-12,
+            3.57609551e-08,
+            -4.74961218e-05,
+            1.32902524e-02,
+            1.09844430e+01]
         dist_bis = np.polyval(p, time - start_intub_time - 2 * 60)
         dist_map = 0
         dist_co = 0
