@@ -979,9 +979,9 @@ class Hemo_meca_PD_model:
             self.int_sv = -0.212  # (ng/ml)
 
             if stimuli_model == 'VitalDB':
-                self.sv_base = 93.1
-                self.hr_base = 74.7
-                self.tpr_base = 102 / (self.hr_base * self.sv_base)
+                self.sv_base = 93.1 / (1 + self.ltde_hr)
+                self.hr_base = 74.7 / (1 + self.ltde_sv)
+                self.tpr_base = 102 / (74.7  * 93.1)
 
             if hr_base is not None:
                 self.hr_base = hr_base / (1 + self.ltde_hr)
