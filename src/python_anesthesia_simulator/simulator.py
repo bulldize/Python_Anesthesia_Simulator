@@ -164,9 +164,9 @@ class Patient:
 
     def __init__(self,
                  patient_characteristic: list,
-                 co_base: float = 6.5,
-                 hr_base: float = 60,
-                 map_base: float = 90,
+                 co_base: float = None,
+                 hr_base: float = None,
+                 map_base: float = None,
                  model_propo: str = 'Schnider',
                  model_remi: str = 'Minto',
                  model_nore: str = 'Beloeil',
@@ -241,12 +241,16 @@ class Patient:
         self.tol_pd = TOL_model(model='Bouillon', random=random_PD)
 
         # Init PD model for Hemodynamic
+        if co_base is not None and hr_base is not None:
+            sv_base = co_base / hr_base * 1000
+        else:
+            sv_base = None
         self.hemo_pd = Hemo_meca_PD_model(
             age=self.age,
             ts=self.ts,
             random=random_PD,
             hr_base=hr_base,
-            sv_base=co_base / hr_base * 1000,  # L to ml
+            sv_base=sv_base,  # L to ml
             map_base=map_base,
             stimuli_model=model_stimuli,
         )
@@ -278,8 +282,8 @@ class Patient:
         self.tpr = self.hemo_pd.tpr_base
         self.sv = self.hemo_pd.abase_sv
         self.hr = self.hemo_pd.abase_hr
-        self.map = map_base
-        self.co = co_base
+        self.co = self.hr*self.sv / 1000
+        self.map = self.tpr*self.hr*self.sv
 
         # Initialize the buffer to simulate BIS delay
         self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.bis

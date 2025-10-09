@@ -161,12 +161,18 @@ class BIS_model:
             # doi: 10.1097/00000542-200406000-00006.
 
             # model parameters and their coefficient of variation
-            self.c50p = 4.47;       cv_c50p = 0.182
-            self.c50r = 19.3;       cv_c50r = 0.888
-            self.gamma = 1.43;      cv_gamma = 0.304
-            self.beta = 0;          cv_beta = 0
-            self.E0 = 97.4;         cv_E0 = 0
-            self.Emax = self.E0;    cv_Emax = 0
+            self.c50p = 4.47
+            cv_c50p = 0.182
+            self.c50r = 19.3
+            cv_c50r = 0.888
+            self.gamma = 1.43
+            cv_gamma = 0.304
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 97.4
+            cv_E0 = 0
+            self.Emax = self.E0
+            cv_Emax = 0
             self.bis_delay = 0
 
         elif self.hill_model == 'Vanluchene':
@@ -176,12 +182,18 @@ class BIS_model:
             # doi: 10.1097/00000542-200407000-00008.
 
             # model parameters and their coefficient of variation
-            self.c50p = 4.92;       cv_c50p = 0.34
-            self.c50r = 0;          cv_c50r = 0
-            self.gamma = 2.69;      cv_gamma = 0.32
-            self.beta = 0;          cv_beta = 0
-            self.E0 = 95.9;         cv_E0 = 0.04
-            self.Emax = 87.5;       cv_Emax = 0.11
+            self.c50p = 4.92
+            cv_c50p = 0.34
+            self.c50r = 0
+            cv_c50r = 0
+            self.gamma = 2.69
+            cv_gamma = 0.32
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 95.9
+            cv_E0 = 0.04
+            self.Emax = 87.5
+            cv_Emax = 0.11
             self.bis_delay = 0
 
         elif self.hill_model == 'Eleveld':
@@ -201,13 +213,20 @@ class BIS_model:
             def fdelay(x): return 15 + np.exp(x * age)
 
             # model parameters and their coefficient of variation
-            self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
-            self.c50r = 0;                       cv_c50r = 0
-            self.gamma = 1.89;                   cv_gamma = 0
-            self.gamma_2 = 1.47;                 cv_gamma = 0  # only used if c_propo > c50p
-            self.beta = 0;                       cv_beta = 0
-            self.E0 = 93;                        cv_E0 = 0
-            self.Emax = self.E0;                 cv_Emax = 0
+            self.c50p = 3.08 * faging(-0.00635)
+            cv_c50p = 0.523
+            self.c50r = 0
+            cv_c50r = 0
+            self.gamma = 1.89
+            cv_gamma = 0
+            self.gamma_2 = 1.47
+            cv_gamma = 0  # only used if c_propo > c50p
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 93
+            cv_E0 = 0
+            self.Emax = self.E0
+            cv_Emax = 0
             self.bis_delay = fdelay(0.0517)
 
         # Greco-type surface model parameters
@@ -218,12 +237,18 @@ class BIS_model:
             # doi: 10.1111/pan.13486
 
             # model parameters and their coefficient of variation
-            self.c50p = 2.99;           cv_c50p = 0.354
-            self.c50r = 21;             cv_c50r = 0
-            self.gamma = 2.69;          cv_gamma = 0.445
-            self.beta = 0;              cv_beta = 0
-            self.E0 = 94;               cv_E0 = 0.05
-            self.Emax = 94 * 0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
+            self.c50p = 2.99
+            cv_c50p = 0.354
+            self.c50r = 21
+            cv_c50r = 0
+            self.gamma = 2.69
+            cv_gamma = 0.445
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 94
+            cv_E0 = 0.05
+            self.Emax = 94 * 0.81
+            cv_Emax = np.sqrt(0.005**2 + 0.148**2)
             self.bis_delay = 0
 
         elif self.hill_model == 'Yumuk':
@@ -232,12 +257,18 @@ class BIS_model:
             # doi: 10.1016/j.jprocont.2024.103243
 
             # model parameters and their coefficient of variation
-            self.c50p = 7.66;           cv_c50p = 0.297
-            self.c50r = 149.62;         cv_c50r = 0.545
-            self.gamma = 4.07;          cv_gamma = 0.448
-            self.beta = 15.03;          cv_beta = 0.539
-            self.E0 = 93.97;            cv_E0 = 0.0112
-            self.Emax = self.E0;        cv_Emax = 0
+            self.c50p = 7.66
+            cv_c50p = 0.297
+            self.c50r = 149.62
+            cv_c50r = 0.545
+            self.gamma = 4.07
+            cv_gamma = 0.448
+            self.beta = 15.03
+            cv_beta = 0.539
+            self.E0 = 93.97
+            cv_E0 = 0.0112
+            self.Emax = self.E0
+            cv_Emax = 0
             self.bis_delay = 0
 
         if random and hill_param is None:
@@ -604,10 +635,14 @@ class LOC_model:
             # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
 
             # model parameters and their coefficient of variation
-            self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
-            self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
-            self.gamma = 3.76;          cv_gamma = 0
-            self.beta = 5.1;            cv_beta = 0
+            self.c50p = 1.80
+            cv_c50p = 0.06 / 1.80
+            self.c50r = 12.5
+            cv_c50r = 0.53 / 12.5
+            self.gamma = 3.76
+            cv_gamma = 0
+            self.beta = 5.1
+            cv_beta = 0
 
         elif self.hill_model == 'Mertens':
             # See [Mertens2003]  Mertens, Martijn J., et al.
@@ -616,10 +651,14 @@ class LOC_model:
             # doi : 10.1097/00000542-200308000-00016
 
             # model parameters and their coefficient of variation
-            self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
-            self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
-            self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
-            self.beta = 0;              cv_beta = 0
+            self.c50p = 2.92
+            cv_c50p = 0.51 / 2.92
+            self.c50r = 5.15
+            cv_c50r = 2.80 / 5.15
+            self.gamma = 3.88
+            cv_gamma = 1.09 / 3.88
+            self.beta = 0
+            cv_beta = 0
 
         elif self.hill_model == 'Johnson':
             # See [Johnson2008] Johnson, Ken B., et al.
@@ -628,10 +667,14 @@ class LOC_model:
             # doi : 10.1213/ane.0b013e3181606c62
 
             # model parameters and their coefficient of variation
-            self.c50p = 2.20;           cv_c50p = 0
-            self.c50r = 33.1;           cv_c50r = 0
-            self.gamma = 5.00;          cv_gamma = 0
-            self.beta = 3.60;           cv_beta = 0
+            self.c50p = 2.20
+            cv_c50p = 0
+            self.c50r = 33.1
+            cv_c50r = 0
+            self.gamma = 5.00
+            cv_gamma = 0
+            self.beta = 3.60
+            cv_beta = 0
 
         if random and hill_param is None:
             # estimation of log normal standard deviation
@@ -670,7 +713,7 @@ class LOC_model:
         ur = np.asarray(c_es_remi, dtype=float) / self.c50r
         interaction = up + ur + self.beta * up * ur
         interaction_gamma = interaction ** self.gamma
-        loc =  interaction_gamma / (1 + interaction_gamma)
+        loc = interaction_gamma / (1 + interaction_gamma)
 
         return loc
 
@@ -935,6 +978,11 @@ class Hemo_meca_PD_model:
             self.int_tpr = 1
             self.int_sv = -0.212  # (ng/ml)
 
+            if stimuli_model == 'VitalDB':
+                self.sv_base = 93.1
+                self.hr_base = 74.7
+                self.tpr_base = 102 / (self.hr_base * self.sv_base)
+
             if hr_base is not None:
                 self.hr_base = hr_base / (1 + self.ltde_hr)
                 self.sv_base = sv_base / (1 + self.ltde_sv)
@@ -950,6 +998,10 @@ class Hemo_meca_PD_model:
                 [-0.0244, 0.0528, -0.0233],
                 [0, -0.0233, 0.0242]
             ]
+            if stimuli_model == "VitalDB":
+                self.w_block1_cov = np.array([[0.09085827, -0.07249175, -0.01973828],
+                                              [-0.07249175,  0.09255021, -0.00040959],
+                                              [-0.01973828, -0.00040959,  0.02315553]])
 
             self.w_block2_mu = [0, 0]
             self.w_block2_cov = [[0.00382, 0.00329], [0.00329, 0.00868]]
