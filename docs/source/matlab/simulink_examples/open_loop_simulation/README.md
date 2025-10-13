@@ -1,7 +1,11 @@
-# Simulating the Python Anesthesia Patient Model in Simulink
+# Open-loop simulation in Simulink
 
-This example demonstrates how to run the **Python Anesthesia Simulator** inside **Simulink** through MATLAB’s Python interface.  
-The script `main_sim_openloop.m` initializes the environment, runs the Simulink model, and visualizes the simulation results.
+This example demonstrates how to run the **Python Anesthesia Simulator** inside **Simulink** through MATLAB’s Python interface.
+The files associated with this example can be downloaded by clicking on the following link:
+
+- [main simulation file](main_sim_openloop.m)
+- [callPython function](callPython.m)
+- [Simulink file](sim_openloop.slx)
 
 ---
 
