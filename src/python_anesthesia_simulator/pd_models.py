@@ -1198,6 +1198,13 @@ class Hemo_meca_PD_model:
         eff_propo_sv = self.emax_propo_sv * fsig(cp_propo, self.c50_propo_sv, 1)
         eff_remi_tpr = self.emax_remi_tpr * fsig(cp_remi, self.c50_remi_tpr, 1)
 
+        # saturate the effects
+        eff_propo_tpr = np.clip(eff_propo_tpr, -0.999, 0.999)
+        eff_remi_sv = np.clip(eff_remi_sv, -0.999, 0.999)
+        eff_remi_hr = np.clip(eff_remi_hr, -0.999, 0.999)
+        eff_propo_sv = np.clip(eff_propo_sv, -0.999, 0.999)
+        eff_remi_tpr = np.clip(eff_remi_tpr, -0.999, 0.999)
+
         # compute apparent values
         dtpr = x[0] + tpr_stim
         dsv = x[1] + x[3] + sv_stim
