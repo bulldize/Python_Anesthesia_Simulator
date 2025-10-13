@@ -173,7 +173,7 @@ class Patient:
                  model_atracurium: str = 'WardWeatherleyLago',
                  model_bis: str = 'Bouillon',
                  model_nmb: str = 'Weatherley',
-                 model_stimuli: str = 'none',
+                 model_stimuli: str = 'null',
                  ts: float = 1,
                  hill_param: list = None,
                  atracurium_model_params: dict = {},

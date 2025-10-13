@@ -933,7 +933,7 @@ class Hemo_meca_PD_model:
                  ts: float,
                  model: str = 'Su',
                  nore_model: str = 'Beloeil',
-                 stimuli_model: str = 'none',
+                 stimuli_model: str = 'null',
                  random: bool = False,
                  hr_base: float = None,
                  sv_base: float = None,
@@ -981,7 +981,7 @@ class Hemo_meca_PD_model:
             if stimuli_model == 'VitalDB':
                 self.sv_base = 93.1 / (1 + self.ltde_hr)
                 self.hr_base = 74.7 / (1 + self.ltde_sv)
-                self.tpr_base = 102 / (74.7  * 93.1)
+                self.tpr_base = 102 / (74.7 * 93.1)
 
             if hr_base is not None:
                 self.hr_base = hr_base / (1 + self.ltde_hr)
@@ -1084,7 +1084,7 @@ class Hemo_meca_PD_model:
         self.dist_surg_tpr_tau = 5 * 60
         self.dist_surg_sv_tau = 3 * 60
         self.dist_surg_hr_tau = 8 * 60
-        if stimuli_model == 'none':
+        if stimuli_model == 'null':
             # intubation stimuli filter
             self.dist_intub_tpr_k = 1e-6
             self.dist_intub_sv_k = 1e-4
@@ -1417,10 +1417,14 @@ class Hemo_meca_PD_model:
 
         if x0 is None:
             x0 = self.x
-
+        dist_equilibrium = [
+            self.dist_tpr[-1],
+            self.dist_sv[-1],
+            self.dist_hr[-1]
+        ]
         # solve equilibrium without nore
         x = cas.MX.sym('x', 5)
-        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + 3 * [0]))
+        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + dist_equilibrium))
         F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
         sol = F_root(x0=x0)
         x_no_nore = sol['x'].full().flatten()
@@ -1428,11 +1432,11 @@ class Hemo_meca_PD_model:
 
         # if nore is used, solve equilibrium with nore
         if cp_nore_eq > 0:
-            output_no_nore = self.output_function(x_no_nore)
+            output_no_nore = self.output_function(x_no_nore, dist=dist_equilibrium)
             map_eq = output_no_nore[3] + self.nore_map_effect(cp_nore_eq)
             # solve equilibrium with nore
             x = cas.MX.sym('x', 5)
-            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + 3 * [0]))
+            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + dist_equilibrium))
             # map_nore = self.output_function(x)[3]
             # dx[0] = (map_nore - map_eq)**2
             F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
@@ -1442,7 +1446,7 @@ class Hemo_meca_PD_model:
         else:
             x_eq_out = x_no_nore
 
-        output = self.output_function(x_eq_out)
+        output = self.output_function(x_eq_out, dist=dist_equilibrium)
         self.x_eq_w_nore = x_eq_out
 
         return output
