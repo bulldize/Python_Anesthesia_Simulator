@@ -1,7 +1,11 @@
-# Closed-Loop Simulation of the Python Anesthesia Patient Model in Simulink
+# Closed-Loop Simulation in Simulink
 
 This example demonstrates how to simulate a **closed-loop anesthesia control system** in **Simulink**, using the **Python Anesthesia Simulator** as the patient model.  
-The MATLAB script `main_sim_closedloop.m` initializes MATLAB, connects to a Python environment, runs the Simulink model, and plots the results.
+The files associated with this example can be downloaded by clicking on the following link:
+
+- [main simulation file](main_sim_closedloop.m)
+- [callPython function](callPython.m)
+- [Simulink file](sim_closedloop.slx)
 
 ---
 
