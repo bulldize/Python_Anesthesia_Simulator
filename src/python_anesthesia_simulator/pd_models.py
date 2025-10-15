@@ -954,9 +954,6 @@ class Hemo_meca_PD_model:
             self.hr_base = 56.1
             self.tpr_base = 0.0163
             self.k_out = 0.072 / 60  # (1/s)
-            self.k_in_tpr = self.k_out * self.tpr_base
-            self.k_in_sv = self.k_out * self.sv_base
-            self.k_in_hr = self.k_out * self.hr_base
             self.fb = -0.661
             self.hr_sv = 0.312
             self.k_ltde = 0.067 / 60  # (1/s)
@@ -987,16 +984,13 @@ class Hemo_meca_PD_model:
                 self.hr_base = hr_base / (1 + self.ltde_hr)
                 self.sv_base = sv_base / (1 + self.ltde_sv)
                 self.tpr_base = map_base / (hr_base * sv_base)
-                self.k_in_tpr = self.k_out * self.tpr_base
-                self.k_in_sv = self.k_out * self.sv_base
-                self.k_in_hr = self.k_out * self.hr_base
 
             # uncertainties values
             self.w_block1_mu = [0, 0, 0]
-            self.w_block1_cov = [
-                [0.0328, -0.0244, 0],
-                [-0.0244, 0.0528, -0.0233],
-                [0, -0.0233, 0.0242]
+            self.w_block1_cov = [  # in order tpr, sv, hr
+                [0.0528, -0.0244, -0.0233],
+                [-0.0244, 0.0328, 0],
+                [-0.0233, 0, 0.0242]
             ]
             if stimuli_model == "VitalDB":
                 self.w_block1_cov = np.array([[0.09085827, -0.07249175, -0.01973828],
@@ -1033,23 +1027,26 @@ class Hemo_meca_PD_model:
         self.k_effect = 0.0002  # (1/s)
 
         if random:
-            # compute intercorrelated uncertainties
-            eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
-            eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
 
             # lognormal distribution
+            eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
             self.tpr_base *= np.exp(eta_values_block1[0])
             self.sv_base *= np.exp(eta_values_block1[1])
             self.hr_base *= np.exp(eta_values_block1[2])
             self.c50_propo_tpr *= np.exp(np.random.normal(0, self.w_c50_propo_tpr))
             # normal distribution
             self.emax_remi_tpr += np.random.normal(0, self.w_emax_remi_tpr)
+            eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
             self.sl_remi_hr += eta_values_block2[0]
             self.sl_remi_sv += eta_values_block2[1]
 
             self.emax_nore_map *= np.exp(np.random.normal(0, scale=w_emax_nore_map))
             self.c50_nore_map *= np.exp(np.random.normal(0, scale=w_c50_nore_map))
             self.gamma_nore_map *= np.exp(np.random.normal(0, scale=w_gamma_nore_map))
+
+        self.k_in_tpr = self.k_out * self.tpr_base
+        self.k_in_sv = self.k_out * self.sv_base
+        self.k_in_hr = self.k_out * self.hr_base
 
         self.x = np.array([
             self.tpr_base,
@@ -1086,13 +1083,13 @@ class Hemo_meca_PD_model:
         self.dist_surg_hr_tau = 8 * 60
         if stimuli_model == 'null':
             # intubation stimuli filter
-            self.dist_intub_tpr_k = 1e-6
-            self.dist_intub_sv_k = 1e-4
-            self.dist_intub_hr_k = 1e-4
+            self.dist_intub_tpr_k = 1e-8
+            self.dist_intub_sv_k = 1e-6
+            self.dist_intub_hr_k = 1e-6
 
-            self.dist_surg_tpr_k = 1e-6
-            self.dist_surg_sv_k = 1e-4
-            self.dist_surg_hr_k = 1e-4
+            self.dist_surg_tpr_k = 1e-8
+            self.dist_surg_sv_k = 1e-6
+            self.dist_surg_hr_k = 1e-6
         elif stimuli_model == 'VitalDB':
             self.dist_intub_tpr_k = 8.8e-6
             self.dist_intub_sv_k = 0.176
