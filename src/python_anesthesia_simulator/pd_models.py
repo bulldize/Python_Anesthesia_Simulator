@@ -161,12 +161,18 @@ class BIS_model:
             # doi: 10.1097/00000542-200406000-00006.
 
             # model parameters and their coefficient of variation
-            self.c50p = 4.47;       cv_c50p = 0.182
-            self.c50r = 19.3;       cv_c50r = 0.888
-            self.gamma = 1.43;      cv_gamma = 0.304
-            self.beta = 0;          cv_beta = 0
-            self.E0 = 97.4;         cv_E0 = 0
-            self.Emax = self.E0;    cv_Emax = 0
+            self.c50p = 4.47
+            cv_c50p = 0.182
+            self.c50r = 19.3
+            cv_c50r = 0.888
+            self.gamma = 1.43
+            cv_gamma = 0.304
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 97.4
+            cv_E0 = 0
+            self.Emax = self.E0
+            cv_Emax = 0
             self.bis_delay = 0
 
         elif self.hill_model == 'Vanluchene':
@@ -176,12 +182,18 @@ class BIS_model:
             # doi: 10.1097/00000542-200407000-00008.
 
             # model parameters and their coefficient of variation
-            self.c50p = 4.92;       cv_c50p = 0.34
-            self.c50r = 0;          cv_c50r = 0
-            self.gamma = 2.69;      cv_gamma = 0.32
-            self.beta = 0;          cv_beta = 0
-            self.E0 = 95.9;         cv_E0 = 0.04
-            self.Emax = 87.5;       cv_Emax = 0.11
+            self.c50p = 4.92
+            cv_c50p = 0.34
+            self.c50r = 0
+            cv_c50r = 0
+            self.gamma = 2.69
+            cv_gamma = 0.32
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 95.9
+            cv_E0 = 0.04
+            self.Emax = 87.5
+            cv_Emax = 0.11
             self.bis_delay = 0
 
         elif self.hill_model == 'Eleveld':
@@ -201,13 +213,20 @@ class BIS_model:
             def fdelay(x): return 15 + np.exp(x * age)
 
             # model parameters and their coefficient of variation
-            self.c50p = 3.08 * faging(-0.00635); cv_c50p = 0.523
-            self.c50r = 0;                       cv_c50r = 0
-            self.gamma = 1.89;                   cv_gamma = 0
-            self.gamma_2 = 1.47;                 cv_gamma = 0  # only used if c_propo > c50p
-            self.beta = 0;                       cv_beta = 0
-            self.E0 = 93;                        cv_E0 = 0
-            self.Emax = self.E0;                 cv_Emax = 0
+            self.c50p = 3.08 * faging(-0.00635)
+            cv_c50p = 0.523
+            self.c50r = 0
+            cv_c50r = 0
+            self.gamma = 1.89
+            cv_gamma = 0
+            self.gamma_2 = 1.47
+            cv_gamma = 0  # only used if c_propo > c50p
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 93
+            cv_E0 = 0
+            self.Emax = self.E0
+            cv_Emax = 0
             self.bis_delay = fdelay(0.0517)
 
         # Greco-type surface model parameters
@@ -218,12 +237,18 @@ class BIS_model:
             # doi: 10.1111/pan.13486
 
             # model parameters and their coefficient of variation
-            self.c50p = 2.99;           cv_c50p = 0.354
-            self.c50r = 21;             cv_c50r = 0
-            self.gamma = 2.69;          cv_gamma = 0.445
-            self.beta = 0;              cv_beta = 0
-            self.E0 = 94;               cv_E0 = 0.05
-            self.Emax = 94 * 0.81;        cv_Emax = np.sqrt(0.005**2 + 0.148**2)
+            self.c50p = 2.99
+            cv_c50p = 0.354
+            self.c50r = 21
+            cv_c50r = 0
+            self.gamma = 2.69
+            cv_gamma = 0.445
+            self.beta = 0
+            cv_beta = 0
+            self.E0 = 94
+            cv_E0 = 0.05
+            self.Emax = 94 * 0.81
+            cv_Emax = np.sqrt(0.005**2 + 0.148**2)
             self.bis_delay = 0
 
         elif self.hill_model == 'Yumuk':
@@ -232,12 +257,18 @@ class BIS_model:
             # doi: 10.1016/j.jprocont.2024.103243
 
             # model parameters and their coefficient of variation
-            self.c50p = 7.66;           cv_c50p = 0.297
-            self.c50r = 149.62;         cv_c50r = 0.545
-            self.gamma = 4.07;          cv_gamma = 0.448
-            self.beta = 15.03;          cv_beta = 0.539
-            self.E0 = 93.97;            cv_E0 = 0.0112
-            self.Emax = self.E0;        cv_Emax = 0
+            self.c50p = 7.66
+            cv_c50p = 0.297
+            self.c50r = 149.62
+            cv_c50r = 0.545
+            self.gamma = 4.07
+            cv_gamma = 0.448
+            self.beta = 15.03
+            cv_beta = 0.539
+            self.E0 = 93.97
+            cv_E0 = 0.0112
+            self.Emax = self.E0
+            cv_Emax = 0
             self.bis_delay = 0
 
         if random and hill_param is None:
@@ -604,10 +635,14 @@ class LOC_model:
             # Anesthesiology 100.6 (2004): 1373-1381. doi : 10.1097/00000542-200406000-00007
 
             # model parameters and their coefficient of variation
-            self.c50p = 1.80;           cv_c50p = 0.06 / 1.80
-            self.c50r = 12.5;           cv_c50r = 0.53 / 12.5
-            self.gamma = 3.76;          cv_gamma = 0
-            self.beta = 5.1;            cv_beta = 0
+            self.c50p = 1.80
+            cv_c50p = 0.06 / 1.80
+            self.c50r = 12.5
+            cv_c50r = 0.53 / 12.5
+            self.gamma = 3.76
+            cv_gamma = 0
+            self.beta = 5.1
+            cv_beta = 0
 
         elif self.hill_model == 'Mertens':
             # See [Mertens2003]  Mertens, Martijn J., et al.
@@ -616,10 +651,14 @@ class LOC_model:
             # doi : 10.1097/00000542-200308000-00016
 
             # model parameters and their coefficient of variation
-            self.c50p = 2.92;           cv_c50p = 0.51 / 2.92
-            self.c50r = 5.15;           cv_c50r = 2.80 / 5.15
-            self.gamma = 3.88;          cv_gamma = 1.09 / 3.88
-            self.beta = 0;              cv_beta = 0
+            self.c50p = 2.92
+            cv_c50p = 0.51 / 2.92
+            self.c50r = 5.15
+            cv_c50r = 2.80 / 5.15
+            self.gamma = 3.88
+            cv_gamma = 1.09 / 3.88
+            self.beta = 0
+            cv_beta = 0
 
         elif self.hill_model == 'Johnson':
             # See [Johnson2008] Johnson, Ken B., et al.
@@ -628,10 +667,14 @@ class LOC_model:
             # doi : 10.1213/ane.0b013e3181606c62
 
             # model parameters and their coefficient of variation
-            self.c50p = 2.20;           cv_c50p = 0
-            self.c50r = 33.1;           cv_c50r = 0
-            self.gamma = 5.00;          cv_gamma = 0
-            self.beta = 3.60;           cv_beta = 0
+            self.c50p = 2.20
+            cv_c50p = 0
+            self.c50r = 33.1
+            cv_c50r = 0
+            self.gamma = 5.00
+            cv_gamma = 0
+            self.beta = 3.60
+            cv_beta = 0
 
         if random and hill_param is None:
             # estimation of log normal standard deviation
@@ -670,7 +713,7 @@ class LOC_model:
         ur = np.asarray(c_es_remi, dtype=float) / self.c50r
         interaction = up + ur + self.beta * up * ur
         interaction_gamma = interaction ** self.gamma
-        loc =  interaction_gamma / (1 + interaction_gamma)
+        loc = interaction_gamma / (1 + interaction_gamma)
 
         return loc
 
@@ -890,7 +933,7 @@ class Hemo_meca_PD_model:
                  ts: float,
                  model: str = 'Su',
                  nore_model: str = 'Beloeil',
-                 stimuli_model: str = 'none',
+                 stimuli_model: str = 'null',
                  random: bool = False,
                  hr_base: float = None,
                  sv_base: float = None,
@@ -911,9 +954,6 @@ class Hemo_meca_PD_model:
             self.hr_base = 56.1
             self.tpr_base = 0.0163
             self.k_out = 0.072 / 60  # (1/s)
-            self.k_in_tpr = self.k_out * self.tpr_base
-            self.k_in_sv = self.k_out * self.sv_base
-            self.k_in_hr = self.k_out * self.hr_base
             self.fb = -0.661
             self.hr_sv = 0.312
             self.k_ltde = 0.067 / 60  # (1/s)
@@ -935,21 +975,27 @@ class Hemo_meca_PD_model:
             self.int_tpr = 1
             self.int_sv = -0.212  # (ng/ml)
 
+            if stimuli_model == 'VitalDB':
+                self.sv_base = 93.1 / (1 + self.ltde_hr)
+                self.hr_base = 74.7 / (1 + self.ltde_sv)
+                self.tpr_base = 102 / (74.7 * 93.1)
+
             if hr_base is not None:
                 self.hr_base = hr_base / (1 + self.ltde_hr)
                 self.sv_base = sv_base / (1 + self.ltde_sv)
                 self.tpr_base = map_base / (hr_base * sv_base)
-                self.k_in_tpr = self.k_out * self.tpr_base
-                self.k_in_sv = self.k_out * self.sv_base
-                self.k_in_hr = self.k_out * self.hr_base
 
             # uncertainties values
             self.w_block1_mu = [0, 0, 0]
-            self.w_block1_cov = [
-                [0.0328, -0.0244, 0],
-                [-0.0244, 0.0528, -0.0233],
-                [0, -0.0233, 0.0242]
+            self.w_block1_cov = [  # in order tpr, sv, hr
+                [0.0528, -0.0244, -0.0233],
+                [-0.0244, 0.0328, 0],
+                [-0.0233, 0, 0.0242]
             ]
+            if stimuli_model == "VitalDB":
+                self.w_block1_cov = np.array([[0.09085827, -0.07249175, -0.01973828],
+                                              [-0.07249175,  0.09255021, -0.00040959],
+                                              [-0.01973828, -0.00040959,  0.02315553]])
 
             self.w_block2_mu = [0, 0]
             self.w_block2_cov = [[0.00382, 0.00329], [0.00329, 0.00868]]
@@ -981,23 +1027,26 @@ class Hemo_meca_PD_model:
         self.k_effect = 0.0002  # (1/s)
 
         if random:
-            # compute intercorrelated uncertainties
-            eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
-            eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
 
             # lognormal distribution
+            eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
             self.tpr_base *= np.exp(eta_values_block1[0])
             self.sv_base *= np.exp(eta_values_block1[1])
             self.hr_base *= np.exp(eta_values_block1[2])
             self.c50_propo_tpr *= np.exp(np.random.normal(0, self.w_c50_propo_tpr))
             # normal distribution
             self.emax_remi_tpr += np.random.normal(0, self.w_emax_remi_tpr)
+            eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
             self.sl_remi_hr += eta_values_block2[0]
             self.sl_remi_sv += eta_values_block2[1]
 
             self.emax_nore_map *= np.exp(np.random.normal(0, scale=w_emax_nore_map))
             self.c50_nore_map *= np.exp(np.random.normal(0, scale=w_c50_nore_map))
             self.gamma_nore_map *= np.exp(np.random.normal(0, scale=w_gamma_nore_map))
+
+        self.k_in_tpr = self.k_out * self.tpr_base
+        self.k_in_sv = self.k_out * self.sv_base
+        self.k_in_hr = self.k_out * self.hr_base
 
         self.x = np.array([
             self.tpr_base,
@@ -1032,15 +1081,15 @@ class Hemo_meca_PD_model:
         self.dist_surg_tpr_tau = 5 * 60
         self.dist_surg_sv_tau = 3 * 60
         self.dist_surg_hr_tau = 8 * 60
-        if stimuli_model == 'none':
+        if stimuli_model == 'null':
             # intubation stimuli filter
-            self.dist_intub_tpr_k = 1e-6
-            self.dist_intub_sv_k = 1e-4
-            self.dist_intub_hr_k = 1e-4
+            self.dist_intub_tpr_k = 1e-8
+            self.dist_intub_sv_k = 1e-6
+            self.dist_intub_hr_k = 1e-6
 
-            self.dist_surg_tpr_k = 1e-6
-            self.dist_surg_sv_k = 1e-4
-            self.dist_surg_hr_k = 1e-4
+            self.dist_surg_tpr_k = 1e-8
+            self.dist_surg_sv_k = 1e-6
+            self.dist_surg_hr_k = 1e-6
         elif stimuli_model == 'VitalDB':
             self.dist_intub_tpr_k = 8.8e-6
             self.dist_intub_sv_k = 0.176
@@ -1145,6 +1194,13 @@ class Hemo_meca_PD_model:
         eff_remi_hr = (self.sl_remi_hr + self.int_hr * fsig(cp_propo, self.c50_int_hr, 1)) * cp_remi
         eff_propo_sv = self.emax_propo_sv * fsig(cp_propo, self.c50_propo_sv, 1)
         eff_remi_tpr = self.emax_remi_tpr * fsig(cp_remi, self.c50_remi_tpr, 1)
+
+        # saturate the effects
+        eff_propo_tpr = np.clip(eff_propo_tpr, -0.999, 0.999)
+        eff_remi_sv = np.clip(eff_remi_sv, -0.999, 0.999)
+        eff_remi_hr = np.clip(eff_remi_hr, -0.999, 0.999)
+        eff_propo_sv = np.clip(eff_propo_sv, -0.999, 0.999)
+        eff_remi_tpr = np.clip(eff_remi_tpr, -0.999, 0.999)
 
         # compute apparent values
         dtpr = x[0] + tpr_stim
@@ -1358,10 +1414,14 @@ class Hemo_meca_PD_model:
 
         if x0 is None:
             x0 = self.x
-
+        dist_equilibrium = [
+            self.dist_tpr[-1],
+            self.dist_sv[-1],
+            self.dist_hr[-1]
+        ]
         # solve equilibrium without nore
         x = cas.MX.sym('x', 5)
-        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + 3 * [0]))
+        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + dist_equilibrium))
         F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
         sol = F_root(x0=x0)
         x_no_nore = sol['x'].full().flatten()
@@ -1369,11 +1429,11 @@ class Hemo_meca_PD_model:
 
         # if nore is used, solve equilibrium with nore
         if cp_nore_eq > 0:
-            output_no_nore = self.output_function(x_no_nore)
+            output_no_nore = self.output_function(x_no_nore, dist=dist_equilibrium)
             map_eq = output_no_nore[3] + self.nore_map_effect(cp_nore_eq)
             # solve equilibrium with nore
             x = cas.MX.sym('x', 5)
-            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + 3 * [0]))
+            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + dist_equilibrium))
             # map_nore = self.output_function(x)[3]
             # dx[0] = (map_nore - map_eq)**2
             F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
@@ -1383,7 +1443,7 @@ class Hemo_meca_PD_model:
         else:
             x_eq_out = x_no_nore
 
-        output = self.output_function(x_eq_out)
+        output = self.output_function(x_eq_out, dist=dist_equilibrium)
         self.x_eq_w_nore = x_eq_out
 
         return output
