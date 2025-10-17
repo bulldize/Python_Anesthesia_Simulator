@@ -7,7 +7,7 @@ import casadi as cas
 from scipy.signal import dlsim, TransferFunction
 # Local imports
 from .pk_models import CompartmentModel, AtracuriumModel
-from .pd_models import BIS_model, TOL_model, Hemo_meca_PD_model, NMB_model
+from .pd_models import BIS_model, LOC_model, TOL_model, Hemo_meca_PD_model, NMB_model
 
 
 class Patient:
@@ -32,7 +32,9 @@ class Patient:
     model_atracurium : str, optional
         Name of the atracurium PK Model. The default is 'WardWeatherleyLago'.    
     model_bis : str, optional
-        Name of the BIS PD Model. The default is 'Bouillon'.    
+        Name of the BIS PD Model. The default is 'Bouillon'.
+    model_loc : str, optional
+        Name of the LOC PD Model. The default is 'Kern'
     model_nmb, : str, optional
         Name of the NMB PD Model. The default is 'Weatherley'.
     model_stimuli : str, optional
@@ -44,6 +46,9 @@ class Patient:
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
         If Delay_BIS is not provided it is assumed equal to 0.
         The default is None.
+    hill_param_loc : list
+        Parameter of the LOC model (Propo Remi interaction)
+        list [C50p_LOC C50r_LOC, gamma_LOC, beta_LOC, E0_LOC, Emax_LOC]
     atracurium_model_params : dict, optional
         For "WardWeatherleyLago":
         dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'}.     
@@ -56,6 +61,8 @@ class Patient:
         Add uncertainties in the Propofol and Remifentanil PK models. The default is False.
     random_PD : bool, optional
         Add uncertainties in the BIS PD model. The default is False.
+    random_PD_loc : bool, optional
+        Add uncertainties in the LOC PD model. The default is False.
     co_update : bool, optional
         Turn on the option to update PK parameters thanks to the CO value. The default is False.
     save_data_bool : bool, optional
@@ -90,6 +97,8 @@ class Patient:
         Name of the atracurium PK model.    
     model_bis : str
         Name of the BIS PD model.
+    model_loc : str
+        Name of the LOC PD model
     model_nmb : str
         Name of the NMB PD model.
     model_stimuli : str
@@ -98,6 +107,9 @@ class Patient:
         Parameter of the BIS model (Propo Remi interaction)
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
         If Delay_BIS is not provided it is assumed equal to 0.
+    hill_param_loc : list
+        Parameter of the LOC model (Propo Remi interaction)
+        list [C50p_LOC, C50r_LOC, gamma_LOC, beta_LOC, E0_LOC, Emax_LOC].
     atracurium_model_params : dict, optional
         For "WardWeatherleyLago":
             dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'} 
@@ -108,6 +120,8 @@ class Patient:
         Add uncertainties in the Propofol and Remifentanil PK models.
     random_PD : bool
         Add uncertainties in the BIS PD model.
+    random_PD_loc : bool
+        Add uncertainties in the LOC PD model
     co_update : bool
         Turn on the option to update PK parameters thanks to the CO value.
     save_data_bool : bool
@@ -124,6 +138,8 @@ class Patient:
         4-comparments model for Atracurium.    
     bis_pd : BIS_model
         Surface-response model for bis computation.
+    loc_pd : LOC_model
+        Surface-response model for loc computation.
     tol_pd : TOL_model
         Hierarchical model for TOL computation.
     hemo_pd : Hemo_PD_model
@@ -134,6 +150,8 @@ class Patient:
         Dataframe containing all the internal variables at each sampling time.
     bis : float
         Bispectral index (%).
+    loc : float 
+        Loss of conciousness (%)
     tol : float
         Tolerance of laryngoscopy probability (0-1).
     co : float
@@ -172,14 +190,17 @@ class Patient:
                  model_nore: str = 'Beloeil',
                  model_atracurium: str = 'WardWeatherleyLago',
                  model_bis: str = 'Bouillon',
+                 model_loc: str = 'Kern',
                  model_nmb: str = 'Weatherley',
                  model_stimuli: str = 'null',
                  ts: float = 1,
                  hill_param: list = None,
+                 hill_param_loc: list = None,
                  atracurium_model_params: dict = {},
                  atracurium_hill_params: dict = {},
                  random_PK: bool = False,
-                 random_PD: bool = False,
+                 random_PD: bool = False, 
+                 random_PD_loc : bool = False,
                  co_update: bool = False,
                  save_data_bool: bool = True,
                  bis_delay_max: float = 120):
@@ -206,10 +227,12 @@ class Patient:
         self.model_atracurium = model_atracurium
         self.model_stimuli = model_stimuli
         self.hill_param = hill_param
+        self.hill_param_loc = hill_param_loc
         self.atracurium_model_params = atracurium_model_params
         self.atracurium_hill_params = atracurium_hill_params
         self.random_PK = random_PK
         self.random_PD = random_PD
+        self.random_PD_loc = random_PD_loc
         self.co_update = co_update
         self.save_data_bool = save_data_bool
         self.bis_delay_max = bis_delay_max
@@ -236,6 +259,10 @@ class Patient:
         # Init PD model for BIS
         self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD, ts=self.ts, age=self.age)
         self.hill_param = self.bis_pd.hill_param
+        
+        # Init PD model for LOC
+        self.loc_pd = LOC_model(hill_model=model_loc, hill_param = hill_param_loc, random=random_PD_loc, ts=self.ts)
+        self.hill_param_loc = self.loc_pd.hill_param
 
         # Init PD model for TOL
         self.tol_pd = TOL_model(model='Bouillon', random=random_PD)
@@ -322,6 +349,8 @@ class Patient:
         -------
         bis : float
             Bispectral index(%).
+        loc : float
+            Loss of consciousness (%)
         co : float
             Cardiac output (L/min).
         map : float
@@ -349,6 +378,8 @@ class Patient:
         self.c_es_atra = self.atracurium_pk.one_step(u_atra)
         # BIS
         self.bis = self.bis_pd.one_step(self.c_es_propo, self.c_es_remi)
+        # LOC
+        self.loc = self.loc_pd.compute_loc(self.c_es_propo, self.c_es_remi)
         # TOL
         self.tol = self.tol_pd.compute_tol(self.c_es_propo, self.c_es_remi)
         # NMB
@@ -399,11 +430,11 @@ class Patient:
             self.Time += self.ts
             self.save_data()
 
-        return (self.bis, self.co, self.map, self.tol, self.nmb)
+        return (self.bis, self.loc, self.co, self.map, self.tol, self.nmb)
 
     def add_noise(self):
         r"""
-        Add noise on the outputs of the model (except TOL and NMB).
+        Add noise on the outputs of the model (except LOC, TOL and NMB).
 
         The MAP and CO noises are considered white noise while the BIS noise is filtered.
         The filter of the BIS noise is a second order low pass filter with a cut-off frequency of 0.03 Hz.
@@ -641,6 +672,8 @@ class Patient:
             # recompute output variable
             # BIS
             self.bis = self.bis_pd.compute_bis(self.propo_pk.x[3, 0], self.remi_pk.x[3, 0])
+            # LOC 
+            self.tol = self.loc_pd.compute_loc(self.propo_pk.x[3, 0], self.remi_pk.x[3, 0])
             # TOL
             self.tol = self.tol_pd.compute_tol(self.propo_pk.x[3, 0], self.remi_pk.x[3, 0])
             # Hemodynamic
@@ -721,6 +754,7 @@ class Patient:
             - 'Time': Simulation time (s)
             - 'BIS': Bispectral Index
             - 'SQI': Signal Quality Index
+            - 'LOC': Loss of Consciousness
             - 'TOL': Tolerance level
             - 'NMB': Neuromuscular blockade level (%)
             - 'TPR': Total eripheral resistance (mmHg min/ mL) 
@@ -741,7 +775,7 @@ class Patient:
         """
         self.Time = 0
         column_names = ['Time',  # time
-                        'BIS', 'SQI', 'TOL', 'NMB', 'MAP', 'CO',  # outputs
+                        'BIS', 'SQI', 'LOC','TOL', 'NMB', 'MAP', 'CO',  # outputs
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore', 'u_atra',  # inputs
                         'blood_volume']  # nore concentration and blood volume
@@ -758,7 +792,7 @@ class Patient:
         dap = self.map - 2 / 9 * self.sv
         sap = self.map + 4 / 9 * self.sv
         new_line = {'Time': self.Time,
-                    'BIS': self.bis, 'TOL': self.tol, 'TPR': self.tpr, 'NMB': self.nmb,
+                    'BIS': self.bis, 'LOC': self.loc, 'TOL': self.tol, 'TPR': self.tpr, 'NMB': self.nmb,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
                     'SAP': sap, 'DAP': dap,
                     # inputs
@@ -866,6 +900,7 @@ class Patient:
 
         # compute outputs
         bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :])
+        loc = self.loc_pd.compute_loc(x_propo[3, :], x_remi[3, :])
         tol = self.tol_pd.compute_tol(x_propo[3, :], x_remi[3, :])
         nmb = self.nmb_pd.compute_nmb(x_atra[3, :])
         if x_nore.ndim == 1:
@@ -884,7 +919,7 @@ class Patient:
         sap = map + 4 / 9 * sv
         df = pd.DataFrame({
             'Time': np.arange(0, len(u_propo) * self.ts, self.ts),
-            'BIS': bis, 'TOL': tol, 'NMB': nmb, 'TPR': tpr, 'SV': sv,
+            'BIS': bis, 'LOC': loc, 'TOL': tol, 'NMB': nmb, 'TPR': tpr, 'SV': sv,
             'HR': hr, 'MAP': map, 'CO': co, 'DAP': dap, 'SAP': sap,
             'u_propo': u_propo, 'u_remi': u_remi, 'u_nore': u_nore, 'u_atra': u_atra
         })
