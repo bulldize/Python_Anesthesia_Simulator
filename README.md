@@ -1,6 +1,6 @@
 [![status](https://joss.theoj.org/papers/61d34ad9ef855a128509b4279e2c9325/status.svg)](https://joss.theoj.org/papers/61d34ad9ef855a128509b4279e2c9325)
 [![Documentation Status](https://readthedocs.org/projects/python-anesthesia-simulator/badge/?version=latest)](https://python-anesthesia-simulator.readthedocs.io/en/latest/?badge=latest)
-<img src ="https://img.shields.io/github/last-commit/BobAubouin/Python_Anesthesia_Simulator" alt="GitHub last commit"> 
+<img src ="https://img.shields.io/github/last-commit/AnesthesiaSimulation/Python_Anesthesia_Simulator" alt="GitHub last commit"> 
 
 # Python_Anesthesia_Simulator
 
