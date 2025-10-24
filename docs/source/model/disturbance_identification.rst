@@ -1,3 +1,4 @@
+.. _disurbance_identification:
 Disturbance Modelling and Identification
 ============================================
 
@@ -176,15 +177,15 @@ For BIS, because the output of the model is not reinjected through the states dy
 where :math:`t` is the time in seconds and :math:`t_{intub}` is the time of end of intubation. The identified parameters are given in the following table:
 
 +-------+-------------------------------+
-| a_0   | :math:`-8.59\times 10^{-12}`  |
+| a_0   | :math:`-8.60\times 10^{-11}`  |
 +-------+-------------------------------+
-| a_1   | :math:`3.58\times 10^{-8}`    |
+| a_1   | :math:`1.54\times 10^{-7}`    |
 +-------+-------------------------------+
-| a_2   | :math:`-4.75\times 10^{-5}`   |
+| a_2   | :math:`-9.35\times 10^{-5}`   |
 +-------+-------------------------------+
-| a_3   | :math:`1.33\times 10^{-2}`    |
+| a_3   | :math:`1.14\times 10^{-2}`    |
 +-------+-------------------------------+
-| a_4   | :math:`1.10\times 10^{1}`     |
+| a_4   | :math:`8.07`     |
 +-------+-------------------------------+
 
 .. figure:: ../images/bis_diff.png

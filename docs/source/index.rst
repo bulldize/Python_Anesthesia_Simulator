@@ -6,16 +6,11 @@
 Welcome to Python Anesthesia Simulator's documentation!
 =======================================================
 
-The Python Anesthesia Simulator (PAS) models the effect of drugs on physiological variables during total 
-intravenous anesthesia. It is particularly dedicated to the control community, to be used as a benchmark 
-for the design of multidrug controllers. The available drugs are Propofol, Remifentanil, and Norepinephrine, 
-the outputs are the Bispectral index (BIS), Mean Arterial Pressure (MAP), Cardiac Output (CO), and Tolerance 
-of Laryngoscopy (TOL). PAS includes different well-known models along with their uncertainties to simulate 
-inter-patient variability. Blood loss can also be simulated to assess the controller's performance in a 
-shock scenario. Finally, PAS includes standard disturbance profiles and metric computation to facilitate 
-the evaluation of the controller's performances. This web page provides a brief overview of the simulator 
-and its capabilities. For more details, please refer to the following paper: https://joss.theoj.org/papers/10.21105/joss.05480.
-If you are using PAS for your research, please cite the previous paper.
+The Python Anesthesia Simulator (PAS) models the effect of drugs on physiological variables during total intravenous anesthesia. It is particularly dedicated to the control community, to be used as a benchmark for the design of multidrug controllers. The available drugs are **propofol**, **remifentanil**, **norepinephrine**, and **atracurium** the outputs are the Bispectral Index (**BIS**), tolerance to laryngoscopy (**TOL**), loss of consciousness (**LOC**), mean arterial pressure (**MAP**), cardiac output (**CO**), total peripheral resistence (**TPR**), stroke volume (**SV**), heart rate (**HR**) and neuromuscular blokade level (**NMB**). PAS includes different well-known models along with their uncertainties to simulate inter-patient variability. Blood loss can also be simulated to assess the controller's performance in a shock scenario. Finally, PAS includes disturbance profiles calibrated on clinical data to facilitate the evaluation of the controller's performances in realistic condition.
+
+If you are using PAS for your research, please cite the previous papers:
+https://joss.theoj.org/papers/10.21105/joss.05480
+
 
 .. toctree::
    :maxdepth: 2

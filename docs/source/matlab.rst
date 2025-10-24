@@ -1,3 +1,5 @@
+.. _matlab:
+
 Usage with MATLAB
 ==================
 
