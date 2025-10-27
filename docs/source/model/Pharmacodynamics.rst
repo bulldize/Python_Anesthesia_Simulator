@@ -140,9 +140,9 @@ In that equation, :math:`x_{ep,LOC}` and :math:`x_{er,LOC}` are the propofol and
 In this simulator, the values of the parameters of the surface model are taken from the study of [Kern2004]_, [Mertens2003]_, and [Johnson2008]_.
 
 
-Atracurium
------------
-For atracurium a 2D-Hill function is used to express the drug's effect on the neoromuscular blockade level (NMB) [Weatherley1983]_, which is expressed in \%:
+Neuromuscular blockade level
+-----------------------------
+For the effect of atracurium, a 2D-Hill function is used to express the drug's effect on the neuromuscular blockade level (NMB) [Weatherley1983]_, which is expressed in \%:
 
 .. math::
 

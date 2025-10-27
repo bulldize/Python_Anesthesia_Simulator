@@ -185,7 +185,7 @@ where :math:`t` is the time in seconds and :math:`t_{intub}` is the time of end 
 +-------+-------------------------------+
 | a_3   | :math:`1.14\times 10^{-2}`    |
 +-------+-------------------------------+
-| a_4   | :math:`8.07`     |
+| a_4   | :math:`8.07`                  |
 +-------+-------------------------------+
 
 .. figure:: ../images/bis_diff.png

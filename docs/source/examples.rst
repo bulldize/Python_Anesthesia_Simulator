@@ -1,8 +1,8 @@
 .. _examples:
 
-********
-Examples
-********
+****************
+Python Examples
+****************
 
 The source code for the examples below are available in the `docs/source/examples/`
 subdirecory of the source code distribution.  The codes can also be accessed online
