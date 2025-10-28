@@ -6,6 +6,7 @@ import math
 # Third party imports
 import numpy as np
 from scipy.signal import lsim, StateSpace
+from scipy.stats import truncnorm
 
 
 class CompartmentModel:
@@ -19,13 +20,13 @@ class CompartmentModel:
     .. math::  y(k) = Cx(k)
 
     The state vector is the concentration of the drug in each compartement in the following order:
-        
+
     * blood, muscles, fat, BIS effect-site, MAP effect-site 1, MAP effect-site 2 for propofol;
     * blood, muscles, fat, BIS effect-site, MAP effect-site 1 for remifentanil;
     * blood for norepinephrine;
-    
+
     The output of the model is:
-        
+
     * the BIS effect-site concentration for propofol and remifentanil;
     * the blood concentration for norepinephrine;
 
@@ -55,6 +56,8 @@ class CompartmentModel:
     measurement : str, optional
         For Elelevd model for propofol, specify the measuremnt place for blood concentration.
         Can be either 'arterial' or 'venous'. The default is 'arterial'.
+    truncated : bool, optional
+        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.
 
     Attributes
     ----------
@@ -110,13 +113,19 @@ class CompartmentModel:
     .. [Li2024] Y. Li et al., “Population Pharmacokinetic Modelling of Norepinephrine
             in Healthy Volunteers Prior to and During General Anesthesia,” Clin Pharmacokinet,
             vol. 63, no. 11, pp. 1597–1608, Nov. 2024, doi: 10.1007/s40262-024-01430-y.
-            
+
     """
 
-    def __init__(self, Patient_characteristic: list, lbm: float,
-                 drug: str, model: str = None, ts: float = 1,
-                 random: bool = False, x0: np.ndarray = None,
-                 opiate=True, measurement="arterial"):
+    def __init__(self, Patient_characteristic: list,
+                 lbm: float,
+                 drug: str,
+                 model: str = None,
+                 ts: float = 1,
+                 random: Optional[bool] = False,
+                 x0: Optional[np.ndarray] = None,
+                 opiate: Optional[bool] = True,
+                 measurement: Optional[str] = "arterial",
+                 truncated: Optional[bool] = False):
         """Init the class."""
         self.ts = ts
         age = Patient_characteristic[0]
@@ -342,15 +351,6 @@ class CompartmentModel:
                 w_cl3 = np.sqrt(0.209)
                 w_ke0 = np.sqrt(0.702)
 
-            # see C. Jeleazcov, M. Lavielle, J. Schüttler, and H. Ihmsen,
-            # “Pharmacodynamic response modelling of arterial blood pressure in adult
-            # volunteers during propofol anaesthesia,”
-            # BJA: British Journal of Anaesthesia, vol. 115, no. 2, pp. 213–226, Aug. 2015, doi: 10.1093/bja/aeu553.
-            ke1_map = 0.054
-            ke2_map = 0.0695
-            w_ke1_map = 1.5
-            w_ke2_map = 1.48
-
         elif drug == "Remifentanil":
             if self.model is None:
                 self.model = 'Minto'
@@ -453,12 +453,7 @@ class CompartmentModel:
                 w_cl2 = np.sqrt(0.0547)
                 w_cl3 = np.sqrt(0.285)
                 w_ke0 = np.sqrt(1.26)
-            # see J. F. Standing, G. B. Hammer, W. J. Sam, and D. R. Drover,
-            # “Pharmacokinetic–pharmacodynamic modeling of the hypotensive effect of
-            # remifentanil in infants undergoing cranioplasty,”
-            # Pediatric Anesthesia, vol. 20, no. 1, pp. 7–18, 2010, doi: 10.1111/j.1460-9592.2009.03174.x.
-            ke_map = 0.81
-            w_ke_map = 0.41
+
         elif drug == 'Norepinephrine':
             if self.model is None:
                 self.model = 'Beloeil'  # set defaut value
@@ -511,15 +506,22 @@ class CompartmentModel:
                 if self.model == 'Marsh':
                     print("Warning: the standard deviation of the Marsh model are not know," +
                           " it is set to 100% for each variable")
-                v1 *= np.exp(np.random.normal(scale=w_v1))
-                v2 *= np.exp(np.random.normal(scale=w_v2))
-                v3 *= np.exp(np.random.normal(scale=w_v3))
-                cl1 *= np.exp(np.random.normal(scale=w_cl1))
-                cl2 *= np.exp(np.random.normal(scale=w_cl2))
-                cl3 *= np.exp(np.random.normal(scale=w_cl3))
-                ke0 *= np.exp(np.random.normal(scale=w_ke0))
-                ke1_map *= np.exp(np.random.normal(scale=w_ke1_map))
-                ke2_map *= np.exp(np.random.normal(scale=w_ke2_map))
+                if truncated:
+                    v1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v1))
+                    v2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v2))
+                    v3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v3))
+                    cl1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl1))
+                    cl2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl2))
+                    cl3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl3))
+                    ke0 *= np.exp(truncnorm.rvs(-3, 3, scale=w_ke0))
+                else:
+                    v1 *= np.exp(np.random.normal(scale=w_v1))
+                    v2 *= np.exp(np.random.normal(scale=w_v2))
+                    v3 *= np.exp(np.random.normal(scale=w_v3))
+                    cl1 *= np.exp(np.random.normal(scale=w_cl1))
+                    cl2 *= np.exp(np.random.normal(scale=w_cl2))
+                    cl3 *= np.exp(np.random.normal(scale=w_cl3))
+                    ke0 *= np.exp(np.random.normal(scale=w_ke0))
             # drug amount transfer rates [1/min]
             k10 = cl1 / v1
             k12 = cl2 / v1
@@ -528,27 +530,33 @@ class CompartmentModel:
             k31 = cl3 / v3
 
             # Matrices system definition
-            A = np.array([[-(k10 + k12 + k13), k12, k13, 0, 0, 0],
-                          [k21, -k21, 0, 0, 0, 0],
-                          [k31, 0, -k31, 0, 0, 0],
-                          [ke0, 0, 0, -ke0, 0, 0],
-                          [ke1_map, 0, 0, 0, -ke1_map, 0],
-                          [ke2_map, 0, 0, 0, 0, -ke2_map]])/60  # 1/s
+            A = np.array([[-(k10 + k12 + k13), k12, k13, 0],
+                          [k21, -k21, 0, 0],
+                          [k31, 0, -k31, 0],
+                          [ke0, 0, 0, -ke0]])/60  # 1/s
 
-            B = np.transpose(np.array([[1/v1, 0, 0, 0, 0, 0]]))  # 1/L
-            C = np.array([[0, 0, 0, 1, 0, 0]])
+            B = np.transpose(np.array([[1/v1, 0, 0, 0]]))  # 1/L
+            C = np.array([[0, 0, 0, 1]])
             D = np.array([[0]])
 
         elif drug == 'Remifentanil':
             if random:
-                v1 *= np.exp(np.random.normal(scale=w_v1))
-                v2 *= np.exp(np.random.normal(scale=w_v2))
-                v3 *= np.exp(np.random.normal(scale=w_v3))
-                cl1 *= np.exp(np.random.normal(scale=w_cl1))
-                cl2 *= np.exp(np.random.normal(scale=w_cl2))
-                cl3 *= np.exp(np.random.normal(scale=w_cl3))
-                ke0 *= np.exp(np.random.normal(scale=w_ke0))
-                ke_map *= np.exp(np.random.normal(scale=w_ke_map))
+                if truncated:
+                    v1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v1))
+                    v2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v2))
+                    v3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v3))
+                    cl1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl1))
+                    cl2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl2))
+                    cl3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl3))
+                    ke0 *= np.exp(truncnorm.rvs(-3, 3, scale=w_ke0))
+                else:
+                    v1 *= np.exp(np.random.normal(scale=w_v1))
+                    v2 *= np.exp(np.random.normal(scale=w_v2))
+                    v3 *= np.exp(np.random.normal(scale=w_v3))
+                    cl1 *= np.exp(np.random.normal(scale=w_cl1))
+                    cl2 *= np.exp(np.random.normal(scale=w_cl2))
+                    cl3 *= np.exp(np.random.normal(scale=w_cl3))
+                    ke0 *= np.exp(np.random.normal(scale=w_ke0))
 
             # drug amount transfer rates [1/min]
             k10 = cl1 / v1
@@ -558,27 +566,37 @@ class CompartmentModel:
             k31 = cl3 / v3
 
             # Matrices system definition
-            A = np.array([[-(k10 + k12 + k13), k12, k13, 0, 0],
-                          [k21, -k21, 0, 0, 0],
-                          [k31, 0, -k31, 0, 0],
-                          [ke0, 0, 0, -ke0, 0],
-                          [ke_map, 0, 0, 0, -ke_map]])/60  # 1/s
+            A = np.array([[-(k10 + k12 + k13), k12, k13, 0],
+                          [k21, -k21, 0, 0],
+                          [k31, 0, -k31, 0],
+                          [ke0, 0, 0, -ke0]])/60  # 1/s
 
-            B = np.transpose(np.array([[1/v1, 0, 0, 0, 0]]))  # 1/L
-            C = np.array([[0, 0, 0, 1, 0]])
+            B = np.transpose(np.array([[1/v1, 0, 0, 0]]))  # 1/L
+            C = np.array([[0, 0, 0, 1]])
             D = np.array([[0]])
 
         elif drug == 'Norepinephrine':
             if random:
-                v1 *= np.exp(np.random.normal(scale=w_v1))
-                cl1 *= np.exp(np.random.normal(scale=w_cl1))
-                if self.model == 'Oualha' or self.model == "Li":
-                    self.u_endo *= np.exp(np.random.normal(scale=w_u_endo))
-                if self.model == "Li":
-                    v2 *= np.exp(np.random.normal(scale=w_v2))
-                    cl2 = np.exp(np.random.normal(scale=w_cl2))
-                    self._prop_coeff += np.random.normal(scale=w_prop_effect)  # additive uncertainty
-                    cl1 *= np.exp(self._prop_coeff*(c_prop - self._c_prop_base))
+                if truncated:
+                    v1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v1))
+                    cl1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl1))
+                    if self.model == 'Oualha' or self.model == "Li":
+                        self.u_endo *= np.exp(truncnorm.rvs(-3, 3, scale=w_u_endo))
+                    if self.model == "Li":
+                        v2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v2))
+                        cl2 = np.exp(truncnorm.rvs(-3, 3, scale=w_cl2))
+                        self._prop_coeff += truncnorm.rvs(-3, 3, scale=w_prop_effect)  # additive uncertainty
+                        cl1 *= np.exp(self._prop_coeff*(c_prop - self._c_prop_base))
+                else:
+                    v1 *= np.exp(np.random.normal(scale=w_v1))
+                    cl1 *= np.exp(np.random.normal(scale=w_cl1))
+                    if self.model == 'Oualha' or self.model == "Li":
+                        self.u_endo *= np.exp(np.random.normal(scale=w_u_endo))
+                    if self.model == "Li":
+                        v2 *= np.exp(np.random.normal(scale=w_v2))
+                        cl2 = np.exp(np.random.normal(scale=w_cl2))
+                        self._prop_coeff += np.random.normal(scale=w_prop_effect)  # additive uncertainty
+                        cl1 *= np.exp(self._prop_coeff*(c_prop - self._c_prop_base))
             if self.model == 'Beloeil' or self.model == "Oualha":  # first order model
                 # drug amount transfer rates [1/min]
                 k10 = cl1 / v1
@@ -776,7 +794,6 @@ class CompartmentModel:
         # Discretization of the system
         self.discretize_sys = self.continuous_sys.to_discrete(self.ts)
 
-
     def get_system_gain(self):
         """
         Compute the steady-state (DC) gain of the compartment model.
@@ -795,18 +812,18 @@ class CompartmentModel:
         float
             The scalar steady-state gain of the system (assumes SISO or extracts [0,0] for MIMO).
         """
-        
+
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
 
 
-class AtracuriumModel:    
+class AtracuriumModel:
     """AtracuriumModel class modelize the linear part of the PK-PD model of atracurium drug. Simulate the drug distribution in the body.
 
     The model is a LTI model with the form:
 
     .. math::  x(k+1)= Ax(k) + Bu(k)
     .. math::  y(k) = Cx(k)
-    
+
     The state vector is the concentration of the drug in each compartement.
 
     Parameters
@@ -818,7 +835,7 @@ class AtracuriumModel:
         The default is "WardWeatherleyLago".    
     model_params : dict, optional
         For "WardWeatherleyLago":
-            
+
         - **'V1'**: Volume of the central compartment (ml/kg)
         - **'V2'**: Volume of the peripheral compartment (ml/kg)
         - **'Cl'**: Clearance (ml/min/kg)
@@ -826,7 +843,7 @@ class AtracuriumModel:
         - **'t12_beta'**: Second half live time (min)
         - **'ke0'**: Transfer rate of the first effect-site compartment (1/min)
         - **'tau'**: Time constant of the second effect-site compartment (min)
-            
+
         If it is not provided average values are used.    
     ts : float, optional
         Sampling time, in s. The default is 1.
@@ -856,10 +873,10 @@ class AtracuriumModel:
     .. [Lago1998] P. Lago et al., "On-Line Autocalibration of a PID Controller of Neuromuscular Blockade"
             Proceedings of the 1998 IEEE International Conference on Control Applications (Cat. No.98CH36104), Trieste, Italy, Vol. 1, pp. 363-367, Sept. 1998, doi: 10.1109/CCA.1998.728448.
     """
-    
-    def __init__(self, Patient_characteristic: list, 
+
+    def __init__(self, Patient_characteristic: list,
                  model: str = None,
-                 model_params: dict = {},    
+                 model_params: dict = {},
                  ts: float = 1,
                  x0: np.ndarray = None):
         """Init the class."""
@@ -868,24 +885,24 @@ class AtracuriumModel:
         self.model = model
         if self.model is None:
             self.model = 'WardWeatherleyLago'
-            
+
         if self.model == 'WardWeatherleyLago':
-            
+
             # Volume of the central compartment [ml/kg]
-            V1 = model_params.get('V1', 49.0) 
+            V1 = model_params.get('V1', 49.0)
             # Volume of the peripheral compartment [ml/kg]
-            V2 = model_params.get('V2', 157.0) 
+            V2 = model_params.get('V2', 157.0)
             # Clearance [ml/min/kg]
-            Cl = model_params.get('Cl', 5.5) 
+            Cl = model_params.get('Cl', 5.5)
             # First half live time [min]
-            t12_alpha = model_params.get('t12_alpha', 2.06) 
+            t12_alpha = model_params.get('t12_alpha', 2.06)
             # Second half live time [min]
             t12_beta = model_params.get('t12_beta', 19.9)
             # Transfer rate of the first effect-site compartment [1/min]
             ke0 = model_params.get('ke0', 0.1)
             # Time constant of the second effect-site compartment [min]
             tau = model_params.get('tau', 6.2670)
-            
+
             # Elimination rate constant [1/min]
             k10 = Cl/V1
             # alpha [1/min]
@@ -896,18 +913,17 @@ class AtracuriumModel:
             k21 = (alpha*beta)/k10
             # Transfer rate 1->2 [1/min]
             k12 = alpha + beta - k10 - k21
-            
+
             # Matrices system definition
-            A = np.array([[ -(k10+k12),     (k21*V2)/V1,    0,      0],
-                          [ (k12*V1)/V2,    -k21,           0,      0],
-                          [ ke0,             0,            -ke0,    0],
-                          [ 0,               0,            1/tau,  -1/tau]])/60  # 1/s  
+            A = np.array([[-(k10+k12),     (k21*V2)/V1,    0,      0],
+                          [(k12*V1)/V2,    -k21,           0,      0],
+                          [ke0,             0,            -ke0,    0],
+                          [0,               0,            1/tau,  -1/tau]])/60  # 1/s
             # Conversion from [ug/s] to [ug/ml/s]
             B = np.transpose(np.array([[1/(weight*V1), 0, 0, 0]]))
             C = np.array([[0, 0, 0, 1]])
             D = np.array([[0]])
-        
-        
+
         # Continuous system
         self.continuous_sys = StateSpace(A, B, C, D)
         # Discretization of the system
@@ -918,7 +934,7 @@ class AtracuriumModel:
             x0 = np.zeros((len(A), 1))
         self.x = x0
         self.y = np.dot(C, self.x)
-        
+
     def one_step(self, u: float) -> list:
         """Simulate one step of the model.
 
@@ -963,11 +979,11 @@ class AtracuriumModel:
 
         if x0 is None:
             x0 = np.zeros(len(self.continuous_sys.A))
-            
+
         t = np.ones_like(u)*self.ts
         t[0] = 0
         t = np.cumsum(t)
-        
+
         _, _, x_lsim = lsim(
             self.continuous_sys,
             T=t,
@@ -975,10 +991,10 @@ class AtracuriumModel:
             X0=x0,
             interp=interp
         )
-        
+
         x = x_lsim.T
-        return x    
-    
+        return x
+
     def get_system_gain(self):
         """
         Compute the steady-state (DC) gain of the atracurium model.
@@ -997,10 +1013,9 @@ class AtracuriumModel:
         float
             The scalar steady-state gain of the system (assumes SISO or extracts [0,0] for MIMO).
         """
-        
+
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
-    
-    
+
     def initialize_state(self, x0: np.ndarray):
         """ Initialize the state vector 
 
@@ -1010,5 +1025,5 @@ class AtracuriumModel:
             Initial state vector. 
 
         """
-        
+
         self.x = x0.reshape(-1, 1)
