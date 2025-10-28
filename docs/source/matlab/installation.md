@@ -196,5 +196,3 @@ clear callPython
 ```
 
 This ensures that the `Patient` object is reinitialized on the next simulation.
-
----

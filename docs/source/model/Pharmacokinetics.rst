@@ -1,3 +1,5 @@
+.. _pharmacokinetics:
+
 Pharmacokinetics
 ================
 

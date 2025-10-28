@@ -1,3 +1,5 @@
+.. _pharmacodynamics:
+
 Pharmacodynamics
 =================
 
@@ -90,7 +92,8 @@ The surface of the 3D-Hill function using parameters from [Bouillon2004]_ is sho
    :width: 80%
    :align: center
    :alt: 3D-Hill function
-   
+
+.. _delay:
 Delay
 ~~~~~~~~~~~~~~
 
@@ -137,9 +140,9 @@ In that equation, :math:`x_{ep,LOC}` and :math:`x_{er,LOC}` are the propofol and
 In this simulator, the values of the parameters of the surface model are taken from the study of [Kern2004]_, [Mertens2003]_, and [Johnson2008]_.
 
 
-Atracurium
------------
-For atracurium a 2D-Hill function is used to express the drug's effect on the neoromuscular blockade level (NMB) [Weatherley1983]_, which is expressed in \%:
+Neuromuscular blockade level
+-----------------------------
+For the effect of atracurium, a 2D-Hill function is used to express the drug's effect on the neuromuscular blockade level (NMB) [Weatherley1983]_, which is expressed in \%:
 
 .. math::
 
@@ -162,10 +165,12 @@ where :math:`preopioid` is the tolerance of laryngoscopy without remifentanil, :
 
    Hierarchical model for TOL, figure from [Bouillon2004]_.
 
-Haemodynamic
+
+.. _hemodynamics:
+Hemodynamics
 --------------
 
-Haemodynamics are the dynamic of blood flow. Blood flow ensures the transportation of nutrients, hormones, metabolic waste products, oxygen, and carbon dioxide throughout the body to maintain cell-level metabolism, the regulation of the pH, osmotic pressure and temperature of the whole body, and the protection from microbial and mechanical harm.
+Hemodynamics are the dynamic of blood flow. Blood flow ensures the transportation of nutrients, hormones, metabolic waste products, oxygen, and carbon dioxide throughout the body to maintain cell-level metabolism, the regulation of the pH, osmotic pressure and temperature of the whole body, and the protection from microbial and mechanical harm.
 
 The main variable to monitor is the cardiac output (CO), which is the volume of blood pumped by the heart per minute as it is the main determinant of oxygen delivery to tissues. However, CO is not directly measurable, and thus, the mean arterial pressure (MAP) is often used as a surrogate. The MAP is the average arterial pressure during one cardiac cycle, and it is considered to be a good indicator of perfusion pressure in the organs. The CO and MAP are influenced by the drugs used during anesthesia, and thus, it is important to model their effects.
 

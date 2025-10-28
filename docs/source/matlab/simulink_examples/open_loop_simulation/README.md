@@ -178,6 +178,3 @@ It ensures that the next simulation starts with a fresh Python object.
 - `pyenv` must point to a valid Python environment containing the simulator.  
 - Each run initializes or reuses a persistent Python `Patient` instance.  
 - Use `clear callPython` between runs to fully reset the model.  
-
----
-
