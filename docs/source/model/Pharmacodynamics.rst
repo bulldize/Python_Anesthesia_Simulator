@@ -142,11 +142,12 @@ In this simulator, the values of the parameters of the surface model are taken f
 
 Neuromuscular blockade level
 -----------------------------
-For the effect of atracurium, a 2D-Hill function is used to express the drug's effect on the neuromuscular blockade level (NMB) [Weatherley1983]_, which is expressed in \%:
+The neuromuscular blockade level is provided by the train-of-four (TOF) monitor and it is expressed as the percentage of the first twitch (T1) magnitude relative to its baseline value (T0), which is measured before administering atracurium.
+A 2D-Hill function is used to express the atracurium effect on TOF [Weatherley1983]_:
 
 .. math::
 
-    NMB(t) =  \frac{E_{max} * C_{50}^\gamma}{C_{50}^\gamma + \hat{x}_{es}(t)^\gamma}
+    TOF(t) =  \frac{E_{max} * C_{50}^\gamma}{C_{50}^\gamma + \hat{x}_{es}(t)^\gamma}
 
 Tolerance of Laryngoscopy
 -----------------------------
@@ -366,7 +367,7 @@ The following table summarizes the effect of single drugs injection on the model
           <td>No effect</td>
         </tr>
         <tr>
-          <th>NMB</th>
+          <th>TOF</th>
           <td>No effect</td>
           <td>No effect</td>
           <td>No effect</td>
