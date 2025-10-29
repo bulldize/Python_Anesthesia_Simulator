@@ -7,7 +7,7 @@ import casadi as cas
 from scipy.signal import dlsim, TransferFunction
 # Local imports
 from .pk_models import CompartmentModel, AtracuriumModel
-from .pd_models import BIS_model, LOC_model, TOL_model, Hemo_meca_PD_model, NMB_model
+from .pd_models import BIS_model, LOC_model, TOL_model, Hemo_meca_PD_model, TOF_model
 
 
 class Patient:
@@ -35,8 +35,8 @@ class Patient:
         Name of the BIS PD Model. The default is 'Bouillon'.
     model_loc : str, optional
         Name of the LOC PD Model. The default is 'Kern'
-    model_nmb, : str, optional
-        Name of the NMB PD Model. The default is 'Weatherley'.
+    model_tof, : str, optional
+        Name of the TOF PD Model. The default is 'Weatherley'.
     model_stimuli : str, optional
         Name of the stimuli model. The default is 'none'.
     ts : float, optional
@@ -99,8 +99,8 @@ class Patient:
         Name of the BIS PD model.
     model_loc : str
         Name of the LOC PD model
-    model_nmb : str
-        Name of the NMB PD model.
+    model_tof : str
+        Name of the TOF PD model.
     model_stimuli : str
         Name of the stimuli model.   
     hill_param : list
@@ -144,8 +144,8 @@ class Patient:
         Hierarchical model for TOL computation.
     hemo_pd : Hemo_PD_model
         Hemodynamic model for CO and MAP computation.
-    nmb_pd : NMB_model
-        Hill curve model for nmb computation.    
+    TOF_pd : TOF_model
+        Hill curve model for tof computation.    
     data : pd.DataFrame
         Dataframe containing all the internal variables at each sampling time.
     bis : float
@@ -158,7 +158,7 @@ class Patient:
         Cardiac output (L/min).
     map : float
         Mean arterial pressure (mmHg).
-    nmb : float
+    tof : float
         Neuromuscular blockade level (%).    
     blood_volume : float
         Blood volume (L).
@@ -191,7 +191,7 @@ class Patient:
                  model_atracurium: str = 'WardWeatherleyLago',
                  model_bis: str = 'Bouillon',
                  model_loc: str = 'Kern',
-                 model_nmb: str = 'Weatherley',
+                 model_tof: str = 'Weatherley',
                  model_stimuli: str = 'null',
                  ts: float = 1,
                  hill_param: list = None,
@@ -282,8 +282,8 @@ class Patient:
             stimuli_model=model_stimuli,
         )
 
-        # Init PD model fo NMB
-        self.nmb_pd = NMB_model(hill_model=model_nmb, hill_param=atracurium_hill_params)
+        # Init PD model fo TOF
+        self.tof_pd = TOF_model(hill_model=model_tof, hill_param=atracurium_hill_params)
 
         # init blood loss volume
         self.blood_volume = self.propo_pk.v1
@@ -305,7 +305,7 @@ class Patient:
         # Init all the output variable
         self.bis = self.bis_pd.compute_bis(0, 0)
         self.tol = self.tol_pd.compute_tol(0, 0)
-        self.nmb = self.nmb_pd.compute_nmb(0)
+        self.tof = self.tof_pd.compute_tof(0)
         self.tpr = self.hemo_pd.tpr_base
         self.sv = self.hemo_pd.abase_sv
         self.hr = self.hemo_pd.abase_hr
@@ -357,8 +357,8 @@ class Patient:
             Mean arterial pressure (mmHg).
         tol : float
             Tolerance of Laryngoscopy index (0-1).
-        nmb : float
-            Neuromuscular Blockade level (%)
+        tof : float
+            Train-of-four (%)
 
         """
         # update PK model with CO
@@ -382,8 +382,8 @@ class Patient:
         self.loc = self.loc_pd.compute_loc(self.c_es_propo, self.c_es_remi)
         # TOL
         self.tol = self.tol_pd.compute_tol(self.c_es_propo, self.c_es_remi)
-        # NMB
-        self.nmb = self.nmb_pd.compute_nmb(self.c_es_atra)
+        # TOF
+        self.tof = self.tof_pd.compute_tof(self.c_es_atra)
         # Hemodynamic
         y_hemo = self.hemo_pd.one_step(
             self.propo_pk.x[0, 0],
@@ -430,11 +430,11 @@ class Patient:
             self.Time += self.ts
             self.save_data()
 
-        return (self.bis, self.loc, self.co, self.map, self.tol, self.nmb)
+        return (self.bis, self.loc, self.co, self.map, self.tol, self.tof)
 
     def add_noise(self):
         r"""
-        Add noise on the outputs of the model (except LOC, TOL and NMB).
+        Add noise on the outputs of the model (except LOC, TOL and TOF).
 
         The MAP and CO noises are considered white noise while the BIS noise is filtered.
         The filter of the BIS noise is a second order low pass filter with a cut-off frequency of 0.03 Hz.
@@ -756,7 +756,7 @@ class Patient:
             - 'SQI': Signal Quality Index
             - 'LOC': Loss of Consciousness
             - 'TOL': Tolerance level
-            - 'NMB': Neuromuscular blockade level (%)
+            - 'TOF': Train-of-four (%)
             - 'TPR': Total eripheral resistance (mmHg min/ mL) 
             - 'SV': Stroke volume (ml)
             - 'HR': Heart rate (beat/min)
@@ -775,7 +775,7 @@ class Patient:
         """
         self.Time = 0
         column_names = ['Time',  # time
-                        'BIS', 'SQI', 'LOC','TOL', 'NMB', 'MAP', 'CO',  # outputs
+                        'BIS', 'SQI', 'LOC','TOL', 'TOF', 'MAP', 'CO',  # outputs
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore', 'u_atra',  # inputs
                         'blood_volume']  # nore concentration and blood volume
@@ -792,7 +792,7 @@ class Patient:
         dap = self.map - 2 / 9 * self.sv
         sap = self.map + 4 / 9 * self.sv
         new_line = {'Time': self.Time,
-                    'BIS': self.bis, 'LOC': self.loc, 'TOL': self.tol, 'TPR': self.tpr, 'NMB': self.nmb,
+                    'BIS': self.bis, 'LOC': self.loc, 'TOL': self.tol, 'TPR': self.tpr, 'TOF': self.tof,
                     'SV': self.sv, 'HR': self.hr, 'MAP': self.map, 'CO': self.co,  # outputs
                     'SAP': sap, 'DAP': dap,
                     # inputs
@@ -902,7 +902,7 @@ class Patient:
         bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :])
         loc = self.loc_pd.compute_loc(x_propo[3, :], x_remi[3, :])
         tol = self.tol_pd.compute_tol(x_propo[3, :], x_remi[3, :])
-        nmb = self.nmb_pd.compute_nmb(x_atra[3, :])
+        tof = self.tof_pd.compute_tof(x_atra[3, :])
         if x_nore.ndim == 1:
             y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[:])
         else:
@@ -919,7 +919,7 @@ class Patient:
         sap = map + 4 / 9 * sv
         df = pd.DataFrame({
             'Time': np.arange(0, len(u_propo) * self.ts, self.ts),
-            'BIS': bis, 'LOC': loc, 'TOL': tol, 'NMB': nmb, 'TPR': tpr, 'SV': sv,
+            'BIS': bis, 'LOC': loc, 'TOL': tol, 'TOF': tof, 'TPR': tpr, 'SV': sv,
             'HR': hr, 'MAP': map, 'CO': co, 'DAP': dap, 'SAP': sap,
             'u_propo': u_propo, 'u_remi': u_remi, 'u_nore': u_nore, 'u_atra': u_atra
         })

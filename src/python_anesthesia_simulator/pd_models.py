@@ -1480,12 +1480,12 @@ class Hemo_meca_PD_model:
         self.previous_cp_remi = cp_remi_eq
 
 
-class NMB_model:
-    r"""Model to link Atracurium effect site concentration to Neuromuscular Blockade (NMB).
+class TOF_model:
+    r"""Model to link Atracurium effect site concentration to train-of-four (TOF).
 
     The equation is:
 
-    .. math:: NMB = \frac{100*C_{50}^\gamma}{C_{50}^\gamma + C_e^\gamma}
+    .. math:: TOF = \frac{100*C_{50}^\gamma}{C_{50}^\gamma + C_e^\gamma}
 
     Parameters
     ----------
@@ -1506,7 +1506,7 @@ class NMB_model:
     Attributes
     ----------
     c50p : float
-        Concentration at half effect for atracurium effect on NMB (µg/mL).
+        Concentration at half effect for atracurium effect on TOF (µg/mL).
     gamma : float
         slope coefficient for the Hill curve.
     hill_model : str
@@ -1537,8 +1537,8 @@ class NMB_model:
             self.C50 = hill_param.get('C50', 0.625)
             self.gamma = hill_param.get('gamma', 4.25)
 
-    def compute_nmb(self, Ce):
-        """Compute NMB from atracurium effect site concentration.
+    def compute_TOF(self, Ce):
+        """Compute TOF from atracurium effect site concentration.
 
         Parameters
         ----------
@@ -1548,24 +1548,24 @@ class NMB_model:
 
         Returns
         -------
-        NMB : float
-            NMB value.
+        TOF : float
+            TOF value.
 
         """
 
         if self.hill_model == 'Weatherley':
-            nmb = (100 * self.C50**self.gamma) / (self.C50**self.gamma + Ce**self.gamma)
+            tof = (100 * self.C50**self.gamma) / (self.C50**self.gamma + Ce**self.gamma)
 
-        return nmb
+        return tof
 
     def plot_surface(self):
-        """Plot the 2D-Hill curve of the NMB level related to Atracurium effect site concentration"""
+        """Plot the 2D-Hill curve of the train-of-four (TOF) related to Atracurium effect site concentration"""
         ce = np.linspace(0, 8, 100)
-        nmb = self.compute_nmb(ce)
+        tof = self.compute_tof(ce)
         plt.figure()
-        plt.plot(ce, nmb)
+        plt.plot(ce, tof)
         plt.xlabel('Atracurium Ce [μg/mL]')
-        plt.ylabel('NMB')
+        plt.ylabel('TOF')
         plt.grid(True)
         plt.ylim(0, 100)
         plt.show()
