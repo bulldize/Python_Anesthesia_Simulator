@@ -66,8 +66,8 @@ class BIS_model:
         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
     ts : float
         Sampling time, in s.
-    truncated : bool, optional
-        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.        
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.    
 
 
     Attributes
@@ -126,7 +126,7 @@ class BIS_model:
                  hill_model: str = 'Bouillon',
                  hill_param: Optional[list] = None,
                  random: Optional[bool] = False,
-                 truncated: Optional[bool] = False,
+                 truncated: Optional[float] = None,
                  ts: float = 1, **kwargs):
         """
         Init the class.
@@ -288,13 +288,13 @@ class BIS_model:
             w_Emax = np.sqrt(np.log(1 + cv_Emax**2))
 
         if random and hill_param is None:
-            if truncated:
-                self.c50p *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50p))
-                self.c50r *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50r))
-                self.beta *= np.exp(truncnorm.rvs(-3, 3, scale=w_beta))
-                self.gamma *= np.exp(truncnorm.rvs(-3, 3, scale=w_gamma))
-                self.E0 *= min(100, np.exp(truncnorm.rvs(-3, 3, scale=w_E0)))
-                self.Emax *= np.exp(truncnorm.rvs(-3, 3, scale=w_Emax))
+            if truncated is not None:
+                self.c50p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50p))
+                self.c50r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50r))
+                self.beta *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_beta))
+                self.gamma *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma))
+                self.E0 *= min(100, np.exp(truncnorm.rvs(-truncated, truncated, scale=w_E0)))
+                self.Emax *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_Emax))
             else:
                 self.c50p *= np.exp(np.random.normal(scale=w_c50p))
                 self.c50r *= np.exp(np.random.normal(scale=w_c50r))
@@ -586,8 +586,8 @@ class LOC_model:
         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
     ts : float
         Sampling time, in s.
-    truncated : bool, optional
-        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
 
     Attributes
@@ -628,7 +628,7 @@ class LOC_model:
                  hill_param: Optional[list] = None,
                  random: Optional[bool] = False,
                  ts: float = 1,
-                 truncated: Optional[bool] = False):
+                 truncated: Optional[float] = None):
         """
         Init the class.
 
@@ -705,11 +705,11 @@ class LOC_model:
             w_beta = np.sqrt(np.log(1 + cv_beta**2))
 
         if random and hill_param is None:
-            if truncated:
-                self.c50p *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50p))
-                self.c50r *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50r))
-                self.beta *= np.exp(truncnorm.rvs(-3, 3, scale=w_beta))
-                self.gamma *= np.exp(truncnorm.rvs(-3, 3, scale=w_gamma))
+            if truncated is not None:
+                self.c50p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50p))
+                self.c50r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50r))
+                self.beta *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_beta))
+                self.gamma *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma))
             else:
                 self.c50p *= np.exp(np.random.normal(scale=w_c50p))
                 self.c50r *= np.exp(np.random.normal(scale=w_c50r))
@@ -779,8 +779,8 @@ class TOL_model():
         The default is None.
     random : bool, optional
         Add uncertainties in the parameters. Ignored if model_param is specified. The default is False.
-    truncated : bool, optional
-        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
     Attributes
     ----------
@@ -802,7 +802,7 @@ class TOL_model():
             model: Optional[str] = 'Bouillon',
             model_param: Optional[list] = None,
             random: Optional[bool] = False,
-            truncated: Optional[bool] = False,
+            truncated: Optional[float] = None,
     ):
         """
         Init the class.
@@ -835,12 +835,12 @@ class TOL_model():
             w_pre_intensity = np.sqrt(np.log(1 + cv_pre_intensity**2))
 
         if random and model_param is None:
-            if truncated:
-                self.c50p *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50p))
-                self.c50r *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50r))
-                self.gamma_r *= np.exp(truncnorm.rvs(-3, 3, scale=w_gamma_p))
-                self.gamma_p *= np.exp(truncnorm.rvs(-3, 3, scale=w_gamma_r))
-                self.pre_intensity *= np.exp(truncnorm.rvs(-3, 3, scale=w_pre_intensity))
+            if truncated is not None:
+                self.c50p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50p))
+                self.c50r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50r))
+                self.gamma_r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma_p))
+                self.gamma_p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma_r))
+                self.pre_intensity *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_pre_intensity))
             else:
                 self.c50p *= np.exp(np.random.normal(scale=w_c50p))
                 self.c50r *= np.exp(np.random.normal(scale=w_c50r))
@@ -1068,23 +1068,26 @@ class Hemo_meca_PD_model:
         self.k_effect = 0.0002  # (1/s)
 
         if random:
-            if truncated:  # truncated normal to 3 standard deviations
+            if truncated is not None:  # truncated normal to 3 standard deviations
                 # lognormal distribution
                 in_range = False
                 while not in_range:
                     eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
-                    check_1 = np.abs(eta_values_block1[0] - self.w_block1_mu[0]) <= 3*np.sqrt(self.w_block1_cov[0][0])
-                    check_2 = np.abs(eta_values_block1[1] - self.w_block1_mu[1]) <= 3*np.sqrt(self.w_block1_cov[1][1])
-                    check_3 = np.abs(eta_values_block1[2] - self.w_block1_mu[2]) <= 3*np.sqrt(self.w_block1_cov[2][2])
+                    check_1 = np.abs(eta_values_block1[0] - self.w_block1_mu[0]
+                                     ) <= truncated*np.sqrt(self.w_block1_cov[0][0])
+                    check_2 = np.abs(eta_values_block1[1] - self.w_block1_mu[1]
+                                     ) <= truncated*np.sqrt(self.w_block1_cov[1][1])
+                    check_3 = np.abs(eta_values_block1[2] - self.w_block1_mu[2]
+                                     ) <= truncated*np.sqrt(self.w_block1_cov[2][2])
                     if check_1 and check_2 and check_3:
                         in_range = True
 
                 self.tpr_base *= np.exp(eta_values_block1[0])
                 self.sv_base *= np.exp(eta_values_block1[1])
                 self.hr_base *= np.exp(eta_values_block1[2])
-                self.c50_propo_tpr *= np.exp(truncnorm.rvs(-3, 3, self.w_c50_propo_tpr))
+                self.c50_propo_tpr *= np.exp(truncnorm.rvs(-truncated, truncated, self.w_c50_propo_tpr))
                 # normal distribution
-                self.emax_remi_tpr += truncnorm.rvs(-3, 3, scale=self.w_emax_remi_tpr)
+                self.emax_remi_tpr += truncnorm.rvs(-truncated, truncated, scale=self.w_emax_remi_tpr)
 
                 in_range = False
                 while not in_range:
@@ -1094,9 +1097,9 @@ class Hemo_meca_PD_model:
                 self.sl_remi_hr += eta_values_block2[0]
                 self.sl_remi_sv += eta_values_block2[1]
 
-                self.emax_nore_map *= np.exp(truncnorm.rvs(-3, 3, scale=w_emax_nore_map))
-                self.c50_nore_map *= np.exp(truncnorm.rvs(-3, 3, scale=w_c50_nore_map))
-                self.gamma_nore_map *= np.exp(truncnorm.rvs(-3, 3, scale=w_gamma_nore_map))
+                self.emax_nore_map *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_emax_nore_map))
+                self.c50_nore_map *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50_nore_map))
+                self.gamma_nore_map *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma_nore_map))
             else:  # infinite support normal distribution
                 eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
                 self.tpr_base *= np.exp(eta_values_block1[0])

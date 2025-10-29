@@ -62,8 +62,8 @@ class Patient:
         Save all interns variable at each sampling time in a data frame. The default is True.
     bis_delay_max : float, optional
         Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).
-    truncated : bool, optional
-        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.    
+    truncated : float, optional 
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
     Attributes
     ----------
@@ -184,7 +184,7 @@ class Patient:
                  co_update: bool = False,
                  save_data_bool: bool = True,
                  bis_delay_max: float = 120,
-                 truncated: bool = False):
+                 truncated: float = None):
         """
         Initialise a patient class for anesthesia simulation.
 

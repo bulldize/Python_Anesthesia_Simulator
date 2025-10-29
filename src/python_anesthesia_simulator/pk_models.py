@@ -56,8 +56,8 @@ class CompartmentModel:
     measurement : str, optional
         For Elelevd model for propofol, specify the measuremnt place for blood concentration.
         Can be either 'arterial' or 'venous'. The default is 'arterial'.
-    truncated : bool, optional
-        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
     Attributes
     ----------
@@ -125,7 +125,7 @@ class CompartmentModel:
                  x0: Optional[np.ndarray] = None,
                  opiate: Optional[bool] = True,
                  measurement: Optional[str] = "arterial",
-                 truncated: Optional[bool] = False):
+                 truncated: Optional[float] = None):
         """Init the class."""
         self.ts = ts
         age = Patient_characteristic[0]
@@ -506,14 +506,14 @@ class CompartmentModel:
                 if self.model == 'Marsh':
                     print("Warning: the standard deviation of the Marsh model are not know," +
                           " it is set to 100% for each variable")
-                if truncated:
-                    v1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v1))
-                    v2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v2))
-                    v3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v3))
-                    cl1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl1))
-                    cl2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl2))
-                    cl3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl3))
-                    ke0 *= np.exp(truncnorm.rvs(-3, 3, scale=w_ke0))
+                if truncated is not None:
+                    v1 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v1))
+                    v2 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v2))
+                    v3 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v3))
+                    cl1 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl1))
+                    cl2 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl2))
+                    cl3 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl3))
+                    ke0 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_ke0))
                 else:
                     v1 *= np.exp(np.random.normal(scale=w_v1))
                     v2 *= np.exp(np.random.normal(scale=w_v2))
@@ -541,14 +541,14 @@ class CompartmentModel:
 
         elif drug == 'Remifentanil':
             if random:
-                if truncated:
-                    v1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v1))
-                    v2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v2))
-                    v3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v3))
-                    cl1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl1))
-                    cl2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl2))
-                    cl3 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl3))
-                    ke0 *= np.exp(truncnorm.rvs(-3, 3, scale=w_ke0))
+                if truncated is not None:
+                    v1 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v1))
+                    v2 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v2))
+                    v3 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v3))
+                    cl1 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl1))
+                    cl2 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl2))
+                    cl3 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl3))
+                    ke0 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_ke0))
                 else:
                     v1 *= np.exp(np.random.normal(scale=w_v1))
                     v2 *= np.exp(np.random.normal(scale=w_v2))
@@ -577,15 +577,16 @@ class CompartmentModel:
 
         elif drug == 'Norepinephrine':
             if random:
-                if truncated:
-                    v1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v1))
-                    cl1 *= np.exp(truncnorm.rvs(-3, 3, scale=w_cl1))
+                if truncated is not None:
+                    v1 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v1))
+                    cl1 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl1))
                     if self.model == 'Oualha' or self.model == "Li":
-                        self.u_endo *= np.exp(truncnorm.rvs(-3, 3, scale=w_u_endo))
+                        self.u_endo *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_u_endo))
                     if self.model == "Li":
-                        v2 *= np.exp(truncnorm.rvs(-3, 3, scale=w_v2))
-                        cl2 = np.exp(truncnorm.rvs(-3, 3, scale=w_cl2))
-                        self._prop_coeff += truncnorm.rvs(-3, 3, scale=w_prop_effect)  # additive uncertainty
+                        v2 *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_v2))
+                        cl2 = np.exp(truncnorm.rvs(-truncated, truncated, scale=w_cl2))
+                        self._prop_coeff += truncnorm.rvs(-truncated, truncated,
+                                                          scale=w_prop_effect)  # additive uncertainty
                         cl1 *= np.exp(self._prop_coeff*(c_prop - self._c_prop_base))
                 else:
                     v1 *= np.exp(np.random.normal(scale=w_v1))
