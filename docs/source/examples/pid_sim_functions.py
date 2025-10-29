@@ -227,7 +227,7 @@ def simu(Patient_info: list, style: str, PID_param: list,
             uP = PID_controller.one_step(Bis, BIS_cible)
             uR = min(ur_max, max(0, uP * ratio))
             uP = min(up_max, max(0, uP))
-            Bis, _, _, _, _ = George.one_step(uP, uR, noise=False)
+            Bis, _, _, _, _, _ = George.one_step(uP, uR, noise=False)
 
     elif style == 'total':
         N_simu = int(60 / ts) * 60
@@ -255,7 +255,7 @@ def simu(Patient_info: list, style: str, PID_param: list,
             uR = min(ur_max, max(0, uP * ratio))
             uP = min(up_max, max(0, uP))
             Dist = pas.compute_disturbances(i * ts, 'step')
-            Bis, _, _, _, _ = George.one_step(uP, uR, dist=Dist, noise=False)
+            Bis, _, _, _, _, _ = George.one_step(uP, uR, dist=Dist, noise=False)
 
     IAE = np.sum(np.abs(George.dataframe['BIS'] - BIS_cible))
     return IAE, George.dataframe, hill_param

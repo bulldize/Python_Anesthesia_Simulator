@@ -1537,7 +1537,7 @@ class TOF_model:
             self.C50 = hill_param.get('C50', 0.625)
             self.gamma = hill_param.get('gamma', 4.25)
 
-    def compute_TOF(self, Ce):
+    def compute_tof(self, Ce):
         """Compute TOF from atracurium effect site concentration.
 
         Parameters

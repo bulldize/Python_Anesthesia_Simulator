@@ -182,9 +182,9 @@ class Patient:
 
     def __init__(self,
                  patient_characteristic: list,
-                 co_base: float = None,
-                 hr_base: float = None,
-                 map_base: float = None,
+                 co_base: float = 6.5,
+                 hr_base: float = 60,
+                 map_base: float = 90,
                  model_propo: str = 'Schnider',
                  model_remi: str = 'Minto',
                  model_nore: str = 'Beloeil',
@@ -306,6 +306,7 @@ class Patient:
         self.bis = self.bis_pd.compute_bis(0, 0)
         self.tol = self.tol_pd.compute_tol(0, 0)
         self.tof = self.tof_pd.compute_tof(0)
+        self.loc = self.loc_pd.compute_loc(0, 0)
         self.tpr = self.hemo_pd.tpr_base
         self.sv = self.hemo_pd.abase_sv
         self.hr = self.hemo_pd.abase_hr
@@ -321,7 +322,7 @@ class Patient:
             self.save_data()
 
     def one_step(self, u_propo: float = 0, u_remi: float = 0, u_nore: float = 0, u_atra: float = 0, sqi: float = 100,
-                 blood_rate: float = 0, dist: list = [0] * 3, noise: bool = True) -> tuple[float, float, float, float]:
+                 blood_rate: float = 0, dist: list = [0] * 3, noise: bool = True) -> tuple[float, float, float, float, float, float]:
         r"""
         Simulate one step time of the patient.
 
