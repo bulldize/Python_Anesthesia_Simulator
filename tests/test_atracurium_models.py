@@ -1,5 +1,5 @@
 from python_anesthesia_simulator.pk_models import AtracuriumModel
-from python_anesthesia_simulator.pd_models import NMB_model
+from python_anesthesia_simulator.pd_models import TOF_model
 from python_anesthesia_simulator.simulator import Patient
 import numpy as np
 import matplotlib.pyplot as plt
@@ -48,8 +48,8 @@ test_model_default_one_step = AtracuriumModel([age, height, weight_test_model_de
 test_model_custom_one_step = AtracuriumModel([age, height, weight_test_model_default, gender],
                                     model_params= pk_parameters_custom)
 # Create Atracurium PD model objects
-test_hill_default = NMB_model()
-test_hill_custom = NMB_model(hill_param= pd_parameters_custom)
+test_hill_default = TOF_model()
+test_hill_custom = TOF_model(hill_param= pd_parameters_custom)
 # test_hill_custom.plot_surface()
 
 # Create Patient objects that implements the atracurium models
@@ -66,68 +66,68 @@ time = np.arange(Tsim)  # Time axis
 # Simulation by using full_sim
 # Simulate the free response to a bolus administration with default initialization
 x_default = test_model_default.full_sim(u= atracurium_infusion_profile, x0= x0)
-nmb_default = test_hill_default.compute_nmb(x_default[3])
+tof_default = test_hill_default.compute_tof(x_default[3])
 # Find response peak and its timing
-peak_idx_default = np.argmin(nmb_default)
-min_nmb_default = nmb_default[peak_idx_default]
+peak_idx_default = np.argmin(tof_default)
+min_tof_default = tof_default[peak_idx_default]
 peak_time_default = time[peak_idx_default]
-# Find  recovery time NMB>= 50
-recovery_idx_default = np.where(nmb_default <= 50)[0][-1]
+# Find  recovery time TOF>= 50
+recovery_idx_default = np.where(tof_default <= 50)[0][-1]
 recovery_time_default = time[recovery_idx_default]
 
 # Simulate the free response to a bolus administration with custom initialization
 x_custom = test_model_custom.full_sim(u= atracurium_infusion_profile, x0= x0)
-nmb_custom = test_hill_custom.compute_nmb(x_custom[3])
+tof_custom = test_hill_custom.compute_tof(x_custom[3])
 # Find response peak and its timing
-peak_idx_custom = np.argmin(nmb_custom)
-min_nmb_custom = nmb_custom[peak_idx_custom]
+peak_idx_custom = np.argmin(tof_custom)
+min_tof_custom = tof_custom[peak_idx_custom]
 peak_time_custom = time[peak_idx_custom]
-# Find  recovery time NMB>= 50
-recovery_idx_custom = np.where(nmb_custom <= 50)[0][-1]
+# Find  recovery time TOF>= 50
+recovery_idx_custom = np.where(tof_custom <= 50)[0][-1]
 recovery_time_custom = time[recovery_idx_custom]
 
 # Simulate the free response to a bolus administration with the Patient object
 df_george_1 = George_1.full_sim(u_atra=atracurium_infusion_profile,
                   x0_atra=x0)
-nmb_george_1 = df_george_1.NMB
+tof_george_1 = df_george_1.TOF
 # Find response peak and its timing
-peak_idx_george_1 = np.argmin(nmb_george_1)
-min_nmb_george_1 = nmb_custom[peak_idx_george_1]
+peak_idx_george_1 = np.argmin(tof_george_1)
+min_tof_george_1 = tof_custom[peak_idx_george_1]
 peak_time_george_1 = time[peak_idx_george_1]
-# Find  recovery time NMB>= 50
-recovery_idx_george_1 = np.where(nmb_george_1 <= 50)[0][-1]
+# Find  recovery time TOF>= 50
+recovery_idx_george_1 = np.where(tof_george_1 <= 50)[0][-1]
 recovery_time_george_1 = time[recovery_idx_george_1]
 
 Ce_default_one_step = np.zeros((Nsim,))
-nmb_default_one_step = np.zeros((Nsim,))
+tof_default_one_step = np.zeros((Nsim,))
 test_model_default_one_step.initialize_state(x0)
 # Simulation by using one_step
 for k in range(Nsim-1):
     uAtra_k = atracurium_infusion_profile[k]
     Ce_default_one_step[k] = test_model_default_one_step.one_step(uAtra_k)
-    nmb_default_one_step[k] = test_hill_default.compute_nmb(Ce_default_one_step[k])
+    tof_default_one_step[k] = test_hill_default.compute_tof(Ce_default_one_step[k])
 # Find response peak and its timing
-peak_idx_default_one_step = np.argmin(nmb_default_one_step)
-min_nmb_default_one_step = nmb_default_one_step[peak_idx_default_one_step]
+peak_idx_default_one_step = np.argmin(tof_default_one_step)
+min_tof_default_one_step = tof_default_one_step[peak_idx_default_one_step]
 peak_time_default_one_step = time[peak_idx_default_one_step]
-# Find  recovery time NMB>= 50
-recovery_idx_default_one_step = np.where(nmb_default_one_step <= 50)[0][-2]
+# Find  recovery time TOF>= 50
+recovery_idx_default_one_step = np.where(tof_default_one_step <= 50)[0][-2]
 recovery_time_default_one_step = time[recovery_idx_default_one_step]
     
 Ce_custom_one_step = np.zeros((Nsim,))
-nmb_custom_one_step = np.zeros((Nsim,))
+tof_custom_one_step = np.zeros((Nsim,))
 test_model_custom_one_step.initialize_state(x0)
 # Simulation by using one_step
 for k in range(Nsim-1):
     uAtra_k = atracurium_infusion_profile[k]
     Ce_custom_one_step[k] = test_model_custom_one_step.one_step(uAtra_k)
-    nmb_custom_one_step[k] = test_hill_custom.compute_nmb(Ce_custom_one_step[k])   
+    tof_custom_one_step[k] = test_hill_custom.compute_tof(Ce_custom_one_step[k])   
 # Find response peak and its timing
-peak_idx_custom_one_step = np.argmin(nmb_custom_one_step)
-min_nmb_custom_one_step = nmb_custom_one_step[peak_idx_custom_one_step]
+peak_idx_custom_one_step = np.argmin(tof_custom_one_step)
+min_tof_custom_one_step = tof_custom_one_step[peak_idx_custom_one_step]
 peak_time_custom_one_step = time[peak_idx_custom_one_step]
-# Find  recovery time NMB>= 50
-recovery_idx_custom_one_step = np.where(nmb_custom_one_step <= 50)[0][-2]
+# Find  recovery time TOF>= 50
+recovery_idx_custom_one_step = np.where(tof_custom_one_step <= 50)[0][-2]
 recovery_time_custom_one_step = time[recovery_idx_custom_one_step]
 
 George_one_step.initialized_at_given_state(x0_atra= x0)
@@ -135,13 +135,13 @@ for k in range(Nsim-1):
     uAtra_k = atracurium_infusion_profile[k]
     George_one_step.one_step(u_atra=uAtra_k,
                       noise=False)    
-nmb_george_one_step = George_one_step.dataframe['NMB']
+tof_george_one_step = George_one_step.dataframe['TOF']
 # Find response peak and its timing
-peak_idx_george_one_step = np.argmin(nmb_george_one_step)
-min_nmb_george_one_step = nmb_george_one_step[peak_idx_george_one_step]
+peak_idx_george_one_step = np.argmin(tof_george_one_step)
+min_tof_george_one_step = tof_george_one_step[peak_idx_george_one_step]
 peak_time_george_one_step = time[peak_idx_george_one_step]
-# Find  recovery time NMB>= 50
-recovery_idx_george_one_step = np.where(nmb_george_one_step <= 50)[0][-1]
+# Find  recovery time TOF>= 50
+recovery_idx_george_one_step = np.where(tof_george_one_step <= 50)[0][-1]
 recovery_time_george_one_step = time[recovery_idx_george_one_step]
 
 # %% Test 2: Infusion simulation
@@ -176,8 +176,8 @@ test_model_default_test_2 = AtracuriumModel([age_test_2, height_test_2, weight_t
 test_model_custom_test_2 = AtracuriumModel([age_test_2, height_test_2, weight_test_2, gender_test_2],
                                     model_params= pk_parameters_custom_test_2)
 # Create Atracurium PD model objects
-test_hill_default_test_2 = NMB_model()
-test_hill_custom_test_2 = NMB_model(hill_param= pd_parameters_custom_test_2)
+test_hill_default_test_2 = TOF_model()
+test_hill_custom_test_2 = TOF_model(hill_param= pd_parameters_custom_test_2)
 # test_hill_custom.plot_surface()
 
 # Create Patient objects that implements the atracurium models
@@ -200,23 +200,23 @@ atracurium_infusion_profile_test_2[int(150/ts_test_2):] = 8   # 8 ug/s from 150s
 
 # Simulate the forced response to infusion with default initialization
 x_default_test_2 = test_model_default_test_2.full_sim(u= atracurium_infusion_profile_test_2)
-nmb_default_test_2 = test_hill_default_test_2.compute_nmb(x_default_test_2[3])
-# Find  induction time NMB<= 20
-induction_idx_default_test_2 = np.where(nmb_default_test_2 <= 20)[0][0]
+tof_default_test_2 = test_hill_default_test_2.compute_tof(x_default_test_2[3])
+# Find  induction time TOF<= 20
+induction_idx_default_test_2 = np.where(tof_default_test_2 <= 20)[0][0]
 induction_time_default_test_2 = time[induction_idx_default_test_2]
 
 # Simulate the forced response to infusion with custom initialization
 x_custom_test_2 = test_model_custom_test_2.full_sim(u= atracurium_infusion_profile_test_2)
-nmb_custom_test_2 = test_hill_custom_test_2.compute_nmb(x_custom_test_2[3])
-# Find  induction time NMB<= 20
-induction_idx_custom_test_2 = np.where(nmb_custom_test_2 <= 20)[0][0]
+tof_custom_test_2 = test_hill_custom_test_2.compute_tof(x_custom_test_2[3])
+# Find  induction time TOF<= 20
+induction_idx_custom_test_2 = np.where(tof_custom_test_2 <= 20)[0][0]
 induction_time_custom_test_2 = time[induction_idx_custom_test_2]
 
 # Simulate the free response to a bolus administration with the Patient object
 df_george_test_2 = George_test_2.full_sim(u_atra=atracurium_infusion_profile_test_2)
-nmb_george_test_2 = df_george_test_2.NMB
-# Find  induction time NMB<= 20
-induction_idx_george_2 = np.where(nmb_george_test_2 <= 20)[0][0]
+tof_george_test_2 = df_george_test_2.TOF
+# Find  induction time TOF<= 20
+induction_idx_george_2 = np.where(tof_george_test_2 <= 20)[0][0]
 induction_time_george_2 = time[induction_idx_george_2]
 
 
@@ -224,43 +224,43 @@ induction_time_george_2 = time[induction_idx_george_2]
 def test_default_initialization_atracurium():
     """Ensure that the default models give correct results"""
     # Check the Weatherley Hill curve at relevant atracurium concentrations
-    assert test_hill_default.compute_nmb(0) == 100
-    assert test_hill_default.compute_nmb(0.4) >= 80
-    assert test_hill_default.compute_nmb(0.6) >= 50
-    assert test_hill_default.compute_nmb(0.8) <= 30
-    assert test_hill_default.compute_nmb(1) <= 20
-    assert test_hill_default.compute_nmb(2) <= 10
+    assert test_hill_default.compute_tof(0) == 100
+    assert test_hill_default.compute_tof(0.4) >= 80
+    assert test_hill_default.compute_tof(0.6) >= 50
+    assert test_hill_default.compute_tof(0.8) <= 30
+    assert test_hill_default.compute_tof(1) <= 20
+    assert test_hill_default.compute_tof(2) <= 10
     
-    assert test_hill_custom.compute_nmb(0) == 100
-    assert test_hill_custom.compute_nmb(0.4) >= 80
-    assert test_hill_custom.compute_nmb(0.6) >= 50
-    assert test_hill_custom.compute_nmb(0.8) <= 30
-    assert test_hill_custom.compute_nmb(1) <= 20
-    assert test_hill_custom.compute_nmb(2) <= 10
+    assert test_hill_custom.compute_tof(0) == 100
+    assert test_hill_custom.compute_tof(0.4) >= 80
+    assert test_hill_custom.compute_tof(0.6) >= 50
+    assert test_hill_custom.compute_tof(0.8) <= 30
+    assert test_hill_custom.compute_tof(1) <= 20
+    assert test_hill_custom.compute_tof(2) <= 10
     
     # Bolus response
     # Check the key characteristic of the average patient response
-    assert min_nmb_default < 1
+    assert min_tof_default < 1
     assert peak_time_default > 500
     assert 3000 <= recovery_time_default <= 4000
     
-    assert min_nmb_custom < 1
+    assert min_tof_custom < 1
     assert peak_time_custom > 500
     assert 3000 <= recovery_time_custom <= 4000
     
-    assert min_nmb_george_1 < 1
+    assert min_tof_george_1 < 1
     assert peak_time_george_1 > 500
     assert 3000 <= recovery_time_george_1 <= 4000
     
-    assert min_nmb_default_one_step < 1
+    assert min_tof_default_one_step < 1
     assert peak_time_default_one_step > 500
     assert 3000 <= recovery_time_default_one_step <= 4000
     
-    assert min_nmb_custom_one_step < 1
+    assert min_tof_custom_one_step < 1
     assert peak_time_custom_one_step > 500
     assert 3000 <= recovery_time_custom_one_step <= 4000
     
-    assert min_nmb_george_one_step < 1
+    assert min_tof_george_one_step < 1
     assert peak_time_george_one_step > 500
     assert 3000 <= recovery_time_george_one_step <= 4000
     
@@ -293,17 +293,17 @@ if __name__ == '__main__':
     plt.show()
      
     plt.figure(figsize=(10, 6))
-    #plt.plot(time, nmb_default, 'k-', linewidth=1, label='NMB')
-    #plt.plot(df_george_1.Time, df_george_1.NMB, 'g--', linewidth=1)
-    plt.plot(time, nmb_default, 'k-', label='NMB')
-    plt.plot(df_george_1.Time, df_george_1.NMB, 'g--')
-    plt.plot(time, nmb_default_one_step, 'm--')
+    #plt.plot(time, tof_default, 'k-', linewidth=1, label='TOF')
+    #plt.plot(df_george_1.Time, df_george_1.TOF, 'g--', linewidth=1)
+    plt.plot(time, tof_default, 'k-', label='TOF')
+    plt.plot(df_george_1.Time, df_george_1.TOF, 'g--')
+    plt.plot(time, tof_default_one_step, 'm--')
     # Set axes limits
     plt.xlim(0, 6000)  # X-axis from 0-6000 seconds
     plt.ylim(0, 120)   # Y-axis from 0-120%
     # Style
     plt.xlabel('time (s)', fontsize=12)
-    plt.ylabel('NMB (%)', fontsize=12)
+    plt.ylabel('TOF (%)', fontsize=12)
     plt.title('Average patient', fontsize=14, pad=20) 
     # Grid and ticks
     plt.grid(True, linestyle='--', alpha=0.7)
@@ -316,15 +316,15 @@ if __name__ == '__main__':
     # Plot infusion responses
     # Create figure with two subplots
     plt.figure(figsize=(10, 8))
-    # First subplot - NMB
+    # First subplot - TOF
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, first plot
-    plt.plot(time_test_2, nmb_default_test_2, 'k-', label='NMB')
-    plt.plot(df_george_test_2.Time, df_george_test_2.NMB, 'g--')
+    plt.plot(time_test_2, tof_default_test_2, 'k-', label='TOF')
+    plt.plot(df_george_test_2.Time, df_george_test_2.TOF, 'g--')
     # Set axes limits
     plt.xlim(0, 6000)  # X-axis from 0-6000 seconds
     plt.ylim(0, 120)   # Y-axis from 0-120%
     # Style
-    plt.ylabel('NMB (%)', fontsize=12)
+    plt.ylabel('TOF (%)', fontsize=12)
     plt.title('Average patient', fontsize=14, pad=20) 
     # Grid and ticks
     plt.grid(True, linestyle='--', alpha=0.7)
