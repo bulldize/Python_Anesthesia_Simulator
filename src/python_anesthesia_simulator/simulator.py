@@ -18,11 +18,11 @@ class Patient:
     Patient_characteristic: list
         Patient_characteristic = [age (yr), height(cm), weight(kg), gender(0: female, 1: male)]
     co_base : float, optional
-        Initial cardiac output. The default is 6.5L/min.
+        Initial cardiac output. The default is None.
     hr_base : float, optional
-        Initial heart rate. The default is 60 beat/min.
+        Initial heart rate. The default is None.
     map_base : float, optional
-        Initial Mean Arterial Pressure. The default is 90mmHg.
+        Initial Mean Arterial Pressure. The default is None.
     model_propo : str, optional
         Name of the Propofol PK Model. The default is 'Schnider'.
     model_remi : str, optional
@@ -46,9 +46,6 @@ class Patient:
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
         If Delay_BIS is not provided it is assumed equal to 0.
         The default is None.
-    hill_param_loc : list
-        Parameter of the LOC model (Propo Remi interaction)
-        list [C50p_LOC C50r_LOC, gamma_LOC, beta_LOC, E0_LOC, Emax_LOC]
     atracurium_model_params : dict, optional
         For "WardWeatherleyLago":
         dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'}.     
@@ -61,15 +58,14 @@ class Patient:
         Add uncertainties in the Propofol and Remifentanil PK models. The default is False.
     random_PD : bool, optional
         Add uncertainties in the BIS PD model. The default is False.
-    random_PD_loc : bool, optional
-        Add uncertainties in the LOC PD model. The default is False.
     co_update : bool, optional
         Turn on the option to update PK parameters thanks to the CO value. The default is False.
     save_data_bool : bool, optional
         Save all interns variable at each sampling time in a data frame. The default is True.
     bis_delay_max : float, optional
-        Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_.
-        The default is 120 (s).    
+        Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).
+    truncated : float, optional 
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
     Attributes
     ----------
@@ -107,9 +103,6 @@ class Patient:
         Parameter of the BIS model (Propo Remi interaction)
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
         If Delay_BIS is not provided it is assumed equal to 0.
-    hill_param_loc : list
-        Parameter of the LOC model (Propo Remi interaction)
-        list [C50p_LOC, C50r_LOC, gamma_LOC, beta_LOC, E0_LOC, Emax_LOC].
     atracurium_model_params : dict, optional
         For "WardWeatherleyLago":
             dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'} 
@@ -120,8 +113,6 @@ class Patient:
         Add uncertainties in the Propofol and Remifentanil PK models.
     random_PD : bool
         Add uncertainties in the BIS PD model.
-    random_PD_loc : bool
-        Add uncertainties in the LOC PD model
     co_update : bool
         Turn on the option to update PK parameters thanks to the CO value.
     save_data_bool : bool
@@ -129,17 +120,15 @@ class Patient:
     lbm : float
         Lean body mass (kg).
     propo_pk : CompartmentModel
-        6-comparments model for Propofol.
+        4-comparments model for Propofol.
     remi_pk : CompartmentModel
-        5-comparments model for Remifentanil.
+        4-comparments model for Remifentanil.
     nore_pk : CompartmentModel
         1-comparments model for Norepinephrine.
     atracurium_pk : CompartmentModel
         4-comparments model for Atracurium.    
     bis_pd : BIS_model
         Surface-response model for bis computation.
-    loc_pd : LOC_model
-        Surface-response model for loc computation.
     tol_pd : TOL_model
         Hierarchical model for TOL computation.
     hemo_pd : Hemo_PD_model
@@ -150,8 +139,6 @@ class Patient:
         Dataframe containing all the internal variables at each sampling time.
     bis : float
         Bispectral index (%).
-    loc : float 
-        Loss of conciousness (%)
     tol : float
         Tolerance of laryngoscopy probability (0-1).
     co : float
@@ -182,9 +169,9 @@ class Patient:
 
     def __init__(self,
                  patient_characteristic: list,
-                 co_base: float = 6.5,
-                 hr_base: float = 60,
-                 map_base: float = 90,
+                 co_base: float = None,
+                 hr_base: float = None,
+                 map_base: float = None,
                  model_propo: str = 'Schnider',
                  model_remi: str = 'Minto',
                  model_nore: str = 'Beloeil',
@@ -195,15 +182,14 @@ class Patient:
                  model_stimuli: str = 'null',
                  ts: float = 1,
                  hill_param: list = None,
-                 hill_param_loc: list = None,
                  atracurium_model_params: dict = {},
                  atracurium_hill_params: dict = {},
                  random_PK: bool = False,
-                 random_PD: bool = False, 
-                 random_PD_loc : bool = False,
+                 random_PD: bool = False,
                  co_update: bool = False,
                  save_data_bool: bool = True,
-                 bis_delay_max: float = 120):
+                 bis_delay_max: float = 120,
+                 truncated: float = None):
         """
         Initialise a patient class for anesthesia simulation.
 
@@ -227,12 +213,10 @@ class Patient:
         self.model_atracurium = model_atracurium
         self.model_stimuli = model_stimuli
         self.hill_param = hill_param
-        self.hill_param_loc = hill_param_loc
         self.atracurium_model_params = atracurium_model_params
         self.atracurium_hill_params = atracurium_hill_params
         self.random_PK = random_PK
         self.random_PD = random_PD
-        self.random_PD_loc = random_PD_loc
         self.co_update = co_update
         self.save_data_bool = save_data_bool
         self.bis_delay_max = bis_delay_max
@@ -245,27 +229,24 @@ class Patient:
 
         # Init PK models for all drugs
         self.propo_pk = CompartmentModel(patient_characteristic, self.lbm, drug="Propofol",
-                                         ts=self.ts, model=model_propo, random=random_PK)
+                                         ts=self.ts, model=model_propo, random=random_PK, truncated=truncated)
 
         self.remi_pk = CompartmentModel(patient_characteristic, self.lbm, drug="Remifentanil",
-                                        ts=self.ts, model=model_remi, random=random_PK)
+                                        ts=self.ts, model=model_remi, random=random_PK, truncated=truncated)
 
         self.nore_pk = CompartmentModel(patient_characteristic, self.lbm, drug="Norepinephrine",
-                                        ts=self.ts, model=model_nore, random=random_PK)
+                                        ts=self.ts, model=model_nore, random=random_PK, truncated=truncated)
         self.atracurium_pk = AtracuriumModel(patient_characteristic,
                                              ts=self.ts, model=model_atracurium,
                                              model_params=atracurium_model_params)
 
         # Init PD model for BIS
-        self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD, ts=self.ts, age=self.age)
+        self.bis_pd = BIS_model(hill_model=model_bis, hill_param=hill_param, random=random_PD,
+                                ts=self.ts, age=self.age, truncated=truncated)
         self.hill_param = self.bis_pd.hill_param
-        
-        # Init PD model for LOC
-        self.loc_pd = LOC_model(hill_model=model_loc, hill_param = hill_param_loc, random=random_PD_loc, ts=self.ts)
-        self.hill_param_loc = self.loc_pd.hill_param
 
         # Init PD model for TOL
-        self.tol_pd = TOL_model(model='Bouillon', random=random_PD)
+        self.tol_pd = TOL_model(model='Bouillon', random=random_PD, truncated=truncated)
 
         # Init PD model for Hemodynamic
         if co_base is not None and hr_base is not None:
@@ -280,7 +261,11 @@ class Patient:
             sv_base=sv_base,  # L to ml
             map_base=map_base,
             stimuli_model=model_stimuli,
+            truncated=truncated,
         )
+        self.hr_base = self.hemo_pd.abase_hr
+        self.map_base = self.hemo_pd.base_map
+        self.co_base = self.hemo_pd.abase_hr * self.hemo_pd.abase_sv / 1000  # L/min
 
         # Init PD model fo TOF
         self.tof_pd = TOF_model(hill_model=model_tof, hill_param=atracurium_hill_params)
@@ -350,8 +335,6 @@ class Patient:
         -------
         bis : float
             Bispectral index(%).
-        loc : float
-            Loss of consciousness (%)
         co : float
             Cardiac output (L/min).
         map : float
@@ -379,8 +362,6 @@ class Patient:
         self.c_es_atra = self.atracurium_pk.one_step(u_atra)
         # BIS
         self.bis = self.bis_pd.one_step(self.c_es_propo, self.c_es_remi)
-        # LOC
-        self.loc = self.loc_pd.compute_loc(self.c_es_propo, self.c_es_remi)
         # TOL
         self.tol = self.tol_pd.compute_tol(self.c_es_propo, self.c_es_remi)
         # TOF
@@ -589,25 +570,25 @@ class Patient:
         Ar = self.remi_pk.discretize_sys.A
         Br = self.remi_pk.discretize_sys.B
 
-        x0p = np.linalg.solve(Ap - np.eye(6), - Bp * 7 / 20)
-        x0r = np.linalg.solve(Ar - np.eye(5), - Br * 7 / 10)
+        x0p = np.linalg.solve(Ap - np.eye(4), - Bp * 7 / 20)
+        x0r = np.linalg.solve(Ar - np.eye(4), - Br * 7 / 10)
         w0 += x0p[:, 0].tolist()
         w0 += x0r[:, 0].tolist()
 
-        xp = cas.MX.sym('xp', 6, 1)
-        xr = cas.MX.sym('xr', 5, 1)
+        xp = cas.MX.sym('xp', 4, 1)
+        xr = cas.MX.sym('xr', 4, 1)
         UP = cas.MX.sym('up', 1)
         w = [xp, xr, UP]
         w0 += [7 / 2]
-        lbw = [1e-3] * 12
-        ubw = [1e4] * 12
+        lbw = [1e-3] * 9
+        ubw = [1e4] * 9
 
         bis = self.bis_pd.compute_bis(xp[3], xr[3])
         J = (bis_target - bis)**2
 
-        g = [(Ap - np.eye(6)) @ xp + Bp * UP, (Ar - np.eye(5)) @ xr + Br * (rp_ratio * UP)]
-        lbg = [-1e-8] * 11
-        ubg = [1e-8] * 11
+        g = [(Ap - np.eye(4)) @ xp + Bp * UP, (Ar - np.eye(4)) @ xr + Br * (rp_ratio * UP)]
+        lbg = [-1e-8] * 8
+        ubg = [1e-8] * 8
         opts = {'ipopt.print_level': 0, 'print_time': 0}
         prob = {'f': J, 'x': cas.vertcat(*w), 'g': cas.vertcat(*g)}
         solver = cas.nlpsol('solver', 'ipopt', prob, opts)
@@ -673,8 +654,6 @@ class Patient:
             # recompute output variable
             # BIS
             self.bis = self.bis_pd.compute_bis(self.propo_pk.x[3, 0], self.remi_pk.x[3, 0])
-            # LOC 
-            self.tol = self.loc_pd.compute_loc(self.propo_pk.x[3, 0], self.remi_pk.x[3, 0])
             # TOL
             self.tol = self.tol_pd.compute_tol(self.propo_pk.x[3, 0], self.remi_pk.x[3, 0])
             # Hemodynamic
@@ -755,7 +734,6 @@ class Patient:
             - 'Time': Simulation time (s)
             - 'BIS': Bispectral Index
             - 'SQI': Signal Quality Index
-            - 'LOC': Loss of Consciousness
             - 'TOL': Tolerance level
             - 'TOF': Train-of-four (%)
             - 'TPR': Total eripheral resistance (mmHg min/ mL) 
@@ -767,10 +745,10 @@ class Patient:
             - 'u_remi': Remifentanil infusion rate (µg/s)
             - 'u_nore': Norepinephrine infusion rate (µg/s)
             - 'u_atra': Atracurium infusion rate (µg/s)
-            - 'x_propo_1' to 'x_propo_6': States of the propofol PK model
-            - 'x_remi_1' to 'x_remi_5': States of the remifentanil PK model
+            - 'x_propo_1' to 'x_propo_4': States of the propofol PK model
+            - 'x_remi_1' to 'x_remi_4': States of the remifentanil PK model
             - 'x_nore': State of the norepinephrine PK model
-            - 'x_atra_1' to 'x_atra_6': States of the atracurium PK model
+            - 'x_atra_1' to 'x_atra_4': States of the atracurium PK model
             - 'blood_volume': Blood volume (L)
 
         """
@@ -901,7 +879,6 @@ class Patient:
 
         # compute outputs
         bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :])
-        loc = self.loc_pd.compute_loc(x_propo[3, :], x_remi[3, :])
         tol = self.tol_pd.compute_tol(x_propo[3, :], x_remi[3, :])
         tof = self.tof_pd.compute_tof(x_atra[3, :])
         if x_nore.ndim == 1:
