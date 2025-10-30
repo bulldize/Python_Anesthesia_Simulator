@@ -248,6 +248,9 @@ class Patient:
         # Init PD model for TOL
         self.tol_pd = TOL_model(model='Bouillon', random=random_PD, truncated=truncated)
 
+        # Init PD model for TOL
+        self.loc_pd = LOC_model(hill_model=model_loc, random=random_PD, truncated=truncated)
+
         # Init PD model for Hemodynamic
         if co_base is not None and hr_base is not None:
             sv_base = co_base / hr_base * 1000
@@ -754,7 +757,7 @@ class Patient:
         """
         self.Time = 0
         column_names = ['Time',  # time
-                        'BIS', 'SQI', 'LOC','TOL', 'TOF', 'MAP', 'CO',  # outputs
+                        'BIS', 'SQI', 'LOC', 'TOL', 'TOF', 'MAP', 'CO',  # outputs
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore', 'u_atra',  # inputs
                         'blood_volume']  # nore concentration and blood volume
@@ -880,6 +883,7 @@ class Patient:
         # compute outputs
         bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :])
         tol = self.tol_pd.compute_tol(x_propo[3, :], x_remi[3, :])
+        loc = self.loc_pd.compute_loc(x_propo[3, :], x_remi[3, :])
         tof = self.tof_pd.compute_tof(x_atra[3, :])
         if x_nore.ndim == 1:
             y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[:])

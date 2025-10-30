@@ -21,7 +21,7 @@ george_truncated = simulator.Patient(
     ts=ts,
     random_PK=True,
     random_PD=True,
-    truncated=True,
+    truncated=1,
 )
 
 # %% run a simple simulation
@@ -85,3 +85,11 @@ def test_truncated_random_output():
     assert np.all(george_truncated.dataframe['MAP'] >= 0)
     assert np.all(george_truncated.dataframe['CO'] <= 20)
     assert np.all(george_truncated.dataframe['CO'] >= 0)
+
+
+if __name__ == '__main__':
+    test_different_output()
+    test_acceptable_random_output()
+    test_truncated_random_output()
+
+    print("All tests passed successfully.")
