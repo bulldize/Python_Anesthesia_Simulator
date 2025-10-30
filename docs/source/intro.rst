@@ -16,7 +16,7 @@ Overview of the Simulator Features
 
 The proposed simulator is a modular, extensible platform for evaluating anesthesia controllers.  
 It accepts as inputs infusion rates for propofol, remifentanil, norepinephrine, and atracurium.  
-It provides as outputs a comprehensive set of clinical variables including Bispectral Index (BIS), tolerance to laryngoscopy (TOL), loss of consciousness (LOC), mean arterial pressure (MAP), cardiac output (CO), total peripheral resistance (TPR), stroke volume (SV), heart rate (HR) and neuromuscular blockade level (NMB).  
+It provides as outputs a comprehensive set of clinical variables including Bispectral Index (BIS), tolerance to laryngoscopy (TOL), loss of consciousness (LOC), mean arterial pressure (MAP), cardiac output (CO), total peripheral resistance (TPR), stroke volume (SV), heart rate (HR) and train-of-four (TOF).  
 Designed for physiological fidelity and user customizability, its core features are summarized below.
 
 * **Flexible pharmacokinetic/pharmacodynamic (PK/PD) modeling**  
