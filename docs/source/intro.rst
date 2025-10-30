@@ -29,7 +29,8 @@ Designed for physiological fidelity and user customizability, its core features 
 * **Variability representation**  
   The simulator incorporates both intra- and inter-patient variability.  
   Users can perturb PK/PD parameters according to statistical distributions available in the literature.  
-  They can also define custom virtual cohorts by selecting physical characteristics and PD parameters.
+  They can also define custom virtual cohorts by selecting physical characteristics and PD parameters. See example PID_example_ for more details.
+
 
 * **Realistic monitor behavior**  
   To assess controller robustness, the simulator includes a model of BIS calculation delay, dependent on the Signal Quality Index (SQI) (see :ref:`delay` for details), and realistic measurement noise, mimicking artifacts from real-world clinical monitors.
@@ -44,7 +45,7 @@ Designed for physiological fidelity and user customizability, its core features 
 * **Data-driven customization**  
   An integrated identification tool allows users to fine-tune the hemodynamic model parameters and identify disturbance profiles (e.g., intubation, incision) using their own clinical data.  
   This enables adaptation to specific populations (e.g., pediatric, elderly) and/or to a specific type of surgery.  
-  This can also be exploited to create virtual patient copies, opening avenues for the testing of personalized treatment strategies.
+  This can also be exploited to create virtual patient copies, opening avenues for the testing of personalized treatment strategies. See section :ref:`disurbance_identification` and repository `PAS_vs_VitalDB <https://github.com/AnesthesiaSimulation/PAS_vs_vitalDB>`_ for more details.
 
 * **MATLAB/Simulink compatibility**  
   While the simulator is written in Python, we provide a seamless interface to MATLAB/Simulink via the MATLAB-Python interface.  
@@ -55,7 +56,10 @@ Designed for physiological fidelity and user customizability, its core features 
   The simulator is distributed as a fully open-source project on GitHub, supported by comprehensive documentation, a contributor code of conduct, and automated test suites to ensure code integrity and foster community-driven development.
 
 * **Additional utilities**  
-  Other features include a Target-Controlled Infusion (TCI) module, patient state initialization at a given state, clinical alarm simulation, and computation of BIS-based control performance metrics commonly employed in the literature.
+  Other features include a Target-Controlled Infusion (TCI) module (see TCI_simulation_, patient state initialization at a given state, clinical alarm simulation, and computation of BIS-based control performance metrics commonly employed in the literature.
+
+.. _TCI_simulation: examples/TCI_example.ipynb
+.. _PID_example: examples/Merigo_PID.ipynb
 
 References
 ----------
