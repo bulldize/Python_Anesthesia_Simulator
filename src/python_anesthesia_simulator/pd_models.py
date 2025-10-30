@@ -2,6 +2,7 @@ from typing import Optional
 
 import numpy as np
 from scipy.integrate import solve_ivp
+from scipy.stats import truncnorm
 import casadi as cas
 from matplotlib import pyplot as plt
 from matplotlib import cm
@@ -64,7 +65,9 @@ class BIS_model:
     random : bool, optional
         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
     ts : float
-        Sampling time, in s.        
+        Sampling time, in s.
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.    
 
 
     Attributes
@@ -119,8 +122,12 @@ class BIS_model:
 
     """
 
-    def __init__(self, hill_model: str = 'Bouillon', hill_param: Optional[list] = None,
-                 random: Optional[bool] = False, ts: float = 1, **kwargs):
+    def __init__(self,
+                 hill_model: str = 'Bouillon',
+                 hill_param: Optional[list] = None,
+                 random: Optional[bool] = False,
+                 truncated: Optional[float] = None,
+                 ts: float = 1, **kwargs):
         """
         Init the class.
 
@@ -281,12 +288,20 @@ class BIS_model:
             w_Emax = np.sqrt(np.log(1 + cv_Emax**2))
 
         if random and hill_param is None:
-            self.c50p *= np.exp(np.random.normal(scale=w_c50p))
-            self.c50r *= np.exp(np.random.normal(scale=w_c50r))
-            self.beta *= np.exp(np.random.normal(scale=w_beta))
-            self.gamma *= np.exp(np.random.normal(scale=w_gamma))
-            self.E0 *= min(100, np.exp(np.random.normal(scale=w_E0)))
-            self.Emax *= np.exp(np.random.normal(scale=w_Emax))
+            if truncated is not None:
+                self.c50p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50p))
+                self.c50r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50r))
+                self.beta *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_beta))
+                self.gamma *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma))
+                self.E0 *= min(100, np.exp(truncnorm.rvs(-truncated, truncated, scale=w_E0)))
+                self.Emax *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_Emax))
+            else:
+                self.c50p *= np.exp(np.random.normal(scale=w_c50p))
+                self.c50r *= np.exp(np.random.normal(scale=w_c50r))
+                self.beta *= np.exp(np.random.normal(scale=w_beta))
+                self.gamma *= np.exp(np.random.normal(scale=w_gamma))
+                self.E0 *= min(100, np.exp(np.random.normal(scale=w_E0)))
+                self.Emax *= np.exp(np.random.normal(scale=w_Emax))
 
         self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta, self.E0, self.Emax, self.bis_delay]
         self.c50p_init = self.c50p  # for blood loss modelling
@@ -570,7 +585,9 @@ class LOC_model:
     random : bool, optional
         Add uncertainties in the parameters. Ignored if hill_param is specified. The default is False.
     ts : float
-        Sampling time, in s.        
+        Sampling time, in s.
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
 
     Attributes
@@ -606,8 +623,12 @@ class LOC_model:
 
     """
 
-    def __init__(self, hill_model: str = 'Kern', hill_param: Optional[list] = None,
-                 random: Optional[bool] = False, ts: float = 1, **kwargs):
+    def __init__(self,
+                 hill_model: str = 'Kern',
+                 hill_param: Optional[list] = None,
+                 random: Optional[bool] = False,
+                 ts: float = 1,
+                 truncated: Optional[float] = None):
         """
         Init the class.
 
@@ -684,10 +705,16 @@ class LOC_model:
             w_beta = np.sqrt(np.log(1 + cv_beta**2))
 
         if random and hill_param is None:
-            self.c50p *= np.exp(np.random.normal(scale=w_c50p))
-            self.c50r *= np.exp(np.random.normal(scale=w_c50r))
-            self.beta *= np.exp(np.random.normal(scale=w_beta))
-            self.gamma *= np.exp(np.random.normal(scale=w_gamma))
+            if truncated is not None:
+                self.c50p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50p))
+                self.c50r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50r))
+                self.beta *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_beta))
+                self.gamma *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma))
+            else:
+                self.c50p *= np.exp(np.random.normal(scale=w_c50p))
+                self.c50r *= np.exp(np.random.normal(scale=w_c50r))
+                self.beta *= np.exp(np.random.normal(scale=w_beta))
+                self.gamma *= np.exp(np.random.normal(scale=w_gamma))
 
         self.hill_param = [self.c50p, self.c50r, self.gamma, self.beta]
 
@@ -752,6 +779,8 @@ class TOL_model():
         The default is None.
     random : bool, optional
         Add uncertainties in the parameters. Ignored if model_param is specified. The default is False.
+    truncated : float, optional
+        If not None it correspond to the number of standard deviation after which the distribution are truncated for generating uncertain parameters. The default is None.
 
     Attributes
     ----------
@@ -772,7 +801,8 @@ class TOL_model():
             self,
             model: Optional[str] = 'Bouillon',
             model_param: Optional[list] = None,
-            random: Optional[bool] = False
+            random: Optional[bool] = False,
+            truncated: Optional[float] = None,
     ):
         """
         Init the class.
@@ -805,11 +835,18 @@ class TOL_model():
             w_pre_intensity = np.sqrt(np.log(1 + cv_pre_intensity**2))
 
         if random and model_param is None:
-            self.c50p *= np.exp(np.random.normal(scale=w_c50p))
-            self.c50r *= np.exp(np.random.normal(scale=w_c50r))
-            self.gamma_r *= np.exp(np.random.normal(scale=w_gamma_p))
-            self.gamma_p *= np.exp(np.random.normal(scale=w_gamma_r))
-            self.pre_intensity *= np.exp(np.random.normal(scale=w_pre_intensity))
+            if truncated is not None:
+                self.c50p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50p))
+                self.c50r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50r))
+                self.gamma_r *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma_p))
+                self.gamma_p *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma_r))
+                self.pre_intensity *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_pre_intensity))
+            else:
+                self.c50p *= np.exp(np.random.normal(scale=w_c50p))
+                self.c50r *= np.exp(np.random.normal(scale=w_c50r))
+                self.gamma_r *= np.exp(np.random.normal(scale=w_gamma_p))
+                self.gamma_p *= np.exp(np.random.normal(scale=w_gamma_r))
+                self.pre_intensity *= np.exp(np.random.normal(scale=w_pre_intensity))
 
     def compute_tol(self, c_es_propo: float, c_es_remi: float) -> float:
         """Return TOL from Propofol and Remifentanil effect site concentration.
@@ -910,6 +947,8 @@ class Hemo_meca_PD_model:
         Baseline stroke volume (mL). The default is None, which will use the value from the Su model.
     map_base : float, optional
         Baseline mean arterial pressure (mmHg). The default is None, which will use the value from the Su model.
+    truncated : bool, optional
+        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.
 
     References
     ----------
@@ -935,6 +974,7 @@ class Hemo_meca_PD_model:
                  nore_model: str = 'Beloeil',
                  stimuli_model: str = 'null',
                  random: bool = False,
+                 truncated: bool = False,
                  hr_base: float = None,
                  sv_base: float = None,
                  map_base: float = None,
@@ -1002,6 +1042,7 @@ class Hemo_meca_PD_model:
 
             self.w_c50_propo_tpr = np.sqrt(0.44)
             self.w_emax_remi_tpr = np.sqrt(0.449)
+
         else:
             raise ValueError("only Su is implemented as model")
         if nore_model == 'Beloeil':
@@ -1027,22 +1068,55 @@ class Hemo_meca_PD_model:
         self.k_effect = 0.0002  # (1/s)
 
         if random:
+            if truncated is not None:  # truncated normal to 3 standard deviations
+                # lognormal distribution
+                in_range = False
+                while not in_range:
+                    eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
+                    check_1 = np.abs(eta_values_block1[0] - self.w_block1_mu[0]
+                                     ) <= truncated*np.sqrt(self.w_block1_cov[0][0])
+                    check_2 = np.abs(eta_values_block1[1] - self.w_block1_mu[1]
+                                     ) <= truncated*np.sqrt(self.w_block1_cov[1][1])
+                    check_3 = np.abs(eta_values_block1[2] - self.w_block1_mu[2]
+                                     ) <= truncated*np.sqrt(self.w_block1_cov[2][2])
+                    if check_1 and check_2 and check_3:
+                        in_range = True
 
-            # lognormal distribution
-            eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
-            self.tpr_base *= np.exp(eta_values_block1[0])
-            self.sv_base *= np.exp(eta_values_block1[1])
-            self.hr_base *= np.exp(eta_values_block1[2])
-            self.c50_propo_tpr *= np.exp(np.random.normal(0, self.w_c50_propo_tpr))
-            # normal distribution
-            self.emax_remi_tpr += np.random.normal(0, self.w_emax_remi_tpr)
-            eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
-            self.sl_remi_hr += eta_values_block2[0]
-            self.sl_remi_sv += eta_values_block2[1]
+                self.tpr_base *= np.exp(eta_values_block1[0])
+                self.sv_base *= np.exp(eta_values_block1[1])
+                self.hr_base *= np.exp(eta_values_block1[2])
+                self.c50_propo_tpr *= np.exp(truncnorm.rvs(-truncated, truncated, self.w_c50_propo_tpr))
+                # normal distribution
+                self.emax_remi_tpr += truncnorm.rvs(-truncated, truncated, scale=self.w_emax_remi_tpr)
 
-            self.emax_nore_map *= np.exp(np.random.normal(0, scale=w_emax_nore_map))
-            self.c50_nore_map *= np.exp(np.random.normal(0, scale=w_c50_nore_map))
-            self.gamma_nore_map *= np.exp(np.random.normal(0, scale=w_gamma_nore_map))
+                in_range = False
+                while not in_range:
+                    eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
+                    if np.abs(eta_values_block2[0] - self.w_block2_mu[0]) <= 3*np.sqrt(self.w_block2_cov[0][0]) and np.abs(eta_values_block2[1] - self.w_block2_mu[1]) <= 3*np.sqrt(self.w_block2_cov[1][1]):
+                        in_range = True
+                self.sl_remi_hr += eta_values_block2[0]
+                self.sl_remi_sv += eta_values_block2[1]
+
+                self.emax_nore_map *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_emax_nore_map))
+                self.c50_nore_map *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_c50_nore_map))
+                self.gamma_nore_map *= np.exp(truncnorm.rvs(-truncated, truncated, scale=w_gamma_nore_map))
+            else:  # infinite support normal distribution
+                eta_values_block1 = np.random.multivariate_normal(self.w_block1_mu, self.w_block1_cov, size=1)[0]
+                self.tpr_base *= np.exp(eta_values_block1[0])
+                self.sv_base *= np.exp(eta_values_block1[1])
+                self.hr_base *= np.exp(eta_values_block1[2])
+
+                self.c50_propo_tpr *= np.exp(np.random.normal(self.w_c50_propo_tpr))
+                # normal distribution
+                self.emax_remi_tpr += np.random.normal(0, self.w_emax_remi_tpr)
+
+                eta_values_block2 = np.random.multivariate_normal(self.w_block2_mu, self.w_block2_cov, size=1)[0]
+                self.sl_remi_hr += eta_values_block2[0]
+                self.sl_remi_sv += eta_values_block2[1]
+
+                self.emax_nore_map *= np.exp(np.random.normal(scale=w_emax_nore_map))
+                self.c50_nore_map *= np.exp(np.random.normal(scale=w_c50_nore_map))
+                self.gamma_nore_map *= np.exp(np.random.normal(scale=w_gamma_nore_map))
 
         self.k_in_tpr = self.k_out * self.tpr_base
         self.k_in_sv = self.k_out * self.sv_base
