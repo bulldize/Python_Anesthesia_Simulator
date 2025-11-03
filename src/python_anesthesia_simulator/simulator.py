@@ -119,7 +119,7 @@ class Simulator:
         Returns
         -------
         tuple[float, float, float, float]
-            BIS, MAP, HR, NMB values after one step of simulation.
+            BIS, MAP, HR, TOF values after one step of simulation.
         """
         if self.tci_propo is not None:
             infusion_propo = self.tci_propo.one_step(target=input_propo)
@@ -170,7 +170,7 @@ class Simulator:
                     sqi,
                 ]
             )
-        return self.patient.bis, self.patient.map, self.patient.hr, self.patient.nmb
+        return self.patient.bis, self.patient.map, self.patient.hr, self.patient.tof
 
     def add_noise(self):
         r"""
@@ -247,7 +247,7 @@ class Simulator:
                     'LOC': self.patient.loc,
                     'TOL': self.patient.tol,
                     'TPR': self.patient.tpr,
-                    'NMB': self.patient.nmb,
+                    'TOF': self.patient.tof,
                     'SV': self.patient.sv,
                     'HR': self.patient.hr,
                     'MAP': self.patient.map,
