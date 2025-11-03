@@ -145,6 +145,7 @@ class Simulator:
         r"""Simulate one step of the patient model with given inputs.
 
         if tci pumps are used, the inputs are the target concentrations. Otherwise, they are the infusion rates.
+
         Parameters
         ----------
         input_propo : float, optional
@@ -159,10 +160,17 @@ class Simulator:
             Fluid rates from blood volume (mL/min), negative is bleeding while positive is a transfusion.
         sqi: float, optional
             Signal Quality Index of the BIS signal. It affects the BIS delay (expressed in seconds) according to the relationship proposed in [Wahlquist2025]_: :math:`bis\_delay = bis\_delay\_max * (1 - \frac{sqi}{100})`. The default is 100.
+
         Returns
         -------
         tuple[float, float, float, float]
             BIS, MAP, HR, TOF values after one step of simulation.
+
+        References
+        ---------- 
+        .. [Wahlquist2025] Y. Wahlquist, et al. "Kalman filter soft sensor to handle signal quality loss
+            in closed-loop controlled anesthesia" Biomedical Signal Processing and Control 104 (2025): 107506.
+            doi: https://doi.org/10.1016/j.bspc.2025.107506
         """
         if self.tci_propo is not None:
             infusion_propo = self.tci_propo.one_step(target=input_propo)
@@ -273,10 +281,11 @@ class Simulator:
             - 'x_nore': State of the norepinephrine PK model
             - 'x_atra_1' to 'x_atra_4': States of the atracurium PK model
             - 'blood_volume': Blood volume (L)
+
             if applicable TCI targets are also added:
+
             - 'target_propo': Target concentration for Propofol (µg/ml)
             - 'target_remi': Target concentration for Remifentanil (ng/ml)
-
         """
         self.Time = 0
         column_names = ['Time',  # time
