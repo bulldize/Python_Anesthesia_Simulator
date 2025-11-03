@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from python_anesthesia_simulator import patient, disturbances
+from python_anesthesia_simulator import patient, disturbances, Simulator
 
 # %% Simulation setup
 # Simulation duration in seconds
@@ -51,11 +51,11 @@ bis_delay_1 = 120 * (1 - sqi/100)
 # %% Simulation 1: Induction phase
 # Create the patient object
 George_1 = patient.Patient([age, height, weight, gender], ts=ts, random_PD=False)
-
+simu_1 = Simulator(George_1)
 # One step simulation
 for k in range(Nsim-1):
     uProp_k = propofol_infusion_profile[k]
-    George_1.one_step(u_propo=uProp_k, sqi=sqi, noise=False)
+    simu_1.one_step(input_propo=uProp_k, sqi=sqi)
 
 # %% Simulation 2: Maintenance phase
 # Create the patient objects
@@ -74,67 +74,31 @@ uP, uR, uN = George_3.u_propo_eq, George_3.u_remi_eq, George_3.u_nore_eq
 George_4.initialized_at_maintenance(bis_target=bis_target_1, tol_target=tol_target_1, map_target=map_target_1)
 uP, uR, uN = George_4.u_propo_eq, George_4.u_remi_eq, George_4.u_nore_eq
 
+simu_2 = Simulator(George_2, disturbance_profil='step')
+simu_3 = Simulator(George_3, disturbance_profil='step')
+simu_4 = Simulator(George_4, disturbance_profil='step')
 # One step simulation
 for k in range(Nsim-1):
     sqi_1 = sqi_profile_1[k]
     sqi_2 = sqi_profile_2[k]
-    Dist = disturbances.compute_disturbances(k*ts, dist_profil='step')
-    George_2.one_step(u_propo=uP, u_remi=uR, u_nore=uN, noise=False, dist=Dist)
-    George_3.one_step(u_propo=uP, u_remi=uR, u_nore=uN, noise=False, dist=Dist, sqi=sqi_1)
-    George_4.one_step(u_propo=uP, u_remi=uR, u_nore=uN, noise=False, dist=Dist, sqi=sqi_2)
+    simu_2.one_step(input_propo=uP, input_remi=uR, input_nore=uN)
+    simu_3.one_step(input_propo=uP, input_remi=uR, input_nore=uN, sqi=sqi_1)
+    simu_4.one_step(input_propo=uP, input_remi=uR, input_nore=uN, sqi=sqi_2)
 
 
 # Compute the delays obtained in simulation
-change = George_1.dataframe['BIS'] != George_1.dataframe['BIS'].shift()
-first_change_index = George_1.dataframe['BIS'][change].index[1]
-simulated_delay_1 = George_1.dataframe['Time'][first_change_index]
+change = simu_1.dataframe['BIS'] != simu_1.dataframe['BIS'].shift()
+first_change_index = simu_1.dataframe['BIS'][change].index[1]
+simulated_delay_1 = simu_1.dataframe['Time'][first_change_index]
 
 
-above_threshold_3 = George_3.dataframe[George_3.dataframe['BIS'] > 59]
+above_threshold_3 = simu_3.dataframe[simu_3.dataframe['BIS'] > 59]
 first_crossing_3 = above_threshold_3.iloc[0]
 time_george_3 = first_crossing_3['Time']
 
-above_threshold_4 = George_4.dataframe[George_4.dataframe['BIS'] > 59]
+above_threshold_4 = simu_4.dataframe[simu_4.dataframe['BIS'] > 59]
 first_crossing_4 = above_threshold_4.iloc[0]
 time_george_4 = first_crossing_4['Time']
-
-
-# %% plot
-if __name__ == '__main__':
-
-    fig, ax = plt.subplots(2)
-    ax[0].plot(George_1.dataframe['Time'], George_1.dataframe['BIS'])
-    ax[1].plot(George_1.dataframe['Time'], George_1.dataframe['u_propo'])
-    ax[0].set_ylabel("BIS")
-    ax[1].set_ylabel("Propofol infusion")
-    ax[1].set_xlabel("Time (min)")
-    for i in range(2):
-        ax[i].grid()
-    plt.ticklabel_format(style='plain')
-    plt.show()
-
-    fig, ax = plt.subplots(2)
-    ax[0].plot(George_2.dataframe['Time'], George_2.dataframe['BIS'])
-    ax[0].plot(George_3.dataframe['Time'], George_3.dataframe['BIS'])
-    ax[1].plot(George_3.dataframe['Time'], George_3.dataframe['SQI'])
-    ax[0].set_ylabel("BIS")
-    ax[1].set_ylabel("sqi")
-    ax[1].set_xlabel("Time (min)")
-    for i in range(2):
-        ax[i].grid()
-    plt.ticklabel_format(style='plain')
-    plt.show()
-
-    fig, ax = plt.subplots(2)
-    ax[0].plot(George_2.dataframe['Time'], George_2.dataframe['BIS'])
-    ax[0].plot(George_4.dataframe['Time'], George_4.dataframe['BIS'])
-    ax[1].plot(George_4.dataframe['Time'], George_4.dataframe['SQI'])
-    ax[1].set_ylabel("sqi")
-    ax[1].set_xlabel("Time (min)")
-    for i in range(2):
-        ax[i].grid()
-    plt.ticklabel_format(style='plain')
-    plt.show()
 
 # %%
 
@@ -147,3 +111,44 @@ def test_delay():
     assert time_george_3 < 720
     assert time_george_4 >= 700
     assert time_george_4 < 720
+
+
+# %% plot
+if __name__ == '__main__':
+
+    fig, ax = plt.subplots(2)
+    ax[0].plot(simu_1.dataframe['Time'], simu_1.dataframe['BIS'])
+    ax[1].plot(simu_1.dataframe['Time'], simu_1.dataframe['u_propo'])
+    ax[0].set_ylabel("BIS")
+    ax[1].set_ylabel("Propofol infusion")
+    ax[1].set_xlabel("Time (min)")
+    for i in range(2):
+        ax[i].grid()
+    plt.ticklabel_format(style='plain')
+    plt.show()
+
+    fig, ax = plt.subplots(2)
+    ax[0].plot(simu_2.dataframe['Time'], simu_2.dataframe['BIS'])
+    ax[0].plot(simu_3.dataframe['Time'], simu_3.dataframe['BIS'])
+    ax[1].plot(simu_3.dataframe['Time'], simu_3.dataframe['SQI'])
+    ax[0].set_ylabel("BIS")
+    ax[1].set_ylabel("sqi")
+    ax[1].set_xlabel("Time (min)")
+    for i in range(2):
+        ax[i].grid()
+    plt.ticklabel_format(style='plain')
+    plt.show()
+
+    fig, ax = plt.subplots(2)
+    ax[0].plot(simu_2.dataframe['Time'], simu_2.dataframe['BIS'])
+    ax[0].plot(simu_4.dataframe['Time'], simu_4.dataframe['BIS'])
+    ax[1].plot(simu_4.dataframe['Time'], simu_4.dataframe['SQI'])
+    ax[1].set_ylabel("sqi")
+    ax[1].set_xlabel("Time (min)")
+    for i in range(2):
+        ax[i].grid()
+    plt.ticklabel_format(style='plain')
+    plt.show()
+
+    test_delay()
+    print("All tests passed successfully.")

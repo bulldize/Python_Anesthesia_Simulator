@@ -2,7 +2,6 @@ from typing import Optional
 # Third party imports
 import numpy as np
 import pandas as pd
-import casadi as cas
 from scipy.signal import dlsim, TransferFunction
 from .patient import Patient
 from .tci_control import TCIController
@@ -18,9 +17,11 @@ class Simulator:
                  tci_remi: Optional[str] = None,
                  #  tci_nore_: Optional[bool] = False,  not yet available
                  #  tci_atracurium: Optional[bool] = False, not yet available
-                 disturbance_profil: Optional[str] = None,
+                 disturbance_profil: Optional[str] = 'null',
+                 arg_disturbance: Optional[dict] = {},
                  noise: bool = False,
-                 save_data: bool = False,
+                 bis_delay_max: float = 120,
+                 save_signals: bool = True,
                  ):
         """Initialize the Simulator with a patient, and eventual TCI pumps.
 
@@ -34,23 +35,36 @@ class Simulator:
             Type of TCI for Remifentanil. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
         disturbance_profil: str, optional
             Type of disturbance profile to apply. See disturbance module for more details. The default is None.
+        arg_disturbance: dict, optionnal
+            Additionnale argument to pass to the function compute_disturbances. The default is empty.
         noise: bool, optional
             If True, add noise to the outputs of the patient model. The default is False.
-        save_data: bool, optional
-            If True, save the simulation data in a dataframe. The default is False.
+        save_signals : bool, optional
+            Save all interns variable at each sampling time in a data frame. The default is True.
+        bis_delay_max : float, optional
+            Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).
+
+        References
+        ---------- 
+        .. [Wahlquist2025] Y. Wahlquist, et al. "Kalman filter soft sensor to handle signal quality loss
+            in closed-loop controlled anesthesia" Biomedical Signal Processing and Control 104 (2025): 107506.
+            doi: https://doi.org/10.1016/j.bspc.2025.107506
         """
         self.patient = patient
         self.ts = patient.ts
         self.time = 0
         self.disturbance_profil = disturbance_profil
+        self.arg_disturbance = arg_disturbance
         self.noise = noise
+        self.bis_delay_max = bis_delay_max
+        self.save_signals = save_signals
         self.demographic = [
             patient.age,
-            patient.weight,
             patient.height,
+            patient.weight,
             patient.gender
         ]
-        if tci_propo != 'none':
+        if tci_propo is not None:
             if tci_propo not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_propo must be either "Plasma", "Effect_site" or "none"')
             self.tci_propo = TCIController(
@@ -61,7 +75,7 @@ class Simulator:
             )
         else:
             self.tci_propo = None
-        if tci_remi != 'none':
+        if tci_remi is not None:
             if tci_remi not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_remi must be either "Plasma", "Effect_site" or "none"')
             self.tci_remi = TCIController(
@@ -74,23 +88,49 @@ class Simulator:
             self.tci_remi = None
 
         # Initialize the buffer to simulate BIS delay
-        self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.bis
+        self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.patient.bis
 
-        # init noise model
-        self.bis_noise_std = 3
-        self.co_noise_std = 0.1
-        self.map_noise_std = 5
-        xi = 0.2
-        target_peak_fr = 0.03 * 2 * np.pi
-        omega = target_peak_fr / np.sqrt(1 - 2 * xi**2)
-        noise_filter = TransferFunction([0.1, 1], [1 / omega**2, 2 * xi / omega, 1])
-        self.noise_filter_d = noise_filter.to_discrete(self.ts, method='bilinear')
-        white_noise = np.random.normal(0, self.bis_noise_std, 1000)
-        _, self.bis_noise = dlsim(self.noise_filter_d, u=white_noise)
-        self.noise_index = 0
+        if noise:
+            self.map_noise_std = 30
+            self.hr_noise_std = 17
+            self.bis_noise_std = 35
+            # MAP
+            xi = 2
+            a = 4 * xi**2 - 2
+            y = (-a + np.sqrt(a**2 + 4)) / 2
+            omega = 0.01/np.sqrt(y)
+            map_filter = TransferFunction([1], [1 / omega**2, 2 * xi / omega, 1])
+            self.map_noise_filter = map_filter.to_discrete(self.ts, method='bilinear')
+            # HR
+            xi = 10
+            a = 4 * xi**2 - 2
+            y = (-a + np.sqrt(a**2 + 4)) / 2
+            omega = 0.02/np.sqrt(y)
+            hr_filter = TransferFunction([1], [1 / omega**2, 2 * xi / omega, 1])
+            self.hr_noise_filter = hr_filter.to_discrete(self.ts, method='bilinear')
+            # bis
+            xi = 1
+            a = 4 * xi**2 - 2
+            y = (-a + np.sqrt(a**2 + 4)) / 2
+            omega = 0.04/np.sqrt(y)
+            bis_filter = TransferFunction([1], [1 / omega**2, 2 * xi / omega, 1])
+            self.bis_noise_filter = bis_filter.to_discrete(self.ts, method='bilinear')
+
+            white_noise_map = np.random.normal(0, self.map_noise_std, 1000)
+            white_noise_hr = np.random.normal(0, self.hr_noise_std, 1000)
+            white_noise_bis = np.random.normal(0, self.bis_noise_std, 1000)
+            _, self.map_noise = dlsim(self.map_noise_filter, u=white_noise_map)
+            _, self.hr_noise = dlsim(self.hr_noise_filter, u=white_noise_hr)
+            _, self.bis_noise = dlsim(self.bis_noise_filter, u=white_noise_bis)
+            self.noise_index = 0
+
+        # init output variable
+        self.bis = self.patient.bis
+        self.map = self.patient.map
+        self.hr = self.patient.hr
 
         # Save data
-        if self.save_data:
+        if self.save_signals:
             self.init_dataframe()
             self.save_data()
 
@@ -98,7 +138,8 @@ class Simulator:
                  input_propo: float = 0,
                  input_remi: float = 0,
                  input_nore: float = 0,
-                 input_atracurium: float = 0,
+                 input_atra: float = 0,
+                 blood_rate: float = 0,
                  sqi: float = 100,
                  ) -> tuple[float, float, float, float]:
         r"""Simulate one step of the patient model with given inputs.
@@ -114,6 +155,8 @@ class Simulator:
             Infusion rate (µg/s) for Norepinephrine. The default is 0.
         input_atracurium : float, optional
             Infusion rate (mg/s) for Atracurium. The default is 0.
+        blood_rate : float, optional
+            Fluid rates from blood volume (mL/min), negative is bleeding while positive is a transfusion.
         sqi: float, optional
             Signal Quality Index of the BIS signal. It affects the BIS delay (expressed in seconds) according to the relationship proposed in [Wahlquist2025]_: :math:`bis\_delay = bis\_delay\_max * (1 - \frac{sqi}{100})`. The default is 100.
         Returns
@@ -133,14 +176,19 @@ class Simulator:
         disturbances = compute_disturbances(
             time=self.time,
             dist_profil=self.disturbance_profil,
+            **self.arg_disturbance,
         )
         self.patient.one_step(
             u_propo=infusion_propo,
             u_remi=infusion_remi,
             u_nore=input_nore,
-            u_atra=input_atracurium,
-            disturbances=disturbances,
+            u_atra=input_atra,
+            dist=disturbances,
+            blood_rate=blood_rate,
         )
+        self.bis = self.patient.bis
+        self.map = self.patient.map
+        self.hr = self.patient.hr
 
         # add noise
         if self.noise:
@@ -160,13 +208,13 @@ class Simulator:
 
         self.time += self.ts
 
-        if self.save_data:
+        if self.save_signals:
             self.save_data(
                 inputs=[
                     infusion_propo,
                     infusion_remi,
                     input_nore,
-                    input_atracurium,
+                    input_atra,
                     sqi,
                 ]
             )
@@ -174,25 +222,33 @@ class Simulator:
 
     def add_noise(self):
         r"""
-        Add noise on the outputs of the model (except LOC, TOL and TOF).
+        Add noise on MAP, HR and BIS.
 
-        The MAP and CO noises are considered white noise while the BIS noise is filtered.
-        The filter of the BIS noise is a second order low pass filter with a cut-off frequency of 0.03 Hz.
+        All noise are considered white noise filtered by a second order transfert function:
+
+        - For MAP, the standard deviation of the white noise is 30 and the filter is a second-order low-pass noise filter with damping ratio ξ=2 and cutoff frequency ω=0.01.
+        - For HR, the standard deviation of the white noise is 17 and the filter is a second-order low-pass noise filter with damping ratio ξ=10 and cutoff frequency ω=0.02. In addition, the output is ceiled to the nearest integer.
+        - For BIS, the standard deviation of the white noise is 35 and the filter is a second-order low-pass noise filter with damping ratio ξ=1 and cutoff frequency ω=0.04.
+
+        See identification details on this `Notebook <https://github.com/AnesthesiaSimulation/PAS_vs_vitalDB/blob/main/scripts/identify_noise.ipynb>`_
 
         """
-        # compute filter noise for BIS
-        # white noise
         self.noise_index += 1
         if self.noise_index >= len(self.bis_noise):
-            self.noise_index = 0
             # new list noise
-            white_noise = np.random.normal(0, self.bis_noise_std, 1000)
-            _, self.bis_noise = dlsim(self.noise_filter_d, u=white_noise)
+            white_noise_map = np.random.normal(0, self.map_noise_std, 1000)
+            white_noise_hr = np.random.normal(0, self.hr_noise_std, 1000)
+            white_noise_bis = np.random.normal(0, self.bis_noise_std, 1000)
+            _, self.map_noise = dlsim(self.map_noise_filter, u=white_noise_map)
+            _, self.hr_noise = dlsim(self.hr_noise_filter, u=white_noise_hr)
+            _, self.bis_noise = dlsim(self.bis_noise_filter, u=white_noise_bis)
+            self.noise_index = 0
+
         self.bis += self.bis_noise[self.noise_index]
         self.bis = np.clip(self.bis, 0, 100)
-        # random noise for MAP and CO
-        self.map += np.random.normal(scale=self.map_noise_std)
-        self.co += np.random.normal(scale=self.co_noise_std)
+        self.map += self.map_noise[self.noise_index]
+        self.hr += self.hr_noise[self.noise_index]
+        self.hr = np.ceil(self.hr)
 
     def init_dataframe(self):
         r"""Initilize the dataframe variable with the following columns:
@@ -228,10 +284,10 @@ class Simulator:
                         'TPR', 'SV', 'HR', 'SAP', 'DAP',  # outputs
                         'u_propo', 'u_remi', 'u_nore', 'u_atra',  # inputs
                         'blood_volume']  # nore concentration and blood volume
-        propo_state_names = [f'x_propo_{i + 1}' for i in range(len(self.propo_pk.x))]
-        remi_state_names = [f'x_remi_{i + 1}' for i in range(len(self.remi_pk.x))]
-        nore_state_names = [f'x_nore_{i + 1}' for i in range(len(self.nore_pk.x))]
-        atra_state_names = [f'x_atra_{i + 1}' for i in range(len(self.atracurium_pk.x))]
+        propo_state_names = [f'x_propo_{i + 1}' for i in range(len(self.patient.propo_pk.x))]
+        remi_state_names = [f'x_remi_{i + 1}' for i in range(len(self.patient.remi_pk.x))]
+        nore_state_names = [f'x_nore_{i + 1}' for i in range(len(self.patient.nore_pk.x))]
+        atra_state_names = [f'x_atra_{i + 1}' for i in range(len(self.patient.atracurium_pk.x))]
         column_names += propo_state_names + remi_state_names + nore_state_names + atra_state_names
         if self.tci_propo is not None:
             column_names.append('target_propo')
@@ -243,14 +299,14 @@ class Simulator:
         r"""Save all current internal variables as a new line in self.dataframe."""
         # store data
         new_line = {'Time': self.time,
-                    'BIS': self.patient.bis,  # measures
+                    'BIS': self.bis,  # measures
                     'LOC': self.patient.loc,
                     'TOL': self.patient.tol,
                     'TPR': self.patient.tpr,
                     'TOF': self.patient.tof,
                     'SV': self.patient.sv,
-                    'HR': self.patient.hr,
-                    'MAP': self.patient.map,
+                    'HR': self.hr,
+                    'MAP': self.map,
                     'CO': self.patient.co,
                     'SAP': self.patient.sap,
                     'DAP': self.patient.dap,
@@ -259,12 +315,13 @@ class Simulator:
                     'u_nore': inputs[2],
                     'u_atra': inputs[3],
                     'SQI': inputs[4],
-                    'blood_volume': self.blood_volume}  # blood volume
+                    'blood_volume': self.patient.blood_volume}  # blood volume
 
-        line_x_propo = {f'x_propo_{i + 1}': self.propo_pk.x[i, 0] for i in range(len(self.propo_pk.x))}
-        line_x_remi = {f'x_remi_{i + 1}': self.remi_pk.x[i, 0] for i in range(len(self.remi_pk.x))}
-        line_x_nore = {f'x_nore_{i + 1}': self.nore_pk.x[i, 0] for i in range(len(self.nore_pk.x))}
-        line_x_atra = {f'x_atra_{i + 1}': self.atracurium_pk.x[i, 0] for i in range(len(self.atracurium_pk.x))}
+        line_x_propo = {f'x_propo_{i + 1}': self.patient.propo_pk.x[i, 0] for i in range(len(self.patient.propo_pk.x))}
+        line_x_remi = {f'x_remi_{i + 1}': self.patient.remi_pk.x[i, 0] for i in range(len(self.patient.remi_pk.x))}
+        line_x_nore = {f'x_nore_{i + 1}': self.patient.nore_pk.x[i, 0] for i in range(len(self.patient.nore_pk.x))}
+        line_x_atra = {f'x_atra_{i + 1}': self.patient.atracurium_pk.x[i, 0]
+                       for i in range(len(self.patient.atracurium_pk.x))}
         new_line.update(line_x_propo)
         new_line.update(line_x_remi)
         new_line.update(line_x_nore)

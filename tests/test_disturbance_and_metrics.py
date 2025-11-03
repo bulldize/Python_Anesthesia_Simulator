@@ -1,118 +1,73 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from python_anesthesia_simulator import patient, disturbances, metrics
+from python_anesthesia_simulator import patient, metrics, Simulator
 
 ts = 60
 age = 35
 weight = 70
 height = 170
-gender = 0
+sex = 0
 
 # %%
 
-George_1 = patient.Patient([age, height, weight, gender], ts=ts,
-                           model_propo="Schnider", model_remi="Minto", random_PD=False)
-George_2 = patient.Patient([age, height, weight, gender], ts=ts,
-                           model_propo="Schnider", model_remi="Minto", random_PD=False)
-George_3 = patient.Patient([age, height, weight, gender], ts=ts,
-                           model_propo="Schnider", model_remi="Minto", random_PD=False)
-George_4 = patient.Patient([age, height, weight, gender], ts=ts,
-                           model_propo="Schnider", model_remi="Minto", random_PD=False, model_stimuli='VitalDB')
+George_1 = patient.Patient([age, height, weight, sex], ts=ts)
+George_2 = patient.Patient([age, height, weight, sex], ts=ts)
+George_3 = patient.Patient([age, height, weight, sex], ts=ts)
+George_4 = patient.Patient([age, height, weight, sex], ts=ts, model_stimuli='VitalDB')
 
+simu_1 = Simulator(George_1, disturbance_profil='realistic')
+simu_2 = Simulator(George_2, disturbance_profil='simple')
+start_step = 20 * 60
+end_step = 30 * 60
+simu_3 = Simulator(
+    George_3,
+    disturbance_profil='step',
+    arg_disturbance={'start_step': start_step, 'end_step': end_step},
+)
+simu_4 = Simulator(George_4, disturbance_profil='VitalDB')
 # %% Simulation
 
 N_simu = int(60 * 60 / ts)
 
 
 uP, uR = 0.13, 0.5
-start_step = 20 * 60
-end_step = 30 * 60
-# George_1.save_data([0, 0, 0])
-# George_2.save_data([0, 0, 0])
-# George_3.save_data([0, 0, 0])
+
+
 for index in range(N_simu):
-    Dist_1 = disturbances.compute_disturbances(index * ts, dist_profil='realistic')
-    George_1.one_step(uP, uR, dist=Dist_1, noise=False)
-    Dist_2 = disturbances.compute_disturbances(index * ts, dist_profil='simple')
-    George_2.one_step(uP, uR, dist=Dist_2, noise=False)
-    Dist_3 = disturbances.compute_disturbances(index * ts, dist_profil='step', start_step=start_step, end_step=end_step)
-    George_3.one_step(uP, uR, dist=Dist_3, noise=False)
-    Dist_4 = disturbances.compute_disturbances(
-        index * ts, dist_profil='VitalDB', start_step=start_step, end_step=end_step)
-    George_4.one_step(uP, uR, dist=Dist_4, noise=False)
+    simu_1.one_step(uP, uR)
+    simu_2.one_step(uP, uR)
+    simu_3.one_step(uP, uR)
+    simu_4.one_step(uP, uR)
 
-# %% plots
-
-if __name__ == '__main__':
-    Time = George_1.dataframe['Time'] / 60
-
-    fig, ax = plt.subplots(3)
-    ax[0].plot(Time, George_1.dataframe['u_propo'])
-    ax[1].plot(Time, George_1.dataframe['u_remi'])
-    ax[2].plot(Time, George_1.dataframe['u_nore'])
-
-    ax[0].set_ylabel("Propo")
-    ax[1].set_ylabel("Remi")
-    ax[2].set_ylabel("Nore")
-
-    plt.show()
-
-    fig, ax = plt.subplots(4)
-
-    ax[0].plot(Time, George_1.dataframe['BIS'])
-    ax[1].plot(Time, George_1.dataframe['MAP'])
-    ax[2].plot(Time, George_1.dataframe['CO'])
-    ax[3].plot(Time, George_1.dataframe['TOL'])
-    ax[0].plot(Time, George_2.dataframe['BIS'])
-    ax[1].plot(Time, George_2.dataframe['MAP'])
-    ax[2].plot(Time, George_2.dataframe['CO'])
-    ax[3].plot(Time, George_2.dataframe['TOL'])
-    ax[0].plot(Time, George_3.dataframe['BIS'])
-    ax[1].plot(Time, George_3.dataframe['MAP'])
-    ax[2].plot(Time, George_3.dataframe['CO'])
-    ax[3].plot(Time, George_3.dataframe['TOL'])
-    ax[0].plot(Time, George_4.dataframe['BIS'])
-    ax[1].plot(Time, George_4.dataframe['MAP'])
-    ax[2].plot(Time, George_4.dataframe['CO'])
-    ax[3].plot(Time, George_4.dataframe['TOL'])
-
-    ax[0].set_ylabel("BIS")
-    ax[1].set_ylabel("MAP")
-    ax[2].set_ylabel("CO")
-    ax[3].set_ylabel("TOL")
-    ax[3].set_xlabel("Time (min)")
-    for i in range(4):
-        ax[i].grid()
-    plt.show()
 
 # %% metrics
 
 metric_1 = metrics.compute_control_metrics(
-    George_1.dataframe.loc[:10 * 60 / ts, 'Time'],
-    George_1.dataframe.loc[:10 * 60 / ts, 'BIS'],
+    simu_1.dataframe.loc[:10 * 60 / ts, 'Time'],
+    simu_1.dataframe.loc[:10 * 60 / ts, 'BIS'],
     phase='induction'
 )
 metric_2 = metrics.compute_control_metrics(
-    George_2.dataframe.loc[:10 * 60 / ts, 'Time'],
-    George_2.dataframe.loc[:10 * 60 / ts, 'BIS'],
+    simu_2.dataframe.loc[:10 * 60 / ts, 'Time'],
+    simu_2.dataframe.loc[:10 * 60 / ts, 'BIS'],
     phase='induction'
 )
 metric_3 = metrics.compute_control_metrics(
-    George_3.dataframe['Time'],
-    George_3.dataframe['BIS'],
+    simu_3.dataframe['Time'],
+    simu_3.dataframe['BIS'],
     phase='total',
     start_step=start_step,
     end_step=end_step
 )
 
 metric_1_new = metrics.new_metrics_induction(
-    George_1.dataframe.loc[:10 * 60 / ts, 'Time'].values,
-    George_1.dataframe.loc[:10 * 60 / ts, 'BIS'].values,
+    simu_1.dataframe.loc[:10 * 60 / ts, 'Time'].values,
+    simu_1.dataframe.loc[:10 * 60 / ts, 'BIS'].values,
 )
 
 metric_3_new = metrics.new_metrics_maintenance(
-    George_3.dataframe.loc[10 * 60 / ts:, 'Time'].values,
-    George_3.dataframe.loc[10 * 60 / ts:, 'BIS'].values,
+    simu_3.dataframe.loc[10 * 60 / ts:, 'Time'].values,
+    simu_3.dataframe.loc[10 * 60 / ts:, 'BIS'].values,
 )
 
 
@@ -160,3 +115,52 @@ def test_new_metrics():
     assert (metric_3_new['Time out of range'] == 0).all()
     assert abs(metric_3_new['Lowest BIS'].iloc[0] - 42.2) <= 1e-1
     assert abs(metric_3_new['Highest BIS'].iloc[0] - 57.0) <= 1e-1
+
+# %% plots
+
+
+if __name__ == '__main__':
+    Time = simu_1.dataframe['Time'] / 60
+
+    fig, ax = plt.subplots(3)
+    ax[0].plot(Time, simu_1.dataframe['u_propo'])
+    ax[1].plot(Time, simu_1.dataframe['u_remi'])
+    ax[2].plot(Time, simu_1.dataframe['u_nore'])
+
+    ax[0].set_ylabel("Propo")
+    ax[1].set_ylabel("Remi")
+    ax[2].set_ylabel("Nore")
+
+    plt.show()
+
+    fig, ax = plt.subplots(4)
+
+    ax[0].plot(Time, simu_1.dataframe['BIS'])
+    ax[1].plot(Time, simu_1.dataframe['MAP'])
+    ax[2].plot(Time, simu_1.dataframe['CO'])
+    ax[3].plot(Time, simu_1.dataframe['TOL'])
+    ax[0].plot(Time, simu_2.dataframe['BIS'])
+    ax[1].plot(Time, simu_2.dataframe['MAP'])
+    ax[2].plot(Time, simu_2.dataframe['CO'])
+    ax[3].plot(Time, simu_2.dataframe['TOL'])
+    ax[0].plot(Time, simu_3.dataframe['BIS'])
+    ax[1].plot(Time, simu_3.dataframe['MAP'])
+    ax[2].plot(Time, simu_3.dataframe['CO'])
+    ax[3].plot(Time, simu_3.dataframe['TOL'])
+    ax[0].plot(Time, simu_4.dataframe['BIS'])
+    ax[1].plot(Time, simu_4.dataframe['MAP'])
+    ax[2].plot(Time, simu_4.dataframe['CO'])
+    ax[3].plot(Time, simu_4.dataframe['TOL'])
+
+    ax[0].set_ylabel("BIS")
+    ax[1].set_ylabel("MAP")
+    ax[2].set_ylabel("CO")
+    ax[3].set_ylabel("TOL")
+    ax[3].set_xlabel("Time (min)")
+    for i in range(4):
+        ax[i].grid()
+    plt.show()
+
+    test_metrics()
+    test_new_metrics()
+    print('All tests passed successfully!')

@@ -1,6 +1,7 @@
 from python_anesthesia_simulator.pk_models import AtracuriumModel
 from python_anesthesia_simulator.pd_models import TOF_model
 from python_anesthesia_simulator.patient import Patient
+from python_anesthesia_simulator.simulator import Simulator
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -131,11 +132,11 @@ recovery_idx_custom_one_step = np.where(tof_custom_one_step <= 50)[0][-2]
 recovery_time_custom_one_step = time[recovery_idx_custom_one_step]
 
 George_one_step.initialized_at_given_state(x0_atra=x0)
+simu_Gerorge_one_step = Simulator(George_one_step)
 for k in range(Nsim-1):
     uAtra_k = atracurium_infusion_profile[k]
-    George_one_step.one_step(u_atra=uAtra_k,
-                             noise=False)
-tof_george_one_step = George_one_step.dataframe['TOF']
+    simu_Gerorge_one_step.one_step(input_atra=uAtra_k)
+tof_george_one_step = simu_Gerorge_one_step.dataframe['TOF']
 # Find response peak and its timing
 peak_idx_george_one_step = np.argmin(tof_george_one_step)
 min_tof_george_one_step = tof_george_one_step[peak_idx_george_one_step]
@@ -282,10 +283,10 @@ if __name__ == '__main__':
     plt.plot(df_george_1.Time, df_george_1.x_atra_2, '--')
     plt.plot(df_george_1.Time, df_george_1.x_atra_3, '--')
     plt.plot(df_george_1.Time, df_george_1.x_atra_4, '--')
-    plt.plot(George_one_step.dataframe['Time'], George_one_step.dataframe['x_atra_1'], '--')
-    plt.plot(George_one_step.dataframe['Time'], George_one_step.dataframe['x_atra_2'], '--')
-    plt.plot(George_one_step.dataframe['Time'], George_one_step.dataframe['x_atra_3'], '--')
-    plt.plot(George_one_step.dataframe['Time'], George_one_step.dataframe['x_atra_4'], '--')
+    plt.plot(simu_Gerorge_one_step.dataframe['Time'], simu_Gerorge_one_step.dataframe['x_atra_1'], '--')
+    plt.plot(simu_Gerorge_one_step.dataframe['Time'], simu_Gerorge_one_step.dataframe['x_atra_2'], '--')
+    plt.plot(simu_Gerorge_one_step.dataframe['Time'], simu_Gerorge_one_step.dataframe['x_atra_3'], '--')
+    plt.plot(simu_Gerorge_one_step.dataframe['Time'], simu_Gerorge_one_step.dataframe['x_atra_4'], '--')
     plt.xlabel('Time (s)')
     plt.ylabel('State Value')
     plt.title('Evolution of States Over Time')
@@ -345,3 +346,6 @@ if __name__ == '__main__':
     plt.yticks(np.arange(0, 30, 5))  # Adjust ticks based on your infusion rate
     plt.tight_layout()
     plt.show()
+
+    test_default_initialization_atracurium()
+    print('All tests passed successfully!')

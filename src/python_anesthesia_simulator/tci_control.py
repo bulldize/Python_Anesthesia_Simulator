@@ -144,8 +144,8 @@ class TCIController():
 
             # compute trajectory from where we are without any infusion
             x_temp = self.x
-            Ce_0 = np.zeros(int(self.t_peak/self.sampling_time))
-            for t in range(int(self.t_peak/self.sampling_time)):
+            Ce_0 = np.zeros(int(max(self.control_time+self.sampling_time, self.t_peak)/self.sampling_time))
+            for t in range(int(max(self.control_time+self.sampling_time, self.t_peak)/self.sampling_time)):
                 x_temp = self.Ad @ x_temp
                 Ce_0[t] = x_temp[self.target_id, 0]
 
