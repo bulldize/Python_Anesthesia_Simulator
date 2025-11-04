@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.signal import dlsim, TransferFunction
 from .patient import Patient
 from .tci_control import TCIController
-from .disturbances import compute_disturbances
+from .disturbances import Disturbances
 
 
 class Simulator:
@@ -17,11 +17,13 @@ class Simulator:
                  tci_remi: Optional[str] = None,
                  #  tci_nore_: Optional[bool] = False,  not yet available
                  #  tci_atracurium: Optional[bool] = False, not yet available
-                 disturbance_profil: Optional[str] = 'null',
-                 arg_disturbance: Optional[dict] = {},
+                 disturbance_profil: Optional[str] = None,
                  noise: bool = False,
                  bis_delay_max: float = 120,
                  save_signals: bool = True,
+                 arg_disturbance: Optional[dict] = {},
+                 arg_tci_propo: Optional[dict] = {},
+                 arg_tci_remi: Optional[dict] = {},
                  ):
         """Initialize the Simulator with a patient, and eventual TCI pumps.
 
@@ -35,14 +37,18 @@ class Simulator:
             Type of TCI for Remifentanil. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
         disturbance_profil: str, optional
             Type of disturbance profile to apply. See disturbance module for more details. The default is None.
-        arg_disturbance: dict, optionnal
-            Additionnale argument to pass to the function compute_disturbances. The default is empty.
         noise: bool, optional
             If True, add noise to the outputs of the patient model. The default is False.
         save_signals : bool, optional
             Save all interns variable at each sampling time in a data frame. The default is True.
         bis_delay_max : float, optional
             Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).
+        arg_disturbance: dict, optionnal
+            Additionnale argument to pass to the function compute_disturbances. The default is empty.
+        arg_tci_propo: dict, optionnal
+            Additionnale argument to pass to tci class initialization for propofol. The default is empty.
+        arg_tci_remi: dict, optionnal
+            Additionnale argument to pass to tci class initialization for remifentanil. The default is empty.
 
         References
         ---------- 
@@ -53,36 +59,46 @@ class Simulator:
         self.patient = patient
         self.ts = patient.ts
         self.time = 0
-        self.disturbance_profil = disturbance_profil
         self.arg_disturbance = arg_disturbance
         self.noise = noise
         self.bis_delay_max = bis_delay_max
         self.save_signals = save_signals
+
         self.demographic = [
             patient.age,
             patient.height,
             patient.weight,
             patient.gender
         ]
+
+        self.disturbances = Disturbances(
+            dist_profil=disturbance_profil,
+            **arg_disturbance,
+        )
+
         if tci_propo is not None:
             if tci_propo not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_propo must be either "Plasma", "Effect_site" or "none"')
+            if 'model_used' not in arg_tci_propo.keys():
+                arg_tci_propo['model_used'] = patient.model_propo
             self.tci_propo = TCIController(
                 self.demographic,
                 drug_name='Propofol',
-                model_used=patient.model_propo,
                 sampling_time=self.ts,
+                **arg_tci_propo,
             )
         else:
             self.tci_propo = None
         if tci_remi is not None:
             if tci_remi not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_remi must be either "Plasma", "Effect_site" or "none"')
+            if 'model_used' not in arg_tci_remi.keys():
+                arg_tci_remi['model_used'] = patient.model_remi
             self.tci_remi = TCIController(
                 self.demographic,
                 drug_name='Remifentanil',
-                model_used=patient.model_remi,
                 sampling_time=self.ts,
+                **arg_tci_remi,
             )
         else:
             self.tci_remi = None
@@ -181,11 +197,10 @@ class Simulator:
         else:
             infusion_remi = input_remi
 
-        disturbances = compute_disturbances(
+        disturbances = self.disturbances.compute_dist(
             time=self.time,
-            dist_profil=self.disturbance_profil,
-            **self.arg_disturbance,
         )
+
         self.patient.one_step(
             u_propo=infusion_propo,
             u_remi=infusion_remi,

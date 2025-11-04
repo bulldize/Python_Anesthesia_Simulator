@@ -36,8 +36,8 @@ class Patient:
         Name of the LOC PD Model. The default is 'Kern'
     model_tof, : str, optional
         Name of the TOF PD Model. The default is 'Weatherley'.
-    model_stimuli : str, optional
-        Name of the stimuli model. The default is 'none'.
+    model_hemo : str, optional
+        Name of the hemodynamic model. The default is 'Su'.
     ts : float, optional
         Sampling time (s). The default is 1.
     hill_param : list
@@ -92,8 +92,8 @@ class Patient:
         Name of the LOC PD model
     model_tof : str
         Name of the TOF PD model.
-    model_stimuli : str
-        Name of the stimuli model.   
+    model_hemo : str
+        Name of the hemo model.   
     hill_param : list
         Parameter of the BIS model (Propo Remi interaction)
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
@@ -168,7 +168,7 @@ class Patient:
                  model_bis: str = 'Bouillon',
                  model_loc: str = 'Kern',
                  model_tof: str = 'Weatherley',
-                 model_stimuli: str = 'null',
+                 model_hemo: str = 'Su',
                  ts: float = 1,
                  hill_param: list = None,
                  atracurium_model_params: dict = {},
@@ -198,7 +198,10 @@ class Patient:
         self.model_remi = model_remi
         self.model_nore = model_nore
         self.model_atracurium = model_atracurium
-        self.model_stimuli = model_stimuli
+        self.model_hemo = model_hemo
+        self.model_bis = model_bis
+        self.model_loc = model_loc
+        self.model_tof = model_tof
         self.hill_param = hill_param
         self.atracurium_model_params = atracurium_model_params
         self.atracurium_hill_params = atracurium_hill_params
@@ -248,7 +251,6 @@ class Patient:
             hr_base=hr_base,
             sv_base=sv_base,  # L to ml
             map_base=map_base,
-            stimuli_model=model_stimuli,
             truncated=truncated,
         )
         self.hr_base = self.hemo_pd.abase_hr
@@ -276,7 +278,7 @@ class Patient:
         self.sap = self.map + 4 / 9 * self.sv
 
     def one_step(self, u_propo: float = 0, u_remi: float = 0, u_nore: float = 0, u_atra: float = 0, sqi: float = 100,
-                 blood_rate: float = 0, dist: list = [0] * 3) -> tuple[float, float, float, float]:
+                 blood_rate: float = 0, dist: list = [0] * 6) -> tuple[float, float, float, float]:
         r"""
         Simulate one step time of the patient.
 
@@ -294,7 +296,7 @@ class Patient:
             Fluid rates from blood volume (mL/min), negative is bleeding while positive is a transfusion.
             The default is 0.
         dist : list, optional
-            Disturbance vector on [BIS (%), MAP (mmHg), CO (L/min)]. The default is [0]*3.
+            Disturbance vector on [BIS (%), MAP (mmHg), CO (L/min), TPR (mmHg.min/mL), SV (mL), HR (beat/min)]. The default is [0]*6.
         noise : bool, optional
             bool to add measurement noise on the outputs. The default is True.
 
@@ -339,10 +341,11 @@ class Patient:
         self.tof = self.tof_pd.compute_tof(self.c_es_atra)
         # Hemodynamic
         y_hemo = self.hemo_pd.one_step(
-            self.propo_pk.x[0, 0],
-            self.remi_pk.x[0, 0],
-            self.c_blood_nore,
-            (self.blood_volume / self.blood_volume_init)
+            cp_propo=self.propo_pk.x[0, 0],
+            cp_remi=self.remi_pk.x[0, 0],
+            cp_nore=self.c_blood_nore,
+            v_ratio=(self.blood_volume / self.blood_volume_init),
+            disturbances=dist[-3:],
         )
         self.tpr = y_hemo[0]
         self.sv = y_hemo[1]
