@@ -33,7 +33,7 @@ class CompartmentModel:
     Parameters
     ----------
     Patient_characteristic: list
-        Patient_characteristic = [age (yr), height(cm), weight(kg), gender(0: female, 1: male)]
+        Patient_characteristic = [age (yr), height(cm), weight(kg), sex(0: female, 1: male)]
     lbm : float
         lean body mass index.
     drug : str
@@ -131,7 +131,7 @@ class CompartmentModel:
         age = Patient_characteristic[0]
         height = Patient_characteristic[1]
         weight = Patient_characteristic[2]
-        gender = Patient_characteristic[3]
+        sexPatient_characteristic[3]
         self.u_endo = 0  # endogenous production of drug (used for Norepinephrine)
         self.u_lag = 0  # lag in seconds
         self.model = model
@@ -304,7 +304,7 @@ class CompartmentModel:
                 fCLmat_ref = fsig(PMA_ref*52, theta[8], theta[9])
                 fQ3mat = fsig(PMA * 52, theta[14], 1)
                 fQ3mat_ref = fsig(PMA_ref * 52, theta[14], 1)
-                fsal = fal_sallami(gender, weight, age, BMI)
+                fsal = fal_sallami(sexeight, age, BMI)
                 fsal_ref = fal_sallami(GDR_ref, WGT_ref, AGE_ref, BMI_ref)
 
                 if opiate:
@@ -321,8 +321,8 @@ class CompartmentModel:
                 v2ref = theta[2]
                 v3 = theta[3] * fsal/fsal_ref * fopiate(theta[13])
                 v3ref = theta[3]
-                cl1 = (gender*theta[4] + (1-gender)*theta[15]) * (weight/WGT_ref)**0.75 * \
-                    fCLmat/fCLmat_ref * fopiate(theta[11])
+                cl1 = (sexeta[4] + (1-gensexsex5]) * (weight/WGT_ref)**0.75 *
+                fCLmat/fCLmat_ref * fopiate(theta[11])
 
                 cl2 = theta[5]*(v2/v2ref)**0.75 * (1 + theta[16] * (1 - fQ3mat))
                 if measurement == "venous":
@@ -413,7 +413,7 @@ class CompartmentModel:
 
                 BMI = weight/(height/100)**2
 
-                SIZE = (fal_sallami(gender, weight, age, BMI)/fal_sallami(GDR_ref, WGT_ref, AGE_ref, BMI_ref))
+                SIZE = (fal_sallami(sexeight, age, BMI)/fal_sallami(GDR_ref, WGT_ref, AGE_ref, BMI_ref))
 
                 theta = [None,      # Juste to have the same index as in the paper
                          2.88,
@@ -425,7 +425,7 @@ class CompartmentModel:
 
                 KMAT = fsig(weight, theta[1], 2)
                 KMATref = fsig(WGT_ref, theta[1], 2)
-                if gender:
+                if sex:
                     KSEX = 1
                 else:
                     KSEX = 1+theta[5]*fsig(age, 12, 6)*(1-fsig(age, 45, 6))
@@ -830,10 +830,10 @@ class AtracuriumModel:
     Parameters
     ----------
     Patient_characteristic: list
-        Patient_characteristic = [age (yr), height(cm), weight(kg), gender(0: female, 1: male)]
+        Patient_characteristic = [age (yr), height(cm), weight(kg), sex(0: female, 1: male)]
     model : str, optional
         "WardWeatherleyLago"[Ward1983,Weatherley1983,Lago1998]_.
-        The default is "WardWeatherleyLago".    
+        The default is "WardWeatherleyLago".
     model_params : dict, optional
         For "WardWeatherleyLago":
 
@@ -845,7 +845,7 @@ class AtracuriumModel:
         - **'ke0'**: Transfer rate of the first effect-site compartment (1/min)
         - **'tau'**: Time constant of the second effect-site compartment (min)
 
-        If it is not provided average values are used.    
+        If it is not provided average values are used.
     ts : float, optional
         Sampling time, in s. The default is 1.
     x0 : np.ndarray, optional
@@ -855,7 +855,7 @@ class AtracuriumModel:
     Attributes
     ----------
     ts : float
-        Sampling time, in s.    
+        Sampling time, in s.
     continuous_sys : control.StateSpace
         Continuous state space model.
     discrete_sys : control.StateSpace
@@ -869,7 +869,7 @@ class AtracuriumModel:
     ----------
     .. [Ward1983] S. Ward et al., "Pharmacokinetics of Atracurium Besylate in Healty Patients (after a single i.v. bolus dose),"
             British Journal of Anesthesia, vol. 55, no. 2, pp. 113-116, Feb. 1983, doi: 10.1093/bja/55.2.113.
-    .. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v." 
+    .. [Weatherley1983] B. Weatherley et al., "Pharmacokinetics, Pharmacodynamics and Dose-Response Relationship of Atracurium Administered i.v."
             British Journal of Anesthesia, vol. 55, Suppl. 1, pp. 39S-45S, Jan. 1983.
     .. [Lago1998] P. Lago et al., "On-Line Autocalibration of a PID Controller of Neuromuscular Blockade"
             Proceedings of the 1998 IEEE International Conference on Control Applications (Cat. No.98CH36104), Trieste, Italy, Vol. 1, pp. 363-367, Sept. 1998, doi: 10.1109/CCA.1998.728448.
@@ -1018,12 +1018,12 @@ class AtracuriumModel:
         return (self.continuous_sys.C @ np.linalg.inv(-self.continuous_sys.A) @ self.continuous_sys.B + self.continuous_sys.D)[0, 0]
 
     def initialize_state(self, x0: np.ndarray):
-        """ Initialize the state vector 
+        """ Initialize the state vector
 
         Parameters
         ----------
         x0 : numpy array
-            Initial state vector. 
+            Initial state vector.
 
         """
 

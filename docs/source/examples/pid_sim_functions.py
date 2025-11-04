@@ -20,7 +20,7 @@ from pyswarm import pso
 import python_anesthesia_simulator as pas
 
 # Patient table:
-# index, Age, H[cm], W[kg], Gender, Ce50p, Ce50r, γ, β, E0, Emax
+# index, Age, H[cm], W[kg], sex, Ce50p, Ce50r, γ, β, E0, Emax
 Patient_table = [[1,  40, 163, 54, 0, 4.73, 24.97,  2.97,  0.3, 97.86, 89.62],
                  [2,  36, 163, 50, 0, 4.43, 19.33,  2.04,  0.29, 89.1, 98.86],
                  [3,  28, 164, 52, 0, 4.81, 16.89,  1.18,  0.14, 93.66, 94.],
@@ -179,7 +179,7 @@ def simu(Patient_info: list, style: str, PID_param: list,
     Parameters
     ----------
     Patient_info : list
-        list of patient informations, Patient_info = [Age, H[cm], W[kg], Gender, Ce50p, Ce50r, γ, β, E0, Emax].
+        list of patient informations, Patient_info = [Age, H[cm], W[kg], sex, Ce50p, Ce50r, γ, β, E0, Emax].
     style : str
         Either 'induction' or 'total' to describe the phase to simulate.
     PID_param : list

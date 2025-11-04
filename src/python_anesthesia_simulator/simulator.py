@@ -68,7 +68,7 @@ class Simulator:
             patient.age,
             patient.height,
             patient.weight,
-            patient.gender
+            patient.sex
         ]
 
         self.disturbances = Disturbances(
