@@ -79,6 +79,8 @@ class TCIController():
         None.
 
         """
+        if sampling_time > control_time:
+            raise ValueError("Sampling time can't be bigger than TCI control time (10s by default)")
         if model_used is None:
             if drug_name == 'Propofol':
                 model_used = 'Schnider'

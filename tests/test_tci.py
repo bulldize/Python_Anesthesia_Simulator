@@ -37,6 +37,7 @@ simulator_w_tci = Simulator(patient_tci_2,
                             tci_nore='Plasma',
                             tci_atra='Effect_site',
                             )
+
 # initialize TCI
 tci_propo = TCIController(
     patient_info,
@@ -72,14 +73,14 @@ for time_step in range(N_simu):
     u_atra = tci_atra.one_step(atracurium_target)
 
     simulator_wo_tci.one_step(u_propo, u_remi, u_nore, u_atra)
-    simulator_w_tci.one_step(
-        input_propo=propofol_target,
-        input_remi=remifentanil_target,
-        input_nore=norepinephrine_target,
-        input_atra=atracurium_target,
-    )
-print('simu_tci')
+
 # test
+results_simulator_w_tci = simulator_w_tci.full_sim(
+    inputs_propo=np.array([propofol_target]*N_simu),
+    inputs_remi=np.array([remifentanil_target]*N_simu),
+    inputs_nore=np.array([norepinephrine_target]*N_simu),
+    inputs_atra=np.array([atracurium_target]*N_simu),
+)
 
 
 def test_tci_ouput_range():
@@ -111,7 +112,7 @@ def test_tci_behavior():
 def test_tci_from_simulator():
     # ensure that both simulation are the same
     for signal in ['u_propo', 'u_remi', 'x_propo_1', 'x_remi_1', 'u_nore', 'x_nore_1', 'u_atra', 'x_atra_1']:
-        assert np.allclose(simulator_wo_tci.dataframe[signal], simulator_w_tci.dataframe[signal])
+        assert np.allclose(simulator_wo_tci.dataframe[signal].iloc[:-1], results_simulator_w_tci[signal])
 
 
 if __name__ == "__main__":
@@ -122,10 +123,10 @@ if __name__ == "__main__":
              simulator_wo_tci.dataframe['u_nore'], label='Norepinephrine (ug/s)')
     plt.plot(simulator_wo_tci.dataframe['Time'] / 60,
              simulator_wo_tci.dataframe['u_atra']/100, label='Atracurium (ug/s)')
-    plt.plot(simulator_w_tci.dataframe['Time'] / 60,
-             simulator_wo_tci.dataframe['u_propo'], '--', label='Propofol in simulator (mg/s)')
-    plt.plot(simulator_w_tci.dataframe['Time'] / 60,
-             simulator_wo_tci.dataframe['u_remi'], '--', label='Remifentanil in simulator (ug/s)')
+    plt.plot(results_simulator_w_tci['Time'] / 60,
+             results_simulator_w_tci['u_propo'], '--', label='Propofol in simulator (mg/s)')
+    plt.plot(results_simulator_w_tci['Time'] / 60,
+             results_simulator_w_tci['u_remi'], '--', label='Remifentanil in simulator (ug/s)')
     plt.ylabel('Drug rate')
     plt.grid()
     plt.legend()
@@ -139,10 +140,10 @@ if __name__ == "__main__":
              simulator_wo_tci.dataframe['x_nore_1'], label='Norepinephrine (ng/ml)')
     plt.plot(simulator_wo_tci.dataframe['Time'] / 60,
              simulator_wo_tci.dataframe['x_atra_4'], label='Atracurium (ng/ml)')
-    plt.plot(simulator_w_tci.dataframe['Time'] / 60,
-             simulator_w_tci.dataframe['x_propo_4'], '--', label='Propofol in simulator (ug/ml)')
-    plt.plot(simulator_w_tci.dataframe['Time'] / 60,
-             simulator_w_tci.dataframe['x_remi_4'], '--', label='Remifentanil in simulator (ng/ml)')
+    plt.plot(results_simulator_w_tci['Time'] / 60,
+             results_simulator_w_tci['x_propo_4'], '--', label='Propofol in simulator (ug/ml)')
+    plt.plot(results_simulator_w_tci['Time'] / 60,
+             results_simulator_w_tci['x_remi_4'], '--', label='Remifentanil in simulator (ng/ml)')
     # plot target
     plt.plot(simulator_wo_tci.dataframe['Time'] / 60, [propofol_target] *
              len(simulator_wo_tci.dataframe['Time']), '--', label='Propofol target')
@@ -152,6 +153,7 @@ if __name__ == "__main__":
              len(simulator_wo_tci.dataframe['Time']), '--', label='Norepinephrine target')
     plt.plot(simulator_wo_tci.dataframe['Time'] / 60, [atracurium_target] *
              len(simulator_wo_tci.dataframe['Time']), '--', label='Atracurium target')
+
     plt.ylabel('Effect site concentration ')
     plt.xlabel('Time (min)')
     plt.legend()

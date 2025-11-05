@@ -29,7 +29,7 @@ class Patient:
     model_nore : str, optional
         Name of the norepinephrine PK Model. The default is 'Beloeil'.
     model_atracurium : str, optional
-        Name of the atracurium PK Model. The default is 'WardWeatherleyLago'.    
+        Name of the atracurium PK Model. The default is 'WardWeatherleyLago'.
     model_bis : str, optional
         Name of the BIS PD Model. The default is 'Bouillon'.
     model_loc : str, optional
@@ -47,12 +47,12 @@ class Patient:
         The default is None.
     atracurium_model_params : dict, optional
         For "WardWeatherleyLago":
-        dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'}.     
-        If it is not provided average values are used.    
+        dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'}.
+        If it is not provided average values are used.
     atracurium_hill_params : dict, optional
         For "WardWeatherleyLago":
-        dict {'c50', 'gamma'}.     
-        If it is not provided average values are used.    
+        dict {'c50', 'gamma'}.
+        If it is not provided average values are used.
     random_PK : bool, optional
         Add uncertainties in the Propofol and Remifentanil PK models. The default is False.
     random_PD : bool, optional
@@ -60,7 +60,7 @@ class Patient:
     co_update : bool, optional
         Turn on the option to update PK parameters thanks to the CO value. The default is False.
     truncated : bool, optional
-        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.    
+        Use truncated normal distribution (between [-3, +3] std) for the random parameters. The default is False.
 
     Attributes
     ----------
@@ -85,7 +85,7 @@ class Patient:
     model_remi : str
         Name of the norepinephrine PK model.
     model_atracurium : str
-        Name of the atracurium PK model.    
+        Name of the atracurium PK model.
     model_bis : str
         Name of the BIS PD model.
     model_loc : str
@@ -93,17 +93,17 @@ class Patient:
     model_tof : str
         Name of the TOF PD model.
     model_hemo : str
-        Name of the hemo model.   
+        Name of the hemo model.
     hill_param : list
         Parameter of the BIS model (Propo Remi interaction)
         list [C50p_BIS, C50r_BIS, gamma_BIS, beta_BIS, E0_BIS, Emax_BIS, Delay_BIS].
         If Delay_BIS is not provided it is assumed equal to 0.
     atracurium_model_params : dict, optional
         For "WardWeatherleyLago":
-            dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'} 
+            dict {'V1', 'V2', 'Cl', 't12_alpha', 't12_beta', 'ke0', 'tau'}
     atracurium_hill_params : dict, optional
         For "WardWeatherleyLago":
-            dict {'c50', 'gamma'}        
+            dict {'c50', 'gamma'}
     random_PK : bool
         Add uncertainties in the Propofol and Remifentanil PK models.
     random_PD : bool
@@ -121,7 +121,7 @@ class Patient:
     nore_pk : CompartmentModel
         1-comparments model for Norepinephrine.
     atracurium_pk : CompartmentModel
-        4-comparments model for Atracurium.    
+        4-comparments model for Atracurium.
     bis_pd : BIS_model
         Surface-response model for bis computation.
     tol_pd : TOL_model
@@ -129,7 +129,7 @@ class Patient:
     hemo_pd : Hemo_PD_model
         Hemodynamic model for CO and MAP computation.
     tof_pd : TOF_model
-        Hill curve model for tof computation.    
+        Hill curve model for tof computation.
     data : pd.DataFrame
         Dataframe containing all the internal variables at each sampling time.
     bis : float
@@ -141,7 +141,7 @@ class Patient:
     map : float
         Mean arterial pressure (mmHg).
     tof : float
-        Neuromuscular blockade level (%).    
+        Neuromuscular blockade level (%).
     blood_volume : float
         Blood volume (L).
     bis_noise_std : float
@@ -151,7 +151,7 @@ class Patient:
     map_noise_std : float
         Standard deviation of the MAP noise.
     bis_delay_max : float
-        Maximum value of the BIS delay caused by signal quality index expressed in (s). 
+        Maximum value of the BIS delay caused by signal quality index expressed in (s).
     bis_delay_buffer: array
         Buffer of BIS values to simulate delay.
     """
@@ -303,12 +303,12 @@ class Patient:
         noise : bool, optional
             bool to add measurement noise on the outputs. The default is True.
 
-        Returns 
+        Returns
         -------
         bis : float
             Bispectral index(%).
         loc: float,
-            Loss of consciousness 
+            Loss of consciousness
         co : float
             Cardiac output (L/min).
         map : float
@@ -660,8 +660,19 @@ class Patient:
         self.nore_pk.update_param_blood_loss(self.blood_volume / self.blood_volume_init, self.co / (self.co_base))
         self.bis_pd.update_param_blood_loss(self.blood_volume / self.blood_volume_init)
 
-    def full_sim(self, u_propo: Optional[np.ndarray] = None, u_remi: Optional[np.ndarray] = None, u_nore: Optional[np.ndarray] = None, u_atra: Optional[np.ndarray] = None,
-                 x0_propo: Optional[np.array] = None, x0_remi: Optional[np.array] = None, x0_nore: Optional[np.array] = None, x0_atra: Optional[np.array] = None, interp=False) -> pd.DataFrame:
+    def full_sim(
+        self,
+        u_propo: Optional[np.ndarray] = None,
+        u_remi: Optional[np.ndarray] = None,
+        u_nore: Optional[np.ndarray] = None,
+        u_atra: Optional[np.ndarray] = None,
+        disturbances: Optional[np.ndarray] = None,
+        x0_propo: Optional[np.array] = None,
+        x0_remi: Optional[np.array] = None,
+        x0_nore: Optional[np.array] = None,
+        x0_atra: Optional[np.array] = None,
+        interp=False,
+    ) -> pd.DataFrame:
         r"""Simulates the patient model using the drugs infusions profiles provided as inputs.
 
         Parameters
@@ -673,7 +684,9 @@ class Patient:
         u_nore : numpy array, optional
             Norepinephrine infusion rate (µg/s). Must be a 1D array.
         u_atra : numpy array, optional
-            Atracurium infusion rate (µg/s). Must be a 1D array.    
+            Atracurium infusion rate (µg/s). Must be a 1D array.
+        disturbances : numpy array, optional
+            2D numpy array with disturbance vector, axis 1=signals; axis 2= Time. Default is null.
         x0_propo : numpy array, optional
             Initial state of the propofol PK model. The default is zeros.
         x0_remi : numpy array, optional
@@ -681,9 +694,9 @@ class Patient:
         x0_nore : numpy array, optional
             Initial state of the norepinephrine PK model. The default is zeros.
         x0_atra : numpy array, optional
-            Initial state of the atracurium PK model. The default is zeros.    
+            Initial state of the atracurium PK model. The default is zeros.
         interp : bool, optional
-            Whether to use zero-order-hold (False, the default) or linear (True) interpolation for the input array.    
+            Whether to use zero-order-hold (False, the default) or linear (True) interpolation for the input array.
 
         Requirements
         ------------
@@ -711,30 +724,17 @@ class Patient:
                 u_propo = np.zeros_like(u_atra)
         # Remifentanil infusion
         if u_remi is None:
-            if u_propo is not None:
-                u_remi = np.zeros_like(u_propo)
-            elif u_nore is not None:
-                u_remi = np.zeros_like(u_nore)
-            else:
-                u_remi = np.zeros_like(u_atra)
+            u_remi = np.zeros_like(u_propo)
         # Norepinephrine infusion
         if u_nore is None:
-            if u_propo is not None:
-                u_nore = np.zeros_like(u_propo)
-            elif u_remi is not None:
-                u_nore = np.zeros_like(u_remi)
-            else:
-                u_nore = np.zeros_like(u_atra)
+            u_nore = np.zeros_like(u_propo)
         # Atracurium infusion
         if u_atra is None:
-            if u_propo is not None:
-                u_atra = np.zeros_like(u_propo)
-            elif u_remi is not None:
-                u_atra = np.zeros_like(u_remi)
-            else:
-                u_atra = np.zeros_like(u_nore)
+            u_atra = np.zeros_like(u_propo)
+        if disturbances is None:
+            disturbances = np.zeros((6, len(u_propo)))
         # INPUT consistency check
-        if not (len(u_propo) == len(u_remi) and len(u_propo) == len(u_nore) == len(u_atra)):
+        if not (len(u_propo) == len(u_remi) == len(u_nore) == len(u_atra) == len(disturbances[0])):
             raise ValueError('Inputs must have the same length')
 
         # simulate
@@ -744,20 +744,28 @@ class Patient:
         x_atra = self.atracurium_pk.full_sim(u_atra, x0_atra, interp)
 
         # compute outputs
-        bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :])
+        bis = self.bis_pd.full_sim(x_propo[3, :], x_remi[3, :]) + disturbances[0, :]
         tol = self.tol_pd.compute_tol(x_propo[3, :], x_remi[3, :])
         loc = self.loc_pd.compute_loc(x_propo[3, :], x_remi[3, :])
         tof = self.tof_pd.compute_tof(x_atra[3, :])
         if x_nore.ndim == 1:
-            y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[:])
+            y = self.hemo_pd.full_sim(
+                x_propo[0, :],
+                x_remi[0, :],
+                x_nore[:],
+                disturbances=disturbances[3:, :].T)
         else:
-            y = self.hemo_pd.full_sim(x_propo[0, :], x_remi[0, :], x_nore[0, :])
+            y = self.hemo_pd.full_sim(
+                x_propo[0, :],
+                x_remi[0, :],
+                x_nore[0, :],
+                disturbances=disturbances[3:, :].T)
 
         tpr = y[:, 0]
         sv = y[:, 1]
         hr = y[:, 2]
-        map = y[:, 3]
-        co = y[:, 4]
+        map = y[:, 3] + disturbances[1, :]
+        co = y[:, 4] + disturbances[2, :]
 
         # save data
         dap = map - 2 / 9 * sv
@@ -776,7 +784,7 @@ class Patient:
         for i in range(np.shape(x_atra)[0]):
             df['x_atra_' + str(i + 1)] = x_atra[i, :]
         if x_nore.ndim == 1:
-            df['x_nore'] = x_nore
+            df['x_nore_1'] = x_nore
         else:
             for i in range(np.shape(x_nore)[0]):
                 df['x_nore' + str(i + 1)] = x_nore[i, :]

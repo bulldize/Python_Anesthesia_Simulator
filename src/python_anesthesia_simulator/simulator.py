@@ -211,9 +211,9 @@ class Simulator:
         input_remi : float, optional
             Infusion rate (µg/s) or target concentration (ng/ml) for Remifentanil. The default is 0.
         input_nore : float, optional
-            Infusion rate (µg/s) for Norepinephrine. The default is 0.
+            Infusion rate (µg/s) or target concentration (ng/ml) for Norepinephrine. The default is 0.
         input_atracurium : float, optional
-            Infusion rate (mg/s) for Atracurium. The default is 0.
+            Infusion rate (mg/s) or target concentration (µg/ml) for Atracurium. The default is 0.
         blood_rate : float, optional
             Fluid rates from blood volume (mL/min), negative is bleeding while positive is a transfusion.
         sqi: float, optional
@@ -321,7 +321,7 @@ class Simulator:
         self.bis = np.clip(self.bis, 0, 100)
         self.map += self.map_noise[self.noise_index]
         self.hr += self.hr_noise[self.noise_index]
-        self.hr = np.ceil(self.hr)
+        self.hr = np.round(self.hr)
 
     def init_dataframe(self):
         r"""Initilize the dataframe variable with the following columns:
@@ -367,6 +367,10 @@ class Simulator:
             column_names.append('target_propo')
         if self.tci_remi is not None:
             column_names.append('target_remi')
+        if self.tci_nore is not None:
+            column_names.append('target_nore')
+        if self.tci_atra is not None:
+            column_names.append('target_atra')
         self.dataframe = pd.DataFrame(columns=column_names, dtype=float)
 
     def save_data(self, inputs: list = None):
@@ -386,10 +390,10 @@ class Simulator:
                     'CO': self.patient.co,
                     'SAP': self.patient.sap,
                     'DAP': self.patient.dap,
-                    'u_propo': inputs[0],  # inputs
-                    'u_remi': inputs[1],
-                    'u_nore': inputs[2],
-                    'u_atra': inputs[3],
+                    'u_propo': 0,  # inputs
+                    'u_remi': 0,
+                    'u_nore': 0,
+                    'u_atra': 0,
                     'SQI': inputs[4],
                     'blood_volume': self.patient.blood_volume}  # blood volume
         if inputs is None:
@@ -403,15 +407,160 @@ class Simulator:
         new_line.update(line_x_remi)
         new_line.update(line_x_nore)
         new_line.update(line_x_atra)
-        if self.tci_propo is not None:
-            new_line['target_propo'] = self.tci_propo.target
-        if self.tci_remi is not None:
-            new_line['target_remi'] = self.tci_remi.target
-        if self.tci_nore is not None:
-            new_line['target_nore'] = self.tci_nore.target
-        if self.tci_atra is not None:
-            new_line['target_atra'] = self.tci_atra.target
         self.dataframe = pd.concat(
             [df for df in (self.dataframe, pd.DataFrame(new_line, index=[1], dtype=float)) if not df.empty],
             ignore_index=True
         )
+        if len(self.dataframe) >= 2:
+            self.dataframe.loc[len(self.dataframe)-2, 'u_propo'] = inputs[0]
+            self.dataframe.loc[len(self.dataframe)-2, 'u_remi'] = inputs[1]
+            self.dataframe.loc[len(self.dataframe)-2, 'u_nore'] = inputs[2]
+            self.dataframe.loc[len(self.dataframe)-2, 'u_atra'] = inputs[3]
+            if self.tci_propo is not None:
+                self.dataframe.loc[len(self.dataframe)-2, 'target_propo'] = self.tci_propo.target
+            if self.tci_remi is not None:
+                self.dataframe.loc[len(self.dataframe)-2, 'target_remi'] = self.tci_remi.target
+            if self.tci_nore is not None:
+                self.dataframe.loc[len(self.dataframe)-2, 'target_nore'] = self.tci_nore.target
+            if self.tci_atra is not None:
+                self.dataframe.loc[len(self.dataframe)-2, 'target_atra'] = self.tci_atra.target
+
+    def full_sim(
+        self,
+        inputs_propo: Optional[np.ndarray] = None,
+        inputs_remi: Optional[np.ndarray] = None,
+        inputs_nore: Optional[np.ndarray] = None,
+        inputs_atra: Optional[np.ndarray] = None,
+        x0_propo: Optional[np.array] = None,
+        x0_remi: Optional[np.array] = None,
+        x0_nore: Optional[np.array] = None,
+        x0_atra: Optional[np.array] = None,
+        interp=False,
+    ) -> pd.DataFrame:
+        """perform a simulation over multiple step times using the inputs profiles provided.
+
+        Parameters
+        ----------
+        inputs_propo : Optional[np.ndarray], optional
+            Infusion rates or TCI targets for propofol over time. The default is null.
+        inputs_remi : Optional[np.ndarray], optional
+            Infusion rates or TCI targets for remifentnanil over time. The default is null.
+        inputs_nore : Optional[np.ndarray], optional
+            Infusion rates or TCI targets for norepinephrine over time. The default is null.
+        inputs_atra : Optional[np.ndarray], optional
+            Infusion rates or TCI targets for remifentanil over time. The default is null.
+        x0_propo : Optional[np.array], optional
+            Initial state of the propofol PK model. The default is zeros.
+        x0_remi : Optional[np.array], optional
+            Initial state of the remifentanil PK model. The default is zeros.
+        x0_nore : Optional[np.array], optional
+            Initial state of the norepinephrine PK model. The default is zeros.
+        x0_atra : Optional[np.array], optional
+            Initial state of the atracurium PK model. The default is zeros.
+        interp : bool, optional
+            Whether to use zero-order-hold (False, the default) or linear (True) interpolation for the input array.
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe including all the signals during the simulation.
+        """
+        if inputs_propo is None and inputs_remi is None and inputs_nore is None and inputs_atra is None:
+            raise ValueError('No input provided')
+        # Propofol input
+        if inputs_propo is None:
+            if inputs_remi is not None:
+                inputs_propo = np.zeros_like(inputs_remi)
+            elif inputs_nore is not None:
+                inputs_propo = np.zeros_like(inputs_nore)
+            else:
+                inputs_propo = np.zeros_like(inputs_atra)
+        # Remifentanil input
+        if inputs_remi is None:
+            inputs_remi = np.zeros_like(inputs_propo)
+        # Norepinephrine input
+        if inputs_nore is None:
+            inputs_nore = np.zeros_like(inputs_propo)
+        # Atracurium input
+        if inputs_atra is None:
+            inputs_atra = np.zeros_like(inputs_propo)
+
+        # INPUT consistency check
+        if not (len(inputs_propo) == len(inputs_remi) and len(inputs_propo) == len(inputs_nore) == len(inputs_atra)):
+            raise ValueError('Inputs must have the same length')
+
+        # TCI computation
+
+        # propofol
+        if self.tci_propo is not None:
+            infusion_propo = np.zeros_like(inputs_propo, dtype=float)
+            if not (inputs_propo == 0).all():
+                for i in range(len(inputs_propo)):
+                    infusion_propo[i] = self.tci_propo.one_step(inputs_propo[i])
+        else:
+            infusion_propo = inputs_propo
+        # remifentanil
+        if self.tci_remi is not None:
+            infusion_remi = np.zeros_like(inputs_remi, dtype=float)
+            if not (inputs_propo == 0).all():
+                for i in range(len(inputs_propo)):
+                    infusion_remi[i] = self.tci_remi.one_step(inputs_remi[i])
+        else:
+            infusion_remi = inputs_remi
+
+        # norepinephrine
+        if self.tci_nore is not None:
+            infusion_nore = np.zeros_like(inputs_nore, dtype=float)
+            if not (inputs_nore == 0).all():
+                for i in range(len(inputs_nore)):
+                    infusion_nore[i] = self.tci_nore.one_step(inputs_nore[i])
+        else:
+            infusion_nore = inputs_nore
+
+        # atracurium
+        if self.tci_atra is not None:
+            infusion_atra = np.zeros_like(inputs_atra, dtype=float)
+            if not (inputs_atra == 0).all():
+                for i in range(len(inputs_atra)):
+                    infusion_atra[i] = self.tci_atra.one_step(inputs_atra[i])
+        else:
+            infusion_atra = inputs_atra
+
+        # Disturbance
+        Time = np.arange(0, (len(inputs_propo))*self.ts, self.ts)
+        dist_vec = np.array(self.disturbances.compute_dist(Time))
+
+        results_patient = self.patient.full_sim(
+            infusion_propo,
+            infusion_remi,
+            infusion_nore,
+            infusion_atra,
+            dist_vec,
+            x0_propo,
+            x0_remi,
+            x0_nore,
+            x0_atra,
+            interp,
+        )
+
+        if self.noise:
+            white_noise_map = np.random.normal(0, self.map_noise_std, len(inputs_propo))
+            white_noise_hr = np.random.normal(0, self.hr_noise_std, len(inputs_propo))
+            white_noise_bis = np.random.normal(0, self.bis_noise_std, len(inputs_propo))
+            _, map_noise = dlsim(self.map_noise_filter, u=white_noise_map)
+            _, hr_noise = dlsim(self.hr_noise_filter, u=white_noise_hr)
+            _, bis_noise = dlsim(self.bis_noise_filter, u=white_noise_bis)
+            results_patient['BIS'] = (results_patient['BIS'] + bis_noise).clip(lower=0, upper=100)
+            results_patient['MAP'] += map_noise
+            results_patient['HR'] = (results_patient['HR'] + hr_noise).round()
+
+        if self.tci_propo is not None:
+            results_patient['target_propo'] = inputs_propo
+        if self.tci_remi is not None:
+            results_patient['target_remi'] = inputs_remi
+        if self.tci_nore is not None:
+            results_patient['target_nore'] = inputs_nore
+        if self.tci_atra is not None:
+            results_patient['target_atra'] = inputs_atra
+
+        return results_patient

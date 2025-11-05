@@ -119,7 +119,7 @@ def compute_control_metrics(time: list, bis: list, phase: str = 'maintenance',
         # Maintenance phase
         # find start step index
         index_start = np.where(np.array(time) == start_step)[0][0] + 1
-        index_end = np.where(np.array(time) == end_step)[0][0] + 1
+        index_end = np.where(np.array(time) == end_step)[0][0]
         BIS_NADIRp = min(bis[index_start:index_end])
         BIS_NADIRn = max(bis[index_end:])
         TTp, TTn = np.nan, np.nan
