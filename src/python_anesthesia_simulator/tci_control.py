@@ -60,9 +60,16 @@ class TCIController():
 
     """
 
-    def __init__(self, patient_info: list, drug_name: str, model_used: str,
-                 drug_concentration: float = 10, maximum_rate: float = 500, sampling_time: float = 1,
-                 control_time: float = 10, target_compartement: str = 'effect_site'):
+    def __init__(
+            self,
+            patient_info: list,
+            drug_name: str,
+            model_used: str,
+            maximum_rate: float = 500,
+            sampling_time: float = 1,
+            control_time: float = 10,
+            target_compartement: str = 'effect_site',
+    ):
         """Init the class and do pre-computation.
 
         Returns

@@ -21,9 +21,9 @@ class Simulator:
                  noise: bool = False,
                  bis_delay_max: float = 120,
                  save_signals: bool = True,
-                 arg_disturbance: Optional[dict] = {},
-                 arg_tci_propo: Optional[dict] = {},
-                 arg_tci_remi: Optional[dict] = {},
+                 arg_disturbance: Optional[dict] = None,
+                 arg_tci_propo: Optional[dict] = None,
+                 arg_tci_remi: Optional[dict] = None,
                  ):
         """Initialize the Simulator with a patient, and eventual TCI pumps.
 
@@ -56,6 +56,12 @@ class Simulator:
             in closed-loop controlled anesthesia" Biomedical Signal Processing and Control 104 (2025): 107506.
             doi: https://doi.org/10.1016/j.bspc.2025.107506
         """
+        if arg_disturbance is None:
+            arg_disturbance = {}
+        if arg_tci_propo is None:
+            arg_tci_propo = {}
+        if arg_tci_remi is None:
+            arg_tci_remi = {}
         self.patient = patient
         self.ts = patient.ts
         self.time = 0
@@ -319,9 +325,11 @@ class Simulator:
             column_names.append('target_remi')
         self.dataframe = pd.DataFrame(columns=column_names, dtype=float)
 
-    def save_data(self, inputs: list = [0, 0, 0, 0, 100]):
+    def save_data(self, inputs: list = None):
         r"""Save all current internal variables as a new line in self.dataframe."""
         # store data
+        if inputs is None:
+            inputs = [0]*5
         new_line = {'Time': self.time,
                     'BIS': self.bis,  # measures
                     'LOC': self.patient.loc,
@@ -340,7 +348,8 @@ class Simulator:
                     'u_atra': inputs[3],
                     'SQI': inputs[4],
                     'blood_volume': self.patient.blood_volume}  # blood volume
-
+        if inputs is None:
+            inputs = [0, 0, 0, 0, 100]
         line_x_propo = {f'x_propo_{i + 1}': self.patient.propo_pk.x[i, 0] for i in range(len(self.patient.propo_pk.x))}
         line_x_remi = {f'x_remi_{i + 1}': self.patient.remi_pk.x[i, 0] for i in range(len(self.patient.remi_pk.x))}
         line_x_nore = {f'x_nore_{i + 1}': self.patient.nore_pk.x[i, 0] for i in range(len(self.patient.nore_pk.x))}

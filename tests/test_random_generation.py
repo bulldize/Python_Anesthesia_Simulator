@@ -25,7 +25,7 @@ george_truncated = patient.Patient(
 )
 
 # %% run a simple simulation
-N_simu = int(60 * 60/ts)
+N_simu = int(20 * 60/ts)
 
 uP, uR, uN = 0.15, 0.1, 2
 

@@ -15,24 +15,27 @@ remifentanil_target = 3
 
 
 # init the patient simulation
-patient = Patient(
+patient_tci = Patient(
     patient_info,
     ts=sampling_time,
     model_propo='Schnider',
     model_remi='Minto'
 )
-simulator_wo_tci = Simulator(patient)
-patient_2 = Patient(
+simulator_wo_tci = Simulator(patient_tci)
+patient_tci_2 = Patient(
     patient_info,
     ts=sampling_time,
     model_propo='Schnider',
     model_remi='Minto'
 )
 
-simulator_w_tci = Simulator(patient_2,
+simulator_w_tci = Simulator(patient_tci_2,
                             tci_propo='Effect_site',
-                            tci_remi='Effect_site')
-
+                            tci_remi='Effect_site',
+                            arg_tci_propo={},
+                            arg_tci_remi={},
+                            )
+print(simulator_w_tci.tci_propo.Ad)
 # initialize TCI
 tci_propo = TCIController(
     patient_info,
@@ -59,6 +62,7 @@ for time_step in range(N_simu):
         input_propo=propofol_target,
         input_remi=remifentanil_target
     )
+print('simu_tci')
 # test
 
 
@@ -82,16 +86,23 @@ def test_tci_behavior():
     assert (simulator_wo_tci.dataframe['x_remi_4'].iloc[-1] <= remifentanil_target * 1.05).all()
 
 
-def test_simulator_tci():
+def test_tci_from_simulator():
     # ensure that both simulation are the same
     for signal in ['u_propo', 'u_remi', 'x_propo_1', 'x_remi_1']:
         assert np.allclose(simulator_wo_tci.dataframe[signal], simulator_w_tci.dataframe[signal])
 
 
 if __name__ == "__main__":
+    test_tci_ouput_range()
+    test_tci_behavior()
+    test_tci_from_simulator()
     plt.subplot(2, 1, 1)
     plt.plot(simulator_wo_tci.dataframe['Time'] / 60, simulator_wo_tci.dataframe['u_propo'], label='Propofol (mg/s)')
     plt.plot(simulator_wo_tci.dataframe['Time'] / 60, simulator_wo_tci.dataframe['u_remi'], label='Remifentanil (ug/s)')
+    plt.plot(simulator_w_tci.dataframe['Time'] / 60,
+             simulator_wo_tci.dataframe['u_propo'], '--', label='Propofol in simulator (mg/s)')
+    plt.plot(simulator_w_tci.dataframe['Time'] / 60,
+             simulator_wo_tci.dataframe['u_remi'], '--', label='Remifentanil in simulator (ug/s)')
     plt.ylabel('Drug rate')
     plt.grid()
     plt.legend()
@@ -118,5 +129,5 @@ if __name__ == "__main__":
 
     test_tci_ouput_range()
     test_tci_behavior()
-    test_simulator_tci()
+    test_tci_from_simulator()
     print("All tests passed successfully.")

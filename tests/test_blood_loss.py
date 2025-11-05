@@ -3,8 +3,8 @@ from python_anesthesia_simulator import Patient, Simulator
 
 # %% Initialization patient
 ts = 5
-age, height, weight, gender = 74, 164, 88, 1
-George = Patient([age, height, weight, gender], ts=ts,
+age, height, weight, sex = 74, 164, 88, 1
+George = Patient([age, height, weight, sex], ts=ts,
                  model_propo="Eleveld", model_remi="Eleveld", co_update=True)
 
 simulator = Simulator(
@@ -12,7 +12,7 @@ simulator = Simulator(
     tci_propo='Effect_site',
     tci_remi='Effect_site',
 )
-
+print(simulator.tci_propo.Ad)
 # %% Simulation
 
 N_simu = int(120 * 60/ts)

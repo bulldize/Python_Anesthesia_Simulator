@@ -5,7 +5,7 @@ from python_anesthesia_simulator import Patient, Simulator
 
 
 # Simulation duration in seconds
-Tsim = 3600
+Tsim = 1000
 # Patient physical data
 age = 35
 weight = 70

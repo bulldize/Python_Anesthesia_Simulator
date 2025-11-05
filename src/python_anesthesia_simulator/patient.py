@@ -171,8 +171,8 @@ class Patient:
                  model_hemo: str = 'Su',
                  ts: float = 1,
                  hill_param: list = None,
-                 atracurium_model_params: dict = {},
-                 atracurium_hill_params: dict = {},
+                 atracurium_model_params: dict = None,
+                 atracurium_hill_params: dict = None,
                  random_PK: bool = False,
                  random_PD: bool = False,
                  co_update: bool = False,
@@ -185,7 +185,10 @@ class Patient:
         None.
 
         """
-
+        if atracurium_model_params is None:
+            atracurium_model_params = {}
+        if atracurium_hill_params is None:
+            atracurium_hill_params = {}
         self.age = patient_characteristic[0]
         self.height = patient_characteristic[1]
         self.weight = patient_characteristic[2]
@@ -278,7 +281,7 @@ class Patient:
         self.sap = self.map + 4 / 9 * self.sv
 
     def one_step(self, u_propo: float = 0, u_remi: float = 0, u_nore: float = 0, u_atra: float = 0, sqi: float = 100,
-                 blood_rate: float = 0, dist: list = [0] * 6) -> tuple[float, float, float, float]:
+                 blood_rate: float = 0, dist: list = None) -> tuple[float, float, float, float]:
         r"""
         Simulate one step time of the patient.
 
@@ -316,6 +319,8 @@ class Patient:
             Neuromuscular Blockade level (%)
 
         """
+        if dist is None:
+            dist = [0]*6
         # update PK model with CO
         if self.co_update:
             self.propo_pk.update_param_CO(self.co / (self.co_base))

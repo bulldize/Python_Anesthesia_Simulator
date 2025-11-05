@@ -5,14 +5,14 @@ from python_anesthesia_simulator import patient, Simulator
 
 # %% Simulation setup
 # Simulation duration in seconds
-Tsim = 3600
+Tsim = 1000
 # Patient physical data
 age = 20
 weight = 70
 height = 170
 sex = 0
 # Sampling time
-ts = 1
+ts = 2
 
 Nsim = int(Tsim/ts)
 

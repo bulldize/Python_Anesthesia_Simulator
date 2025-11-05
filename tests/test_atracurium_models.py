@@ -40,29 +40,36 @@ pd_parameters_custom = {
     'C50': 0.625,          # Half effect concentration [ug/ml]
     'gamma': 4.25          # Slope
 }
+# Simulation parameters
+Tsim = 60*50
+ts = 10
+Nsim = int(Tsim/ts)
+atracurium_infusion_profile = np.zeros((Nsim,))        # ug/s
+time = np.arange(Tsim)  # Time axis
 
 # Create Atracurium PK model objects
-test_model_default = AtracuriumModel([age, height, weight_test_model_default, sex])
+test_model_default = AtracuriumModel([age, height, weight_test_model_default, sex], ts=ts)
 test_model_custom = AtracuriumModel([age, height, weight_test_model_default, sex],
-                                    model_params=pk_parameters_custom)
-test_model_default_one_step = AtracuriumModel([age, height, weight_test_model_default, sex])
+                                    model_params=pk_parameters_custom, ts=ts)
+test_model_default_one_step = AtracuriumModel([age, height, weight_test_model_default, sex], ts=ts)
 test_model_custom_one_step = AtracuriumModel([age, height, weight_test_model_default, sex],
-                                             model_params=pk_parameters_custom)
+                                             model_params=pk_parameters_custom, ts=ts)
 # Create Atracurium PD model objects
 test_hill_default = TOF_model()
 test_hill_custom = TOF_model(hill_param=pd_parameters_custom)
 # test_hill_custom.plot_surface()
 
-# Create Patient objects that implements the atracurium models
-George_1 = Patient([age, height, weight_test_model_default, sex])
-George_one_step = Patient([age, height, weight_test_model_default, sex])
-
 # Simulation parameters
 Tsim = 60*100
-ts = 1
+ts = 10
 Nsim = int(Tsim/ts)
 atracurium_infusion_profile = np.zeros((Nsim,))        # ug/s
-time = np.arange(Tsim)  # Time axis
+time = np.arange(0, Tsim, ts)  # Time axis
+
+# Create Patient objects that implements the atracurium models
+George_1 = Patient([age, height, weight_test_model_default, sex], ts=ts)
+George_one_step = Patient([age, height, weight_test_model_default, sex], ts=ts)
+
 
 # Simulation by using full_sim
 # Simulate the free response to a bolus administration with default initialization
@@ -172,29 +179,29 @@ pd_parameters_custom_test_2 = {
     'gamma': 4.25          # Slope
 }
 
+# Simulation parameters
+Tsim_test_2 = 60*100
+ts_test_2 = 10
+Nsim_test_2 = int(Tsim_test_2/ts_test_2)
+atracurium_infusion_profile_test_2 = np.zeros((Nsim_test_2,))        # ug/s
+time_test_2 = np.arange(0, Tsim_test_2, ts_test_2)  # Time axis
+
 # Create Atracurium PK model objects
-test_model_default_test_2 = AtracuriumModel([age_test_2, height_test_2, weight_test_2, sex_test_2])
+test_model_default_test_2 = AtracuriumModel([age_test_2, height_test_2, weight_test_2, sex_test_2], ts=ts_test_2)
 test_model_custom_test_2 = AtracuriumModel([age_test_2, height_test_2, weight_test_2, sex_test_2],
-                                           model_params=pk_parameters_custom_test_2)
+                                           model_params=pk_parameters_custom_test_2, ts=ts_test_2)
 # Create Atracurium PD model objects
 test_hill_default_test_2 = TOF_model()
 test_hill_custom_test_2 = TOF_model(hill_param=pd_parameters_custom_test_2)
 # test_hill_custom.plot_surface()
 
 # Create Patient objects that implements the atracurium models
-George_test_2 = Patient([age_test_2, height_test_2, weight_test_2, sex_test_2])
-
-# Simulation parameters
-Tsim_test_2 = 60*100
-ts_test_2 = 1
-Nsim_test_2 = int(Tsim_test_2/ts_test_2)
-atracurium_infusion_profile_test_2 = np.zeros((Nsim_test_2,))        # ug/s
-time_test_2 = np.arange(Tsim_test_2)  # Time axis
+George_test_2 = Patient([age_test_2, height_test_2, weight_test_2, sex_test_2], ts=ts_test_2)
 
 
 # Simulation parameters
 atracurium_infusion_profile_test_2 = np.zeros((Nsim_test_2,))  # ug/s
-time_test_2 = np.arange(Tsim_test_2)  # Time axis
+
 # Atracurium infusion profile
 atracurium_infusion_profile_test_2[0:int(50/ts_test_2)] = 20  # 20 ug/s for 50 seconds
 atracurium_infusion_profile_test_2[int(150/ts_test_2):] = 8   # 8 ug/s from 150s onward

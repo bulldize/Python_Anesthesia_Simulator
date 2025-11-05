@@ -2,14 +2,13 @@ import matplotlib.pyplot as plt
 from python_anesthesia_simulator import Patient, TCIController, Simulator
 
 
-Ts = 1
+Ts = 10
 George_1 = Patient([18, 170, 60, 0], ts=Ts, model_propo="Eleveld", model_remi="Eleveld", co_update=False)
 George_2 = Patient([18, 170, 60, 0], ts=Ts, model_propo="Eleveld", model_remi="Eleveld", co_update=False)
 
 tci_propo = TCIController(
     [18, 170, 60, 0],
     drug_name="Propofol",
-    drug_concentration=10,
     sampling_time=Ts,
     model_used="Eleveld",
 )

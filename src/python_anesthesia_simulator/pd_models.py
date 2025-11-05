@@ -1234,7 +1234,7 @@ class Hemo_meca_PD_model:
             cp_remi: float = 0,
             cp_nore: float = 0,
             v_ratio: float = 1,
-            disturbances: list = [0]*3
+            disturbances: list = None,
     ) -> np.ndarray:
         """Compute one step time of the hemodynamic system.
 
@@ -1257,6 +1257,8 @@ class Hemo_meca_PD_model:
         -------
 
         """
+        if disturbances is None:
+            disturbances = [0]*3
         c_propo_sim = (self.previous_cp_propo + cp_propo) / 2
         c_remi_sim = (self.previous_cp_remi + cp_remi) / 2
         # run computation for model without nore effect and without blood loss
@@ -1357,7 +1359,7 @@ class Hemo_meca_PD_model:
             cp_propo_eq: float = 0,
             cp_remi_eq: float = 0,
             cp_nore_eq: float = 0,
-            disturbance: list = [0]*3,
+            disturbances: list = None,
             x0: np.ndarray = None,
     ) -> np.ndarray:
         """Solve the problem f(x,u)=0 for the continuous dynamique with a given u.
@@ -1380,12 +1382,13 @@ class Hemo_meca_PD_model:
         np.ndarray
             List of the output value at equilibrium.
         """
-
+        if disturbances is None:
+            disturbances = [0]*3
         if x0 is None:
             x0 = self.x
         # solve equilibrium without nore
         x = cas.MX.sym('x', 5)
-        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + disturbance))
+        dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, 0, 0] + disturbances))
         F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
         sol = F_root(x0=x0)
         x_no_nore = sol['x'].full().flatten()
@@ -1393,11 +1396,11 @@ class Hemo_meca_PD_model:
 
         # if nore is used, solve equilibrium with nore
         if cp_nore_eq > 0:
-            output_no_nore = self.output_function(x_no_nore, dist=disturbance)
+            output_no_nore = self.output_function(x_no_nore, dist=disturbances)
             map_eq = output_no_nore[3] + self.nore_map_effect(cp_nore_eq)
             # solve equilibrium with nore
             x = cas.MX.sym('x', 5)
-            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + disturbance))
+            dx = cas.vertcat(*self.continuous_dynamic(x, [cp_propo_eq, cp_remi_eq, map_eq, 0] + disturbances))
             # map_nore = self.output_function(x)[3]
             # dx[0] = (map_nore - map_eq)**2
             F_root = cas.rootfinder('F_root', 'newton', {'x': x, 'g': dx})
@@ -1407,7 +1410,7 @@ class Hemo_meca_PD_model:
         else:
             x_eq_out = x_no_nore
 
-        output = self.output_function(x_eq_out, dist=disturbance)
+        output = self.output_function(x_eq_out, dist=disturbances)
         self.x_eq_w_nore = x_eq_out
 
         return output
@@ -1484,7 +1487,7 @@ class TOF_model:
     """
 
     def __init__(self, hill_model: str = 'Weatherley',
-                 hill_param: Optional[dict] = {}):
+                 hill_param: Optional[dict] = None):
         """
         Init the class.
 
@@ -1493,7 +1496,8 @@ class TOF_model:
         None.
 
         """
-
+        if hill_param is None:
+            hill_param = {}
         self.hill_model = hill_model
 
         if self.hill_model == 'Weatherley':

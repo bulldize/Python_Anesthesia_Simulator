@@ -131,7 +131,7 @@ class CompartmentModel:
         age = Patient_characteristic[0]
         height = Patient_characteristic[1]
         weight = Patient_characteristic[2]
-        sexPatient_characteristic[3]
+        sex = Patient_characteristic[3]
         self.u_endo = 0  # endogenous production of drug (used for Norepinephrine)
         self.u_lag = 0  # lag in seconds
         self.model = model
@@ -304,7 +304,7 @@ class CompartmentModel:
                 fCLmat_ref = fsig(PMA_ref*52, theta[8], theta[9])
                 fQ3mat = fsig(PMA * 52, theta[14], 1)
                 fQ3mat_ref = fsig(PMA_ref * 52, theta[14], 1)
-                fsal = fal_sallami(sexeight, age, BMI)
+                fsal = fal_sallami(sex, weight, age, BMI)
                 fsal_ref = fal_sallami(GDR_ref, WGT_ref, AGE_ref, BMI_ref)
 
                 if opiate:
@@ -321,8 +321,8 @@ class CompartmentModel:
                 v2ref = theta[2]
                 v3 = theta[3] * fsal/fsal_ref * fopiate(theta[13])
                 v3ref = theta[3]
-                cl1 = (sexeta[4] + (1-gensexsex5]) * (weight/WGT_ref)**0.75 *
-                fCLmat/fCLmat_ref * fopiate(theta[11])
+                cl1 = (sex*theta[4] + (1-sex)*theta[15]) * (weight/WGT_ref)**0.75 * \
+                    fCLmat/fCLmat_ref * fopiate(theta[11])
 
                 cl2 = theta[5]*(v2/v2ref)**0.75 * (1 + theta[16] * (1 - fQ3mat))
                 if measurement == "venous":
@@ -413,7 +413,7 @@ class CompartmentModel:
 
                 BMI = weight/(height/100)**2
 
-                SIZE = (fal_sallami(sexeight, age, BMI)/fal_sallami(GDR_ref, WGT_ref, AGE_ref, BMI_ref))
+                SIZE = (fal_sallami(sex, weight, age, BMI)/fal_sallami(GDR_ref, WGT_ref, AGE_ref, BMI_ref))
 
                 theta = [None,      # Juste to have the same index as in the paper
                          2.88,
@@ -877,10 +877,12 @@ class AtracuriumModel:
 
     def __init__(self, Patient_characteristic: list,
                  model: str = None,
-                 model_params: dict = {},
+                 model_params: dict = None,
                  ts: float = 1,
                  x0: np.ndarray = None):
         """Init the class."""
+        if model_params is None:
+            model_params = {}
         self.ts = ts
         weight = Patient_characteristic[2]
         self.model = model
