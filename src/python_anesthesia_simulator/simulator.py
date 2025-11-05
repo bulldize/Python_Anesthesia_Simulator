@@ -15,8 +15,8 @@ class Simulator:
                  patient: Patient,
                  tci_propo: Optional[str] = None,
                  tci_remi: Optional[str] = None,
-                 #  tci_nore_: Optional[bool] = False,  not yet available
-                 #  tci_atracurium: Optional[bool] = False, not yet available
+                 tci_nore: Optional[bool] = None,
+                 tci_atra: Optional[bool] = None,
                  disturbance_profil: Optional[str] = None,
                  noise: bool = False,
                  bis_delay_max: float = 120,
@@ -24,6 +24,8 @@ class Simulator:
                  arg_disturbance: Optional[dict] = None,
                  arg_tci_propo: Optional[dict] = None,
                  arg_tci_remi: Optional[dict] = None,
+                 arg_tci_nore: Optional[dict] = None,
+                 arg_tci_atra: Optional[dict] = None,
                  ):
         """Initialize the Simulator with a patient, and eventual TCI pumps.
 
@@ -49,6 +51,10 @@ class Simulator:
             Additionnale argument to pass to tci class initialization for propofol. The default is empty.
         arg_tci_remi: dict, optionnal
             Additionnale argument to pass to tci class initialization for remifentanil. The default is empty.
+        arg_tci_nore: dict, optionnal
+            Additionnale argument to pass to tci class initialization for norepinephrine. The default is empty.
+        arg_tci_atra: dict, optionnal
+            Additionnale argument to pass to tci class initialization for atracurium. The default is empty.
 
         References
         ---------- 
@@ -62,6 +68,10 @@ class Simulator:
             arg_tci_propo = {}
         if arg_tci_remi is None:
             arg_tci_remi = {}
+        if arg_tci_nore is None:
+            arg_tci_nore = {}
+        if arg_tci_atra is None:
+            arg_tci_atra = {}
         self.patient = patient
         self.ts = patient.ts
         self.time = 0
@@ -84,7 +94,7 @@ class Simulator:
 
         if tci_propo is not None:
             if tci_propo not in ['Plasma', 'Effect_site']:
-                raise ValueError('tci_propo must be either "Plasma", "Effect_site" or "none"')
+                raise ValueError('tci_propo must be either "Plasma", "Effect_site" or None')
             if 'model_used' not in arg_tci_propo.keys():
                 arg_tci_propo['model_used'] = patient.model_propo
             self.tci_propo = TCIController(
@@ -97,7 +107,7 @@ class Simulator:
             self.tci_propo = None
         if tci_remi is not None:
             if tci_remi not in ['Plasma', 'Effect_site']:
-                raise ValueError('tci_remi must be either "Plasma", "Effect_site" or "none"')
+                raise ValueError('tci_remi must be either "Plasma", "Effect_site" or None')
             if 'model_used' not in arg_tci_remi.keys():
                 arg_tci_remi['model_used'] = patient.model_remi
             self.tci_remi = TCIController(
@@ -108,6 +118,32 @@ class Simulator:
             )
         else:
             self.tci_remi = None
+        if tci_nore is not None:
+            if tci_nore not in ['Plasma', 'Effect_site']:
+                raise ValueError('tci_nore must be either "Plasma" or None')
+            if 'model_used' not in arg_tci_nore.keys():
+                arg_tci_nore['model_used'] = patient.model_nore
+            self.tci_nore = TCIController(
+                self.demographic,
+                drug_name='Norepinephrine',
+                sampling_time=self.ts,
+                **arg_tci_nore,
+            )
+        else:
+            self.tci_nore = None
+        if tci_atra is not None:
+            if tci_atra not in ['Plasma', 'Effect_site']:
+                raise ValueError('tci_remi must be either "Plasma", "Effect_site" or "none"')
+            if 'model_used' not in arg_tci_atra.keys():
+                arg_tci_atra['model_used'] = patient.model_atra
+            self.tci_atra = TCIController(
+                self.demographic,
+                drug_name='Atracurium',
+                sampling_time=self.ts,
+                **arg_tci_atra,
+            )
+        else:
+            self.tci_atra = None
 
         # Initialize the buffer to simulate BIS delay
         self.bis_delay_buffer = np.ones(int(np.ceil(self.bis_delay_max / self.ts))) * self.patient.bis
@@ -202,6 +238,14 @@ class Simulator:
             infusion_remi = self.tci_remi.one_step(target=input_remi)
         else:
             infusion_remi = input_remi
+        if self.tci_nore is not None:
+            infusion_nore = self.tci_nore.one_step(target=input_nore)
+        else:
+            infusion_nore = input_nore
+        if self.tci_atra is not None:
+            infusion_atra = self.tci_atra.one_step(target=input_atra)
+        else:
+            infusion_atra = input_atra
 
         disturbances = self.disturbances.compute_dist(
             time=self.time,
@@ -210,8 +254,8 @@ class Simulator:
         self.patient.one_step(
             u_propo=infusion_propo,
             u_remi=infusion_remi,
-            u_nore=input_nore,
-            u_atra=input_atra,
+            u_nore=infusion_nore,
+            u_atra=infusion_atra,
             dist=disturbances,
             blood_rate=blood_rate,
         )
@@ -242,8 +286,8 @@ class Simulator:
                 inputs=[
                     infusion_propo,
                     infusion_remi,
-                    input_nore,
-                    input_atra,
+                    infusion_nore,
+                    infusion_atra,
                     sqi,
                 ]
             )
@@ -363,6 +407,10 @@ class Simulator:
             new_line['target_propo'] = self.tci_propo.target
         if self.tci_remi is not None:
             new_line['target_remi'] = self.tci_remi.target
+        if self.tci_nore is not None:
+            new_line['target_nore'] = self.tci_nore.target
+        if self.tci_atra is not None:
+            new_line['target_atra'] = self.tci_atra.target
         self.dataframe = pd.concat(
             [df for df in (self.dataframe, pd.DataFrame(new_line, index=[1], dtype=float)) if not df.empty],
             ignore_index=True

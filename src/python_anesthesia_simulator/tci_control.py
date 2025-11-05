@@ -1,6 +1,6 @@
 import numpy as np
 
-from .pk_models import CompartmentModel
+from .pk_models import CompartmentModel, AtracuriumModel
 
 
 class TCIController():
@@ -14,18 +14,20 @@ class TCIController():
     patient_info : list
         Patient information = [age (yr), height (cm), weight (kg), sex( 0= female, 1 = male)].
     drug_name : str
-        Can be either 'Propofol' or 'Remifentanil'.
+        Can be either 'Propofol', 'Remifentanil', 'Norepinephrine' or 'Atracurium'.
     model_used : str
         Could be "Minto", "Eleveld" for Remifentanil,
-        "Schnider", "Marsh_initial", "Marsh_modified", "Shuttler" or "Eleveld" for Propofol.
+        "Schnider", "Marsh_initial", "Marsh_modified", "Shuttler" or "Eleveld" for Propofol,
+        "Oualha", or "Beloeil" for Norepinephrine,
+        "WardWeatherleyLago" for Atracurium
     maximum_rate : float
-        Maximum drug rate in ml/hr.
+        Maximum drug rate in mg/s or µg/s depending on the unit.
     sampling_time : float, optional
         Sampling time of the model for the calculs. The default is 1s.
     control_time : float, optional
         Sampling time of the controller, must be a multiple of the sampling time. The default is 10s.
     target_compartement : str, optional
-        Can be either "plasma" or "effect_site". The default is 'effect_site'.
+        Can be either "plasma" or "effect_site", for Norepinephrine only plasma is available. The default is 'effect_site' except for norepinephrine.
 
     Attributes
     ----------
@@ -64,7 +66,7 @@ class TCIController():
             self,
             patient_info: list,
             drug_name: str,
-            model_used: str,
+            model_used: str = None,
             maximum_rate: float = 500,
             sampling_time: float = 1,
             control_time: float = 10,
@@ -77,6 +79,17 @@ class TCIController():
         None.
 
         """
+        if model_used is None:
+            if drug_name == 'Propofol':
+                model_used = 'Schnider'
+            elif drug_name == 'Remifentanil':
+                model_used = 'Minto'
+            elif drug_name == 'Norepinephrine':
+                model_used = 'Beloeil'
+            elif drug_name == 'Atracurium':
+                model_used = 'WardWeatherleyLago'
+            else:
+                raise ValueError("drug_name must be either 'Propofol', 'Remifentanil', 'Norepinephrine' or 'Atracurium'")
         self.sampling_time = sampling_time
         self.control_time = control_time
         if target_compartement == 'plasma':
@@ -85,6 +98,8 @@ class TCIController():
             self.target_id = 3
         else:
             raise ValueError('target_compartement must be either "plasma" or "effect_site"')
+        if drug_name == 'Norepinephrine':
+            self.target_id = 0
         self.infusion_max = maximum_rate  # in mg/s or µg/s respectively Propo and Remi
 
         height = patient_info[1]
@@ -95,16 +110,36 @@ class TCIController():
         elif sex == 0:  # femme
             lbm = 1.07 * weight - 148 * (weight / height) ** 2
 
-        pk_model = CompartmentModel(patient_info, lbm, drug_name, ts=sampling_time, model=model_used)
-        self.Ad = pk_model.discretize_sys.A[:4, :4]
-        self.Bd = pk_model.discretize_sys.B[:4]
+        if drug_name != 'Atracurium':
+            pk_model = CompartmentModel(patient_info, lbm, drug_name, ts=sampling_time, model=model_used)
+            self.Ad = pk_model.discretize_sys.A
+            self.Bd = pk_model.discretize_sys.B
 
-        pk_model = CompartmentModel(patient_info, lbm, drug_name, ts=control_time, model=model_used)
-        self.Ad_control = pk_model.discretize_sys.A[:4, :4]
-        self.Bd_control = pk_model.discretize_sys.B[:4]
+            pk_model = CompartmentModel(patient_info, lbm, drug_name, ts=control_time, model=model_used)
+            self.Ad_control = pk_model.discretize_sys.A
+            self.Bd_control = pk_model.discretize_sys.B
+            self.u_endo = pk_model.u_endo
+        else:
+            pk_model = AtracuriumModel(
+                patient_info,
+                ts=sampling_time,
+                model=model_used,
+            )
+            self.Ad = pk_model.discretize_sys.A
+            self.Bd = pk_model.discretize_sys.B
+            pk_model = AtracuriumModel(
+                patient_info,
+                ts=control_time,
+                model=model_used,
+            )
+            self.Ad_control = pk_model.discretize_sys.A
+            self.Bd_control = pk_model.discretize_sys.B
+            self.u_endo = 0
+
+        self.n_state = len(self.Ad)
         # find the response to a 10s infusion
-        x = np.zeros((4, 1))
-        x_p = np.zeros((4, 1))
+        x = np.zeros((self.n_state, 1))
+        x_p = np.zeros((self.n_state, 1))
         self.Ce = []
         t = sampling_time
         self.t_peak = 0
@@ -121,7 +156,7 @@ class TCIController():
         self.Ce = np.array(self.Ce)
         # variable used for control
         self.infusion_rate = 0  # last control move chosen
-        self.x = np.zeros((4, 1))  # state to store the real patient
+        self.x = pk_model.x  # state to store the real patient
         self.target = 0
         self.tpeak_0 = 0
         self.tpeak_1 = 0
@@ -153,14 +188,14 @@ class TCIController():
             x_temp = self.x
             Ce_0 = np.zeros(int(max(self.control_time+self.sampling_time, self.t_peak)/self.sampling_time))
             for t in range(int(max(self.control_time+self.sampling_time, self.t_peak)/self.sampling_time)):
-                x_temp = self.Ad @ x_temp
+                x_temp = self.Ad @ x_temp + self.Bd * self.u_endo
                 Ce_0[t] = x_temp[self.target_id, 0]
 
             # compute the infusion rate to reach the target
 
             # if we are close to the target, we compute the infusion rate to reach the target at the next step time
             if Ce_0[0] > 0.95*target and Ce_0[0] < 1.05 * target:
-                self.infusion_rate = (target - (self.Ad_control @ self.x)[0]) / self.Bd_control[0]
+                self.infusion_rate = (target - (self.Ad_control @ self.x)[0]) / self.Bd_control[0] - self.u_endo
                 self.infusion_rate = max(0, self.infusion_rate)
             # if we are far from the target, we compute the infusion rate to reach the target at the next peak
             else:
@@ -192,7 +227,7 @@ class TCIController():
             self.infusion_rate = self.infusion_rate
 
         self.time += self.sampling_time
-        self.x = self.Ad @ self.x + self.Bd * self.infusion_rate
+        self.x = self.Ad @ self.x + self.Bd * (self.infusion_rate + self.u_endo)
         self.infusion_rate = max(min(self.infusion_rate, self.infusion_max), 0)
         if isinstance(self.infusion_rate, np.ndarray):
             self.infusion_rate = self.infusion_rate[0]

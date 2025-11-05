@@ -164,7 +164,7 @@ class Patient:
                  model_propo: str = 'Schnider',
                  model_remi: str = 'Minto',
                  model_nore: str = 'Beloeil',
-                 model_atracurium: str = 'WardWeatherleyLago',
+                 model_atra: str = 'WardWeatherleyLago',
                  model_bis: str = 'Bouillon',
                  model_loc: str = 'Kern',
                  model_tof: str = 'Weatherley',
@@ -200,7 +200,7 @@ class Patient:
         self.model_propo = model_propo
         self.model_remi = model_remi
         self.model_nore = model_nore
-        self.model_atracurium = model_atracurium
+        self.model_atra = model_atra
         self.model_hemo = model_hemo
         self.model_bis = model_bis
         self.model_loc = model_loc
@@ -228,7 +228,7 @@ class Patient:
         self.nore_pk = CompartmentModel(patient_characteristic, self.lbm, drug="Norepinephrine",
                                         ts=self.ts, model=model_nore, random=random_PK, truncated=truncated)
         self.atracurium_pk = AtracuriumModel(patient_characteristic,
-                                             ts=self.ts, model=model_atracurium,
+                                             ts=self.ts, model=model_atra,
                                              model_params=atracurium_model_params)
 
         # Init PD model for BIS
