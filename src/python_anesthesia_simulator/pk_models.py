@@ -465,8 +465,8 @@ class CompartmentModel:
                 v1 = 8.840
                 cl1 = 59.6 / 30  # suppose SAPS II = 30 ()
 
-                w_v1 = 1.63
-                w_cl1 = 0.974
+                w_v1 = np.sqrt(np.log(1+1.63/v1**2))
+                w_cl1 = np.sqrt(np.log(1+0.974/cl1**2))
             elif self.model == 'Oualha':
                 # see M. Oualha et al., “Population pharmacokinetics and haemodynamic effects of norepinephrine
                 # in hypotensive critically ill children,” British Journal of Clinical Pharmacology,

@@ -1019,7 +1019,7 @@ class Hemo_meca_PD_model:
             self.c50_nore_map = 7.04
             self.gamma_nore_map = 1.8
             w_emax_nore_map = 0
-            w_c50_nore_map = 1.64
+            w_c50_nore_map = np.sqrt(np.log(1+1.64/self.c50_nore_map**2))
             w_gamma_nore_map = 0
         elif nore_model == 'Oualha':
             # see M. Oualha et al., “Population pharmacokinetics and haemodynamic effects of norepinephrine
