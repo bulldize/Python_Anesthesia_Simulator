@@ -12,7 +12,8 @@ class Simulator:
     """Class to add environment and usefull functions for simulation."""
 
     def __init__(self,
-                 patient: Patient,
+                 patient: Optional[Patient] = None,
+                 random_generation_arg: Optional[dict] = None,
                  tci_propo: Optional[str] = None,
                  tci_remi: Optional[str] = None,
                  tci_nore: Optional[bool] = None,
@@ -31,8 +32,10 @@ class Simulator:
 
         Parameters
         ----------
-        patient: Patient
-            The virtual patient object.
+        patient: Patient, optional
+            The virtual patient object. If None a random patient is generaed with random_generation_arg parameters.
+        random_generation_arg: dict, optional
+            argument to pass to generate_random_patient_method. The default is empty.
         tci_propo: str, optional 
             Type of TCI for Propofol. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
         tci_remi: str, optional
@@ -72,8 +75,13 @@ class Simulator:
             arg_tci_nore = {}
         if arg_tci_atra is None:
             arg_tci_atra = {}
-        self.patient = patient
-        self.ts = patient.ts
+        if random_generation_arg is None:
+            random_generation_arg = {}
+        if patient is None:
+            self.patient = self.generate_random_patient(**random_generation_arg)
+        else:
+            self.patient = patient
+        self.ts = self.patient.ts
         self.time = 0
         self.arg_disturbance = arg_disturbance
         self.noise = noise
@@ -81,10 +89,10 @@ class Simulator:
         self.save_signals = save_signals
 
         self.demographic = [
-            patient.age,
-            patient.height,
-            patient.weight,
-            patient.sex
+            self.patient.age,
+            self.patient.height,
+            self.patient.weight,
+            self.patient.sex
         ]
 
         self.disturbances = Disturbances(
@@ -96,7 +104,7 @@ class Simulator:
             if tci_propo not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_propo must be either "Plasma", "Effect_site" or None')
             if 'model_used' not in arg_tci_propo.keys():
-                arg_tci_propo['model_used'] = patient.model_propo
+                arg_tci_propo['model_used'] = self.patient.model_propo
             self.tci_propo = TCIController(
                 self.demographic,
                 drug_name='Propofol',
@@ -109,7 +117,7 @@ class Simulator:
             if tci_remi not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_remi must be either "Plasma", "Effect_site" or None')
             if 'model_used' not in arg_tci_remi.keys():
-                arg_tci_remi['model_used'] = patient.model_remi
+                arg_tci_remi['model_used'] = self.patient.model_remi
             self.tci_remi = TCIController(
                 self.demographic,
                 drug_name='Remifentanil',
@@ -122,7 +130,7 @@ class Simulator:
             if tci_nore not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_nore must be either "Plasma" or None')
             if 'model_used' not in arg_tci_nore.keys():
-                arg_tci_nore['model_used'] = patient.model_nore
+                arg_tci_nore['model_used'] = self.patient.model_nore
             self.tci_nore = TCIController(
                 self.demographic,
                 drug_name='Norepinephrine',
@@ -135,7 +143,7 @@ class Simulator:
             if tci_atra not in ['Plasma', 'Effect_site']:
                 raise ValueError('tci_remi must be either "Plasma", "Effect_site" or "none"')
             if 'model_used' not in arg_tci_atra.keys():
-                arg_tci_atra['model_used'] = patient.model_atra
+                arg_tci_atra['model_used'] = self.patient.model_atra
             self.tci_atra = TCIController(
                 self.demographic,
                 drug_name='Atracurium',
@@ -564,3 +572,65 @@ class Simulator:
             results_patient['target_atra'] = inputs_atra
 
         return results_patient
+
+    def generate_random_patient(
+        self,
+        distribution: Optional[str] = 'uniform',
+        patient_arg: Optional[dict] = None,
+    ):
+        """
+        Generate a random patient with caracteristique following either a uniform distribution or a distribution fitted on VitalDB data.
+
+        Paramters
+        ----------
+        distribution: str, optionnal
+            Choose how patient characteristic are drawn. Can be "uniform" or "VitalDB". Default is "uniform".
+        patient_arg: list, optionnal
+            Arguments to pass to init the patient class. Default is an empty list.
+        Return
+        -------
+        patient: Patient object
+            Instance of the patient class.
+        """
+        if patient_arg is None:
+            patient_arg = {}
+
+        if distribution == 'uniform':
+            age = np.random.randint(low=18, high=81)
+            height = np.random.randint(low=150, high=190)
+            weight = np.random.randint(low=50, high=100)
+            sex = np.random.randint(low=0, high=2)
+        elif distribution == 'VitalDB':
+
+            mean_male = [55.4, 167.6, 65.8]  # age, height, weight
+            mean_female = [51.6, 157.7, 54.4]
+            sigma_male = [
+                [116.2, -13.9, -41.4],
+                [-13.9,  33.3,  18.1],
+                [-41.4,  18.1, 105.0]]
+            sigma_female = [
+                [251.5, -44.0, -19.0],
+                [-44.0,  21.3,  22.5],
+                [-19.0,  22.5,  68.8]]
+            sex = np.random.randint(low=0, high=2)
+            good_range = False
+            while not good_range:
+                if sex == 0:
+                    vec = np.random.multivariate_normal(mean_female, sigma_female)
+                else:
+                    vec = np.random.multivariate_normal(mean_male, sigma_male)
+                good_age = (vec[0] >= 18) and (vec[0] <= 80)
+                good_height = (vec[1] >= 145) and (vec[1] <= 185)
+                good_weight = (vec[2] >= 40) and (vec[2] <= 95)
+                good_range = good_age and good_height and good_weight
+            age = vec[0]
+            height = vec[1]
+            weight = vec[2]
+        else:
+            raise ValueError('Only uniform and VitalDB are available as distribution')
+
+        patient = Patient(
+            [age, height, weight, sex],
+            **patient_arg,
+        )
+        return patient
