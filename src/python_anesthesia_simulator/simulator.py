@@ -9,7 +9,43 @@ from .disturbances import Disturbances
 
 
 class Simulator:
-    """Class to add environment and usefull functions for simulation."""
+    """Class to add environment and usefull functions for simulation.
+
+    Parameters
+    ----------
+    patient: Patient, optional
+        The virtual patient object. If None a random patient is generaed with random_generation_arg parameters.
+    random_generation_arg: dict, optional
+        Argument to pass to generate_random_patient_method. The default is empty.
+    tci_propo: str, optional 
+        Type of TCI for Propofol. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
+    tci_remi: str, optional
+        Type of TCI for Remifentanil. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
+    disturbance_profil: str, optional
+        Type of disturbance profile to apply. See disturbance module for more details. The default is None.
+    noise: bool, optional
+        If True, add noise to the outputs of the patient model. The default is False.
+    save_signals : bool, optional
+        Save all internal variables at each sampling time in a data frame. The default is True.
+    bis_delay_max : float, optional
+        Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).
+    arg_disturbance: dict, optional
+        Additional argument to pass to the function compute_disturbances. The default is empty.
+    arg_tci_propo: dict, optional
+        Additional argument to pass to tci class initialization for propofol. The default is empty.
+    arg_tci_remi: dict, optional
+        Additional argument to pass to tci class initialization for remifentanil. The default is empty.
+    arg_tci_nore: dict, optional
+        Additional argument to pass to tci class initialization for norepinephrine. The default is empty.
+    arg_tci_atra: dict, optional
+        Additional argument to pass to tci class initialization for atracurium. The default is empty.
+
+    References
+    ---------- 
+    .. [Wahlquist2025] Y. Wahlquist, et al. "Kalman filter soft sensor to handle signal quality loss
+        in closed-loop controlled anesthesia" Biomedical Signal Processing and Control 104 (2025): 107506.
+        doi: https://doi.org/10.1016/j.bspc.2025.107506
+    """
 
     def __init__(self,
                  patient: Optional[Patient] = None,
@@ -28,43 +64,7 @@ class Simulator:
                  arg_tci_nore: Optional[dict] = None,
                  arg_tci_atra: Optional[dict] = None,
                  ):
-        """Initialize the Simulator with a patient, and eventual TCI pumps.
-
-        Parameters
-        ----------
-        patient: Patient, optional
-            The virtual patient object. If None a random patient is generaed with random_generation_arg parameters.
-        random_generation_arg: dict, optional
-            argument to pass to generate_random_patient_method. The default is empty.
-        tci_propo: str, optional 
-            Type of TCI for Propofol. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
-        tci_remi: str, optional
-            Type of TCI for Remifentanil. Can be either 'Plasma', 'Effect_site' or 'none'. Defaults to 'none'.
-        disturbance_profil: str, optional
-            Type of disturbance profile to apply. See disturbance module for more details. The default is None.
-        noise: bool, optional
-            If True, add noise to the outputs of the patient model. The default is False.
-        save_signals : bool, optional
-            Save all interns variable at each sampling time in a data frame. The default is True.
-        bis_delay_max : float, optional
-            Maximum value of the BIS delay caused by Signal Quality Index (SQI) expressed in (s) according to the relationship proposed in [Wahlquist2025]_. The default is 120 (s).
-        arg_disturbance: dict, optionnal
-            Additionnale argument to pass to the function compute_disturbances. The default is empty.
-        arg_tci_propo: dict, optionnal
-            Additionnale argument to pass to tci class initialization for propofol. The default is empty.
-        arg_tci_remi: dict, optionnal
-            Additionnale argument to pass to tci class initialization for remifentanil. The default is empty.
-        arg_tci_nore: dict, optionnal
-            Additionnale argument to pass to tci class initialization for norepinephrine. The default is empty.
-        arg_tci_atra: dict, optionnal
-            Additionnale argument to pass to tci class initialization for atracurium. The default is empty.
-
-        References
-        ---------- 
-        .. [Wahlquist2025] Y. Wahlquist, et al. "Kalman filter soft sensor to handle signal quality loss
-            in closed-loop controlled anesthesia" Biomedical Signal Processing and Control 104 (2025): 107506.
-            doi: https://doi.org/10.1016/j.bspc.2025.107506
-        """
+        """Initialize the Simulator with a patient, and eventual TCI pumps. """
         if arg_disturbance is None:
             arg_disturbance = {}
         if arg_tci_propo is None:
@@ -210,7 +210,7 @@ class Simulator:
                  ) -> tuple[float, float, float, float]:
         r"""Simulate one step of the patient model with given inputs.
 
-        if tci pumps are used, the inputs are the target concentrations. Otherwise, they are the infusion rates.
+        If tci pumps are used, the inputs are the target concentrations. Otherwise, they are the infusion rates.
 
         Parameters
         ----------
@@ -445,7 +445,7 @@ class Simulator:
         x0_atra: Optional[np.array] = None,
         interp=False,
     ) -> pd.DataFrame:
-        """perform a simulation over multiple step times using the inputs profiles provided.
+        """Perform a simulation over multiple step times using the inputs profiles provided.
 
         Parameters
         ----------
@@ -471,7 +471,7 @@ class Simulator:
         Returns
         -------
         pd.DataFrame
-            dataframe including all the signals during the simulation.
+            Dataframe including all the signals during the simulation.
         """
         if inputs_propo is None and inputs_remi is None and inputs_nore is None and inputs_atra is None:
             raise ValueError('No input provided')
@@ -579,7 +579,7 @@ class Simulator:
         patient_arg: Optional[dict] = None,
     ):
         """
-        Generate a random patient with caracteristique following either a uniform distribution or a distribution fitted on VitalDB data.
+        Generate a random patient with characteristics following either a uniform distribution or a distribution fitted on VitalDB data.
 
         Paramters
         ----------

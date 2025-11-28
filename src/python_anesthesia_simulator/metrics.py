@@ -191,7 +191,7 @@ def new_metrics_induction(time: np.ndarray, bis: np.ndarray):
 
     References
     ----------
-    ..  [Aubouin2024] B. Aubouin–Pairault, M. Fiacchini, and T. Dang, “Online identification
+    .. [Aubouin2024] B. Aubouin–Pairault, M. Fiacchini, and T. Dang, “Online identification
             of pharmacodynamic parameters for closed-loop anesthesia with model predictive control,”
             Computers & Chemical Engineering, vol. 191, p. 108837, Dec. 2024,
             doi: 10.1016/j.compchemeng.2024.108837.

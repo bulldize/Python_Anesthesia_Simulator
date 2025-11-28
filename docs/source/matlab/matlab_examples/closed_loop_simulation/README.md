@@ -107,8 +107,7 @@ for k=1:1:N_simu
     [uProp_k, uRem_k] = pid_ratio(BIS_k, y_sp, PID_params);
 
     simulation_tuple = George.one_step(u_propo=uProp_k,...
-        u_remi=uRem_k,...
-        noise = false);
+        u_remi=uRem_k);
     simulation_cell = cell(simulation_tuple);
     BIS_k = double(simulation_cell{1});
 

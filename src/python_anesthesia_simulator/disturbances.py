@@ -22,13 +22,13 @@ class Disturbances:
 
         The default is None.
     start_step : float, optional
-        For step profil, start time of the step disturbance (seconds). The default is 600s.
+        For step profile, start time of the step disturbance (seconds). The default is 600s.
     end_step : float, optional
-        For step profil, end time of the step distuebance (seconds). The default is 1200s.
+        For step profile, end time of the step disturbance (seconds). The default is 1200s.
     start_intub_time : float, optional
-        For VitalDb profil, start time of the intubation disturbance (seconds). The default is 180s.
+        For VitalDb profile, start time of the intubation disturbance (seconds). The default is 180s.
     start_surgery_time : float, optional
-        For VitalDb profil, start time of the surgery disturbance (seconds). The default is 40 minutes
+        For VitalDb profile, start time of the surgery disturbance (seconds). The default is 40 minutes
 
     Returns
     -------
@@ -235,7 +235,7 @@ class Disturbances:
                 'dist_profil should be: realistic, realistic2, liverTransplantation, simple, step, VitalDB or None')
 
     def disturbance_dynamic(self):
-        """Compute the disturbance from the VitalDB profil.
+        """Compute the disturbance from the VitalDB profile.
         """
         # stimuli input
         length_computation = 10_000
@@ -285,7 +285,7 @@ class Disturbances:
         self.dist_hr += lfilter(tf_dist_hr.num, tf_dist_hr.den, self.surg_input)
 
     def compute_dist(self, time: float):
-        """Interpolate the disturbance profil for the given time.
+        """Interpolate the disturbance profile for the given time.
 
         Parameters
         ----------
@@ -332,7 +332,7 @@ class Disturbances:
         return [dist_bis, dist_map, dist_co, dist_tpr, dist_sv, dist_hr]
 
     def plot_dist(self):
-        """Plot the selected profil.
+        """Plot the selected profile.
         """
         Time = np.arange(0, 60*60)
         if self.dist_profil is not None and self.dist_profil != 'VitalDB':
@@ -352,7 +352,7 @@ class Disturbances:
             dist_sv = np.interp(Time, self.time, self.dist_sv)
             dist_hr = np.interp(Time, self.time, self.dist_hr)
         else:
-            print("profil is None")
+            print("profile is None")
             return
         title = ['BIS', 'MAP', 'CO', 'TPR', 'SV', 'HR']
         for i, dist in enumerate([dist_bis, dist_map, dist_co, dist_tpr, dist_sv, dist_hr]):
