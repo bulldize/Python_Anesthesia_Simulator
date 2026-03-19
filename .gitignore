@@ -1,5 +1,8 @@
 # Python Cache
 *__pycache__*
+*.py[cod]
+# pytest cache
+.pytest_cache/
 # Obsidian cache
 paper/.obsidian/
 # Jupiter Cache
@@ -12,8 +15,12 @@ docs/build/
 .vscode/
 # python env
 .venv/
+# generated outputs
+outputs/
 # coverage file
 *.coverage
+# macOS
+.DS_Store
 # matlab asv files
 *.asv
 # virtual documents
