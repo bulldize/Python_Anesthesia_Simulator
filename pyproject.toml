@@ -12,7 +12,7 @@ authors = [
 description = """Anesthesia simulator: modellize the effect of drugs (Propofol, Remifentanil, Norepinephrine, Atracurium) \
                  during general anesthesia. Specially build for control design."""
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies=[
     "numpy>=2.2.5",
     "scipy==1.16.0",
@@ -42,4 +42,3 @@ test = [
 addopts = [
     "--import-mode=importlib",
 ]
-
